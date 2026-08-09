@@ -218,9 +218,23 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
       id: appointment.id,
       age: '',
       gender: '',
-      risk: appointment.risk,
+      finalTriageLevel: switch (appointment.risk.level) {
+        DoctorRiskLevel.low => TriageBand.green,
+        DoctorRiskLevel.medium => TriageBand.yellow,
+        DoctorRiskLevel.high || DoctorRiskLevel.urgent => TriageBand.red,
+      },
+      aiTriageLevel: switch (appointment.risk.level) {
+        DoctorRiskLevel.low => TriageBand.green,
+        DoctorRiskLevel.medium => TriageBand.yellow,
+        DoctorRiskLevel.high || DoctorRiskLevel.urgent => TriageBand.red,
+      },
+      aiRiskScore: switch (appointment.risk.level) {
+        DoctorRiskLevel.low => 25,
+        DoctorRiskLevel.medium => 55,
+        DoctorRiskLevel.high || DoctorRiskLevel.urgent => 85,
+      },
       symptoms: const [],
-      waitTime: '00 MIN WAIT',
+      waitMinutes: 0,
       consultType: appointment.consultType,
     );
     final riskColors = switch (appointment.risk.level) {

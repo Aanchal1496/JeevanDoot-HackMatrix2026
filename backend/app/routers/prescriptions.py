@@ -1,6 +1,4 @@
-"""Prescription endpoints: create + read for patients."""
-import uuid
-
+"""Prescription endpoints: read-only for patients."""
 from fastapi import APIRouter, HTTPException
 
 from ..db import get_connection
@@ -21,10 +19,17 @@ def _prescription_dict(conn, row) -> dict:
 
 @router.get("")
 def list_prescriptions(patient_id: str):
+    """Patient-facing list: only ISSUED prescriptions are visible.
+
+    Drafts stay hidden from the patient portal - the server enforces this,
+    never the client.
+    """
     conn = get_connection()
     try:
         rows = conn.execute(
-            "SELECT * FROM prescriptions WHERE patient_id = ? ORDER BY id DESC",
+            """SELECT * FROM prescriptions
+               WHERE patient_id = ? AND status = 'ISSUED'
+               ORDER BY issued_at DESC, id DESC""",
             (patient_id,),
         ).fetchall()
         return {"prescriptions": [_prescription_dict(conn, r) for r in rows]}
@@ -48,28 +53,14 @@ def get_prescription(prescription_id: str):
 
 @router.post("")
 def create_prescription(payload: PrescriptionCreate):
-    conn = get_connection()
-    try:
-        pid = "RX-" + uuid.uuid4().hex[:8].upper()
-        conn.execute(
-            """INSERT INTO prescriptions (id, patient_id, doctor_name, date, notes)
-               VALUES (?,?,?,?,?)""",
-            (pid, payload.patient_id, payload.doctor_name,
-             "August 10, 2026", payload.notes),
-        )
-        for m in payload.medicines:
-            conn.execute(
-                """INSERT INTO prescription_items
-                   (prescription_id, name, category, dosage, unit, morning,
-                    afternoon, night, days, instructions)
-                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (pid, m.name, m.category, m.dosage, m.unit, m.morning,
-                 m.afternoon, m.night, m.days, m.instructions),
-            )
-        conn.commit()
-        row = conn.execute(
-            "SELECT * FROM prescriptions WHERE id = ?", (pid,)
-        ).fetchone()
-        return {"prescription": _prescription_dict(conn, row), "message": "Prescription saved."}
-    finally:
-        conn.close()
+    """Deprecated: prescriptions are created by doctors only.
+
+    The legacy patient-facing create path bypassed the doctor-confirmation
+    and safety checks of the prescription writer, so it is disabled. Use the
+    authenticated doctor endpoints under `/api/doctor/prescriptions`.
+    """
+    raise HTTPException(
+        status_code=403,
+        detail="Prescriptions can only be created by an authorized doctor "
+        "through the consultation workflow.",
+    )

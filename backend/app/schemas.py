@@ -1,5 +1,5 @@
 """Pydantic request/response schemas for the JeevanDoot API."""
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -26,6 +26,22 @@ class DoctorLoginRequest(BaseModel):
 # ---------------------------------------------------------------------------
 class TriageRequest(BaseModel):
     symptoms: List[str]
+
+
+# ---------------------------------------------------------------------------
+# Doctor: triage override
+# ---------------------------------------------------------------------------
+class TriageOverride(BaseModel):
+    triage_level: Literal["RED", "YELLOW", "GREEN"]
+    reason: str = Field(..., min_length=1, max_length=500)
+    changed_by: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Doctor: case file
+# ---------------------------------------------------------------------------
+class CaseFileSummaryUpdate(BaseModel):
+    doctor_summary: str = Field(..., min_length=1, max_length=2000)
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +145,53 @@ class PrescriptionCreate(BaseModel):
     doctor_name: str = "Dr. Priya Sharma"
     notes: str = ""
     medicines: List[MedicineItem]
+
+
+# ---------------------------------------------------------------------------
+# Doctor: prescription writer
+# ---------------------------------------------------------------------------
+class PrescriptionDraftCreate(BaseModel):
+    patient_id: str
+    consultation_id: Optional[str] = None
+
+
+class PrescriptionItemAdd(BaseModel):
+    medicine_id: str
+    generic_name: Optional[str] = None
+    strength: Optional[str] = None
+    dosage_form: Optional[str] = None
+    dose: Optional[str] = None
+    frequency: Optional[str] = None
+    # Accept both "3" and 3 - normalized to a string by the service.
+    duration: Optional[Union[int, str]] = None
+    duration_unit: Optional[str] = None
+    route: Optional[str] = None
+    timing: Optional[str] = None
+    instructions: Optional[str] = None
+
+
+class PrescriptionItemUpdate(BaseModel):
+    strength: Optional[str] = None
+    dosage_form: Optional[str] = None
+    dose: Optional[str] = None
+    frequency: Optional[str] = None
+    duration: Optional[Union[int, str]] = None
+    duration_unit: Optional[str] = None
+    route: Optional[str] = None
+    timing: Optional[str] = None
+    instructions: Optional[str] = None
+
+
+class PrescriptionNotesUpdate(BaseModel):
+    additional_instructions: str = Field("", max_length=2000)
+
+
+class PrescriptionCancel(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=500)
+
+
+class PrescriptionSupersede(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=500)
 
 
 # ---------------------------------------------------------------------------

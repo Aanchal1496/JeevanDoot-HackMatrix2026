@@ -334,6 +334,9 @@ ThemeData buildDoctorTheme() {
           bodyLarge: AppTextStyles.bodyLg,
           bodyMedium: AppTextStyles.bodyMd,
           labelLarge: AppTextStyles.labelLg,
+        ).apply(
+          bodyColor: DoctorAppColors.onSurface,
+          displayColor: DoctorAppColors.onSurface,
         ),
     appBarTheme: AppBarTheme(
       backgroundColor: DoctorAppColors.surface,
@@ -376,6 +379,9 @@ ThemeData buildAppTheme() {
       bodyLarge: AppTextStyles.bodyLg,
       bodyMedium: AppTextStyles.bodyMd,
       labelLarge: AppTextStyles.labelLg,
+    ).apply(
+      bodyColor: AppColors.onSurface,
+      displayColor: AppColors.onSurface,
     ),
     appBarTheme: AppBarTheme(
       backgroundColor: AppColors.surface.withValues(alpha: 0.8),

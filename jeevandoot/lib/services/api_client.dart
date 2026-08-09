@@ -109,7 +109,7 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> delete(String endpoint,
+Future<dynamic> delete(String endpoint,
       {Map<String, String>? query, Duration? timeout}) async {
     var uri = ApiConfig.path(endpoint);
     if (query != null && query.isNotEmpty) {
@@ -128,6 +128,26 @@ class ApiClient {
       rethrow;
     } on TimeoutException {
       throw ApiException('Request timed out. Please try again.', statusCode: 408);
+    } catch (_) {
+      throw ApiException('Could not reach the server. Is the backend running?');
+    }
+  }
+
+  /// Downloads raw bytes (e.g. a prescription PDF) with auth headers.
+  Future<List<int>> download(String endpoint) async {
+    try {
+      final res = await http
+          .get(Uri.parse(ApiConfig.path(endpoint)), headers: _headers())
+          .timeout(const Duration(seconds: 20));
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        return res.bodyBytes;
+      }
+      throw ApiException(
+        'Download failed (${res.statusCode}).',
+        statusCode: res.statusCode,
+      );
+    } on ApiException {
+      rethrow;
     } catch (_) {
       throw ApiException('Could not reach the server. Is the backend running?');
     }
