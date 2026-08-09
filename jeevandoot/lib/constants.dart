@@ -1,0 +1,14 @@
+/// Shared asset URLs used across the patient app.
+abstract final class AppAssets {
+  static const String patientAvatar =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBITWx9omukcrbVq6oHizm_c_NShTaHdvNkKnJrECbSRpr7IGAjxnk1ZhTpFpKFrISSu8EU6aQMFu8EtAfNk7uT1YxuwD6VvI0s7Iuvude1Sid0pMZud8RMdB32TFe-O7wgyA6so2ZcgfCvTFLv85JQB3USmyXjJZrDj7IEvE3mTQ7_mOzsUrWaRs2ymBwquFS663a1D0wCB5A1mCUgPyZCzDch-rNqxdGpXExzPzNqXNiOKTFq6mFJ';
+
+  static const String doctorImage =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB4o1TFkvIyoFzAWoEO7eNeqCED0RPxkF3vQn-UAcVhDfjtyDZ6Iu7vfKm5WAAXLCaGOWnk6iGiYo7XSMqqFY2uTYpvojScUEFbG5JCF6WvJiAkpeTIomPDJ-DQJd2O5h9OJBpnLMQZNjgywHahoWsdH2L2wN1kDDJkNlhLSRpTx5akNa83Pk0VLLzzhlV_SN7Rm7-e5xdWKKM4cmoKDrQSSeeNEIiwNyngUR665ByPRI_HQgrJJOGx';
+
+  static const String doctorAvatar =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBRpkLjw4XTt-Fx7OI2_by2-JuBIgGXPLNw_WUdhJ8FDLaIl2Z033bZhYKoBRa_lnS9SkYjDRx4wfAshBObaf2yMYEHF24EU-YRphCc7aRvhP6gKXj1jc2Y-mrsbU4C4SFPoG9VyiKwMLMRdWTp705NmqmBpSAiN334oMixaqPDk396MegKMmbRzPJBU0n6lOHjWleVegy5GztvbP1pfpSfRFbhv8eEuBv9F4f4cBJB1A80k0IASN0';
+
+  static const String patientCaseImage =
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuB5nJ6HtadHMK8_AadQieVOrJuXZTTLUQrhoc1_IDFLLoWqrrDC1fGp9BAaW2lDpyE7iTMKOfnx6f3Cd4HA7m5y2NGiB4JAgetWtYTm1lIOIGR92bLQ-ZyrMkxgIEvyuMlX2eMHA4ZwXFwE1oXKM5IuCFmyIi4Vuz68kUcit-eDYKUscurmcsfI0XFLBRTAm6Koz5afuy46zR6a9GyRCrfpeaYJ7BbXBMDAVJ9fAybtyQcnD19AehU';
+}

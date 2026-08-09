@@ -1,0 +1,13 @@
+# Root-level ignores
+backend/.env
+backend/node_modules/
+backend/.venv/
+
+# Flutter local config (contains machine-specific SDK paths)
+jeevandoot/android/local.properties
+jeevandoot/ios/Flutter/Generated.xcconfig
+jeevandoot/ios/Flutter/ephemeral/
+jeevandoot/ios/Flutter/flutter_export_environment.sh
+jeevandoot/macos/Flutter/ephemeral/
+jeevandoot/linux/flutter/ephemeral/
+jeevandoot/windows/flutter/ephemeral/
