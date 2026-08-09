@@ -217,12 +217,34 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                           .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${prescription.medicines.length} medicine${prescription.medicines.length == 1 ? '' : 's'}',
-                      style: AppTextStyles.labelSm.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '${prescription.medicines.length} medicine${prescription.medicines.length == 1 ? '' : 's'}',
+                          style: AppTextStyles.labelSm.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'ISSUED',
+                            style: AppTextStyles.labelSm.copyWith(
+                              color: const Color(0xFF15803D),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

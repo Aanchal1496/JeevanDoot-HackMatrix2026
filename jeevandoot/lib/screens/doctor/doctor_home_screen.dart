@@ -354,7 +354,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
               Expanded(
                 child: _actionButton(
                   scheme,
-                  label: 'View Patient',
+                  label: 'View Case File',
                   filled: false,
                   onTap: () =>
                       Navigator.of(context).push(MaterialPageRoute(
