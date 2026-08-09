@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/consultation_models.dart';
 import '../models/doctor_models.dart';
 import '../models/models.dart';
 import '../screens/profile_settings.dart';
@@ -215,6 +216,9 @@ class Prescription {
     required this.id,
     required this.doctorName,
     required this.date,
+    required this.dateIso,
+    required this.followUpDate,
+    required this.followUpTime,
     required this.notes,
     required this.medicines,
   });
@@ -222,6 +226,9 @@ class Prescription {
   final String id;
   final String doctorName;
   final String date;
+  final String dateIso;
+  final String followUpDate;
+  final String followUpTime;
   final String notes;
   final List<PrescriptionItem> medicines;
 
@@ -229,6 +236,9 @@ class Prescription {
         id: json['id'] as String? ?? '',
         doctorName: json['doctor_name'] as String? ?? '',
         date: json['date'] as String? ?? '',
+        dateIso: json['date_iso'] as String? ?? '',
+        followUpDate: json['follow_up_date'] as String? ?? '',
+        followUpTime: json['follow_up_time'] as String? ?? '',
         notes: json['notes'] as String? ?? '',
         medicines: (json['medicines'] as List?)
                 ?.map((e) =>
@@ -729,6 +739,102 @@ Future<Prescription> createPrescription({
   }) as Map;
   return Prescription.fromJson(
     (res['prescription'] as Map).cast<String, dynamic>(),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Teleconsultations API
+// ---------------------------------------------------------------------------
+
+Future<List<ConsultationSpecialty>> fetchConsultationSpecialties() async {
+  final res = await ApiClient.instance.get('/api/consultations/specialties') as Map;
+  return (res['specialties'] as List? ?? const [])
+      .map((e) =>
+          ConsultationSpecialty.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+Future<List<DoctorInfo>> fetchConsultationDoctors({
+  String specialty = '',
+  String query = '',
+}) async {
+  final res = await ApiClient.instance.get('/api/consultations/doctors',
+      query: {
+        if (specialty.isNotEmpty) 'specialty': specialty,
+        if (query.trim().isNotEmpty) 'q': query.trim(),
+      }) as Map;
+  return (res['doctors'] as List? ?? const [])
+      .map((e) => DoctorInfo.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+Future<List<SlotDateInfo>> fetchDoctorDates(String doctorId) async {
+  final res = await ApiClient.instance
+      .get('/api/consultations/doctors/$doctorId/dates') as Map;
+  return (res['dates'] as List? ?? const [])
+      .map((e) => SlotDateInfo.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+Future<DoctorSlots> fetchDoctorSlots(String doctorId, String date) async {
+  final res = await ApiClient.instance
+      .get('/api/consultations/doctors/$doctorId/slots', query: {'date': date}) as Map;
+  return DoctorSlots.fromJson(res.cast<String, dynamic>());
+}
+
+Future<ConsultationAppointment> bookConsultation({
+  required String doctorId,
+  required String date,
+  required String startTime,
+  required ConsultKind consultKind,
+  String reason = '',
+  List<ConsultationAttachment> attachments = const [],
+  String bookingSource = 'SELF',
+  String? ashaRequestId,
+  String? patientName,
+  String? patientPhone,
+}) async {
+  final res = await ApiClient.instance.post('/api/consultations/book', {
+    'patient_id': AppState.patientId,
+    'doctor_id': doctorId,
+    'date': date,
+    'start_time': startTime,
+    'consult_type': consultKind.apiValue,
+    'reason': reason,
+    'attachments': attachments.map((a) => a.toJson()).toList(),
+    'booking_source': bookingSource,
+    'asha_request_id': ?ashaRequestId,
+    'patient_name': ?patientName,
+    'patient_phone': ?patientPhone,
+  }) as Map;
+  return ConsultationAppointment.fromJson(
+    (res['appointment'] as Map).cast<String, dynamic>(),
+  );
+}
+
+Future<List<ConsultationAppointment>> fetchUpcomingConsultations() async {
+  final res = await ApiClient.instance.get('/api/consultations/upcoming',
+      query: {'patient_id': AppState.patientId}) as Map;
+  return (res['appointments'] as List? ?? const [])
+      .map((e) =>
+          ConsultationAppointment.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+Future<List<ConsultationAppointment>> fetchConsultationHistory() async {
+  final res = await ApiClient.instance.get('/api/consultations/history',
+      query: {'patient_id': AppState.patientId}) as Map;
+  return (res['appointments'] as List? ?? const [])
+      .map((e) =>
+          ConsultationAppointment.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+Future<ConsultationAppointment> fetchConsultationAppointment(String id) async {
+  final res = await ApiClient.instance.get('/api/consultations/$id',
+      query: {'patient_id': AppState.patientId}) as Map;
+  return ConsultationAppointment.fromJson(
+    (res['appointment'] as Map).cast<String, dynamic>(),
   );
 }
 

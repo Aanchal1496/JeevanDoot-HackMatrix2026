@@ -20,19 +20,21 @@ from .db import init_db
 from .routers import (
     appointments,
     auth,
+    consultations,
     doctor,
     health,
     prescriptions,
     profile,
     symptoms,
 )
-from .seed import seed_if_empty
+from .seed import seed_if_empty, seed_teleconsultation
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
     seed_if_empty()
+    seed_teleconsultation()
     yield
 
 app = FastAPI(
@@ -54,6 +56,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(health.router)
 app.include_router(appointments.router)
+app.include_router(consultations.router)
 app.include_router(doctor.router)
 app.include_router(prescriptions.router)
 app.include_router(profile.router)

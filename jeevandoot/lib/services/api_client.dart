@@ -95,6 +95,20 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> patch(String endpoint, Map<String, dynamic> body) async {
+    try {
+      final res = await http
+          .patch(Uri.parse(ApiConfig.path(endpoint)),
+              headers: _headers(), body: jsonEncode(body))
+          .timeout(_timeout);
+      return _decode(res);
+    } on ApiException {
+      rethrow;
+    } catch (_) {
+      throw ApiException('Could not reach the server. Is the backend running?');
+    }
+  }
+
   dynamic _decode(http.Response res) {
     dynamic decoded;
     try {

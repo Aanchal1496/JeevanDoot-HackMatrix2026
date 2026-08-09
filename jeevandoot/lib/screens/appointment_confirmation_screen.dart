@@ -1,15 +1,17 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/models/consultation_models.dart';
+import 'package:jeevandoot/screens/consultation/appointment_detail_screen.dart';
 import 'package:jeevandoot/screens/home_screen.dart';
-import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
+/// Full-screen success state shown after a consultation is booked.
 class AppointmentConfirmationScreen extends StatefulWidget {
   const AppointmentConfirmationScreen({super.key, required this.appointment});
 
-  final BookedAppointment appointment;
+  final ConsultationAppointment appointment;
 
   @override
   State<AppointmentConfirmationScreen> createState() =>
@@ -67,7 +69,8 @@ class _AppointmentConfirmationScreenState
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isAudio = widget.appointment.consultType.contains('Audio');
+    final a = widget.appointment;
+    final isAudio = a.consultType.contains('Audio');
     return Scaffold(
       backgroundColor: scheme.surface,
       body: Stack(
@@ -77,10 +80,7 @@ class _AppointmentConfirmationScreenState
             builder: (context, child) {
               return CustomPaint(
                 size: Size.infinite,
-                painter: _ConfettiPainter(
-                  _particles,
-                  _controller.value,
-                ),
+                painter: _ConfettiPainter(_particles, _controller.value),
               );
             },
           ),
@@ -97,14 +97,14 @@ class _AppointmentConfirmationScreenState
                     _successIllustration(scheme),
                     const SizedBox(height: AppSpacing.stackLg),
                     Text(
-                      'Appointment Confirmed',
+                      'Consultation Booked Successfully',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.displayHeroMobile
                           .copyWith(color: scheme.onSurface),
                     ),
                     const SizedBox(height: AppSpacing.unit),
                     Text(
-                      'Your consultation has been successfully scheduled.',
+                      'Your consultation with ${a.doctorName} is scheduled for ${a.countdownLabel}.',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodyLg
                           .copyWith(color: scheme.onSurfaceVariant),
@@ -116,9 +116,9 @@ class _AppointmentConfirmationScreenState
                       label: 'View Appointment',
                       icon: Icons.receipt_long,
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Appointment added to your Records.'),
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AppointmentDetailScreen(appointment: a),
                           ),
                         );
                       },
@@ -130,7 +130,7 @@ class _AppointmentConfirmationScreenState
                         foregroundColor: scheme.primary,
                         textStyle: AppTextStyles.labelLg,
                       ),
-                      child: const Text('Back to Home'),
+                      child: const Text('Back to Dashboard'),
                     ),
                   ],
                 ),
@@ -179,11 +179,7 @@ class _AppointmentConfirmationScreenState
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.check,
-              size: 48,
-              color: AppColors.onPrimary,
-            ),
+            child: const Icon(Icons.check, size: 48, color: AppColors.onPrimary),
           ),
         ],
       ),
@@ -191,6 +187,7 @@ class _AppointmentConfirmationScreenState
   }
 
   Widget _detailsCard(ColorScheme scheme, bool isAudio) {
+    final a = widget.appointment;
     return SoftCard(
       child: Column(
         children: [
@@ -200,10 +197,19 @@ class _AppointmentConfirmationScreenState
                 child: SizedBox(
                   width: 56,
                   height: 56,
-                  child: ColoredBox(
-                    color: scheme.surfaceContainerHigh,
-                    child: const Icon(Icons.person, size: 32),
-                  ),
+                  child: a.photoUrl.isEmpty
+                      ? ColoredBox(
+                          color: scheme.surfaceContainerHigh,
+                          child: const Icon(Icons.person, size: 32),
+                        )
+                      : Image.network(
+                          a.photoUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => ColoredBox(
+                            color: scheme.surfaceContainerHigh,
+                            child: const Icon(Icons.person),
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(width: AppSpacing.gutter),
@@ -212,13 +218,15 @@ class _AppointmentConfirmationScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.appointment.doctorName,
+                      a.doctorName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                     ),
                     Text(
-                      widget.appointment.specialization,
+                      [a.qualification, a.specialization]
+                          .where((e) => e.isNotEmpty)
+                          .join(' • '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.bodyMd.copyWith(color: scheme.primary),
@@ -232,29 +240,41 @@ class _AppointmentConfirmationScreenState
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.gutter),
             child: Divider(color: scheme.surfaceContainerHighest),
           ),
+          _detailRow(scheme, Icons.confirmation_number, a.id, 'Booking ID'),
+          const SizedBox(height: AppSpacing.stackSm),
           _detailRow(
             scheme,
-            Icons.confirmation_number,
-            widget.appointment.id,
-            'Booking reference',
+            Icons.calendar_today,
+            a.dateLabel.isEmpty ? a.relativeDayLabel : '${a.relativeDayLabel} • ${a.dateLabel}',
+            a.start == null ? '' : '${a.start!.day} ${_months[a.start!.month - 1]} ${a.start!.year}',
           ),
           const SizedBox(height: AppSpacing.stackSm),
-          _detailRow(scheme, Icons.calendar_today, widget.appointment.date, widget.appointment.weekday),
-          const SizedBox(height: AppSpacing.stackSm),
-          _detailRow(scheme, Icons.schedule, widget.appointment.time, '15 min duration'),
+          _detailRow(scheme, Icons.schedule, a.time, '30 min consultation'),
           const SizedBox(height: AppSpacing.stackSm),
           _detailRow(
             scheme,
             isAudio ? Icons.mic : Icons.videocam,
-            widget.appointment.consultType,
+            a.consultType,
             isAudio
                 ? 'We will call you on your registered number.'
-                : 'Join from the app at the scheduled time.',
+                : 'Join from the app 10 minutes before the scheduled time.',
+          ),
+          const SizedBox(height: AppSpacing.stackSm),
+          _detailRow(
+            scheme,
+            Icons.currency_rupee,
+            a.fee <= 0 ? 'Free' : '₹${a.fee.round()}',
+            'Consultation fee',
           ),
         ],
       ),
     );
   }
+
+  static const List<String> _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
 
   Widget _detailRow(ColorScheme scheme, IconData icon, String title, String subtitle) {
     return Row(
@@ -270,10 +290,11 @@ class _AppointmentConfirmationScreenState
                 title,
                 style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
               ),
-              Text(
-                subtitle,
-                style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
-              ),
+              if (subtitle.isNotEmpty)
+                Text(
+                  subtitle,
+                  style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
+                ),
             ],
           ),
         ),
