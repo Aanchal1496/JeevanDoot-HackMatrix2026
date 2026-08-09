@@ -7,6 +7,24 @@ import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
+/// Severity bucket assigned by the symptom triage.
+enum TriageLevel { low, consult, urgent }
+
+/// Structured outcome of the symptom triage assessment.
+class TriageResult {
+  const TriageResult({
+    required this.summary,
+    this.triageLevel = TriageLevel.low,
+    this.advice = const [],
+    this.reasons = const [],
+  });
+
+  final String summary;
+  final TriageLevel triageLevel;
+  final List<AdviceItem> advice;
+  final List<AdviceItem> reasons;
+}
+
 class TriageResultScreen extends StatefulWidget {
   const TriageResultScreen({super.key, this.result, this.level});
 

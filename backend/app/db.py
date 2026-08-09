@@ -196,6 +196,20 @@ CREATE TABLE IF NOT EXISTS appointment_audit (
     to_value TEXT,
     created_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS consultations (
+    id TEXT PRIMARY KEY,
+    appointment_id TEXT,
+    patient_id TEXT NOT NULL,
+    doctor_id TEXT NOT NULL,
+    scheduled_start TEXT,
+    scheduled_end TEXT,
+    status TEXT NOT NULL DEFAULT 'SCHEDULED',
+    started_at TEXT,
+    ended_at TEXT,
+    duration_seconds INTEGER,
+    connection_quality TEXT
+);
 """
 
 # Columns added to pre-existing tables so the teleconsultation feature works

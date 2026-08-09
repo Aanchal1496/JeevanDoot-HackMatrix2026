@@ -12,6 +12,7 @@ import 'package:jeevandoot/screens/reminders_screen.dart';
 import 'package:jeevandoot/screens/self_care_advice_screen.dart';
 import 'package:jeevandoot/screens/symptom_checker_screen.dart';
 import 'package:jeevandoot/screens/video_call_screen.dart';
+import 'package:jeevandoot/screens/consultation_hub_screen.dart';
 import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -300,6 +301,26 @@ class _HomeTabState extends State<HomeTab> {
                 color: scheme.onSecondaryContainer,
                 label: 'Health Records',
                 onTap: widget.onNavigateRecords,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.gutter),
+        Row(
+          children: [
+            Expanded(
+              child: _actionCard(
+                context,
+                scheme,
+                icon: Icons.battery_saver,
+                bg: scheme.surfaceContainer,
+                color: scheme.onSurface,
+                label: 'Low-Bandwidth Consult',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ConsultationHubScreen(role: 'patient'),
+                  ),
+                ),
               ),
             ),
           ],

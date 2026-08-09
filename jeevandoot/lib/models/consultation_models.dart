@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// How the patient chooses to book a consultation.
 enum BookingMode { self, asha }
@@ -82,7 +82,7 @@ class DoctorInfo {
   final bool isActive;
   final bool availableToday;
 
-  String get feeLabel => fee <= 0 ? 'Free' : '₹${fee.round()}';
+  String get feeLabel => fee <= 0 ? 'Free' : 'Γé╣${fee.round()}';
 
   factory DoctorInfo.fromJson(Map<String, dynamic> json) => DoctorInfo(
         id: json['id'] as String? ?? '',
@@ -329,7 +329,7 @@ class ConsultationAppointment {
       status.toLowerCase() == 'confirmed' || status.toLowerCase() == 'upcoming';
 
   /// Status as shown to the patient, derived from the backend status and the
-  /// appointment time (Upcoming → In Progress → Completed as time passes).
+  /// appointment time (Upcoming ΓåÆ In Progress ΓåÆ Completed as time passes).
   AppointmentStatus get displayStatus {
     if (status.toLowerCase() == 'cancelled') return AppointmentStatus.cancelled;
     if (status.toLowerCase() == 'no show') return AppointmentStatus.noShow;
@@ -396,7 +396,7 @@ class ConsultationAppointment {
       1 => 'Tomorrow',
       _ => '$relativeDayLabel ${start!.year}',
     };
-    return '$base • $time';
+    return '$base ΓÇó $time';
   }
 
   bool get isCancelable =>
@@ -491,5 +491,93 @@ class AppNotification {
         type: json['type'] as String? ?? 'system',
         read: (json['read'] as int? ?? 0) == 1,
         createdAt: DateTime.tryParse(json['created_at'] as String? ?? ''),
+      );
+}
+
+/// Models for the teleconsultation (video/audio call) feature.
+
+/// A consultation session created from an appointment. The backend is the
+/// source of truth; this mirrors its payload.
+class Consultation {
+  const Consultation({
+    required this.id,
+    required this.appointmentId,
+    required this.patientId,
+    required this.doctorId,
+    required this.status,
+    this.startedAt,
+    this.endedAt,
+    this.durationSeconds,
+    this.connectionQuality,
+  });
+
+  final String id;
+  final String appointmentId;
+  final String patientId;
+  final String doctorId;
+  final String status;
+  final String? startedAt;
+  final String? endedAt;
+  final int? durationSeconds;
+  final String? connectionQuality;
+
+  bool get isCompleted => status == 'COMPLETED';
+  bool get isWaiting => status == 'WAITING' || status == 'SCHEDULED';
+
+  factory Consultation.fromJson(Map<String, dynamic> json) => Consultation(
+        id: json['id'] as String? ?? '',
+        appointmentId: json['appointment_id'] as String? ?? '',
+        patientId: json['patient_id'] as String? ?? '',
+        doctorId: json['doctor_id'] as String? ?? '',
+        status: json['status'] as String? ?? 'SCHEDULED',
+        startedAt: json['started_at'] as String?,
+        endedAt: json['ended_at'] as String?,
+        durationSeconds: json['duration_seconds'] as int?,
+        connectionQuality: json['connection_quality'] as String?,
+      );
+}
+
+/// Data-mode preference for a consultation (per-call unless saved globally).
+enum ConsultDataMode {
+  standard,
+  dataSaver,
+  audioOnly;
+
+  String get label => switch (this) {
+        ConsultDataMode.standard => 'Standard',
+        ConsultDataMode.dataSaver => 'Data Saver',
+        ConsultDataMode.audioOnly => 'Audio Only',
+      };
+}
+
+/// Network quality classification used by the adaptive bandwidth controller.
+enum NetworkQuality {
+  good,
+  fair,
+  poor,
+  critical;
+
+  String get label => switch (this) {
+        NetworkQuality.good => 'Good',
+        NetworkQuality.fair => 'Fair',
+        NetworkQuality.poor => 'Poor',
+        NetworkQuality.critical => 'Critical',
+      };
+}
+
+/// ICE server configuration fetched from the backend (TURN creds never baked
+/// into the app).
+class IceServerConfig {
+  const IceServerConfig({required this.urls, this.username, this.credential});
+
+  final List<String> urls;
+  final String? username;
+  final String? credential;
+
+  factory IceServerConfig.fromJson(Map<String, dynamic> json) =>
+      IceServerConfig(
+        urls: (json['urls'] as List?)?.cast<String>() ?? const [],
+        username: json['username'] as String?,
+        credential: json['credential'] as String?,
       );
 }

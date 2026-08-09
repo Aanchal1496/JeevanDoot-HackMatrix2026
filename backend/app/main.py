@@ -20,6 +20,7 @@ from .db import init_db
 from .routers import (
     appointments,
     auth,
+    consultation_session,
     consultations,
     doctor,
     health,
@@ -57,6 +58,7 @@ app.include_router(auth.router)
 app.include_router(health.router)
 app.include_router(appointments.router)
 app.include_router(consultations.router)
+app.include_router(consultation_session.router)
 app.include_router(doctor.router)
 app.include_router(prescriptions.router)
 app.include_router(profile.router)
