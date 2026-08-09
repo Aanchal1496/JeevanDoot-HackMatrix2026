@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/case_file_models.dart';
 import '../models/doctor_models.dart';
 import '../models/models.dart';
 import '../screens/profile_settings.dart';
@@ -162,30 +163,69 @@ class DoctorStats {
 class PatientCase {
   const PatientCase({
     required this.id,
+    required this.patientId,
     required this.name,
     required this.age,
     required this.gender,
+    required this.bloodGroup,
     required this.symptoms,
+    required this.symptomDuration,
+    required this.symptomSeverity,
+    required this.symptomOnset,
     required this.vitals,
     required this.history,
     required this.aiSummary,
+    required this.status,
+    required this.waitMinutes,
+    required this.aiRiskScore,
+    required this.aiTriageLevel,
+    required this.aiTriageReason,
+    required this.finalTriageLevel,
+    required this.triageSource,
+    required this.triageReason,
+    required this.doctorOverrideReason,
+    required this.safetyEscalated,
+    required this.criticalSymptoms,
+    required this.triageHistory,
   });
 
   final String id;
+  final String patientId;
   final String name;
   final String age;
   final String gender;
+  final String bloodGroup;
   final List<String> symptoms;
+  final String symptomDuration;
+  final String symptomSeverity;
+  final String symptomOnset;
   final Map<String, String> vitals;
   final Map<String, List<String>> history;
   final String aiSummary;
+  final QueueStatus status;
+  final int waitMinutes;
+  final int aiRiskScore;
+  final TriageBand aiTriageLevel;
+  final String? aiTriageReason;
+  final TriageBand finalTriageLevel;
+  final TriageSource triageSource;
+  final String? triageReason;
+  final String? doctorOverrideReason;
+  final bool safetyEscalated;
+  final List<String> criticalSymptoms;
+  final List<TriageHistoryEntry> triageHistory;
 
   factory PatientCase.fromJson(Map<String, dynamic> json) => PatientCase(
         id: json['id'] as String? ?? '',
+        patientId: json['patient_id'] as String? ?? '',
         name: json['name'] as String? ?? '',
         age: (json['age'] ?? '').toString(),
         gender: json['gender'] as String? ?? '',
+        bloodGroup: json['blood_group'] as String? ?? '',
         symptoms: (json['symptoms'] as List?)?.cast<String>() ?? const [],
+        symptomDuration: json['symptom_duration'] as String? ?? '',
+        symptomSeverity: json['symptom_severity'] as String? ?? '',
+        symptomOnset: json['symptom_onset'] as String? ?? '',
         vitals: (json['vitals'] as Map?)?.map(
               (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
             ) ??
@@ -198,6 +238,67 @@ class PatientCase {
             ) ??
             const {},
         aiSummary: json['ai_summary'] as String? ?? '',
+        status: QueueStatus.fromApi(json['status'] as String?),
+        waitMinutes: (json['wait_minutes'] as num?)?.toInt() ?? 0,
+        aiRiskScore: (json['ai_risk_score'] as num?)?.toInt() ?? 0,
+        aiTriageLevel: TriageBand.fromApi(json['ai_triage_level'] as String?),
+        aiTriageReason: json['ai_triage_reason'] as String?,
+        finalTriageLevel:
+            TriageBand.fromApi(json['final_triage_level'] as String?),
+        triageSource: TriageSource.fromApi(json['triage_source'] as String?),
+        triageReason: json['triage_reason'] as String?,
+        doctorOverrideReason: json['doctor_override_reason'] as String?,
+        safetyEscalated: json['safety_escalated'] == true ||
+            json['safety_escalated'] == 1,
+        criticalSymptoms:
+            (json['critical_symptoms'] as List?)?.cast<String>() ?? const [],
+        triageHistory: (json['triage_history'] as List? ?? const [])
+            .map((e) => TriageHistoryEntry.fromJson(
+                (e as Map).cast<String, dynamic>()))
+            .toList(),
+      );
+}
+
+/// One medicine from the structured catalog (backend `medicines` table).
+class Medicine {
+  const Medicine({
+    required this.id,
+    required this.name,
+    required this.genericName,
+    required this.brandName,
+    required this.strength,
+    required this.dosageForm,
+    required this.route,
+    required this.category,
+    required this.active,
+    required this.quickSelect,
+  });
+
+  final String id;
+  final String name;
+  final String genericName;
+  final String brandName;
+  final String strength;
+  final String dosageForm;
+  final String route;
+  final String category;
+  final bool active;
+  final bool quickSelect;
+
+  /// Display label, e.g. "Paracetamol 500 mg".
+  String get display => strength.isNotEmpty ? '$name $strength' : name;
+
+  factory Medicine.fromJson(Map<String, dynamic> json) => Medicine(
+        id: json['id']?.toString() ?? '',
+        name: json['name'] as String? ?? '',
+        genericName: json['generic_name'] as String? ?? '',
+        brandName: json['brand_name'] as String? ?? '',
+        strength: json['strength'] as String? ?? '',
+        dosageForm: json['dosage_form'] as String? ?? '',
+        route: json['route'] as String? ?? '',
+        category: json['category'] as String? ?? '',
+        active: json['active'] == true || json['active'] == 1,
+        quickSelect: json['quick_select'] == true || json['quick_select'] == 1,
       );
 }
 
@@ -212,6 +313,18 @@ class PrescriptionItem {
     required this.night,
     required this.days,
     required this.instructions,
+    this.id,
+    this.medicineId,
+    this.genericName = '',
+    this.strength = '',
+    this.dosageForm = '',
+    this.dose = '',
+    this.frequency = '',
+    this.duration,
+    this.durationUnit = 'days',
+    this.route = '',
+    this.timing = '',
+    this.displayOrder = 0,
   });
 
   final String name;
@@ -223,18 +336,54 @@ class PrescriptionItem {
   final int night;
   final int days;
   final String instructions;
+  final int? id;
+  final String? medicineId;
+  final String genericName;
+  final String strength;
+  final String dosageForm;
+  final String dose;
+  final String frequency;
+  final String? duration;
+  final String durationUnit;
+  final String route;
+  final String timing;
+  final int displayOrder;
+
+  /// Plain-language dose line: "1 tablet twice daily after food for 3 days".
+  String get doseLine {
+    final parts = <String>[
+      if (dose.isNotEmpty) dose,
+      if (frequency.isNotEmpty) frequency.toLowerCase(),
+      if (timing.isNotEmpty) timing.toLowerCase(),
+      if (duration != null && duration!.isNotEmpty)
+        'for $duration $durationUnit',
+    ];
+    return parts.join(' ');
+  }
 
   factory PrescriptionItem.fromJson(Map<String, dynamic> json) =>
       PrescriptionItem(
+        id: int.tryParse(json['id']?.toString() ?? ''),
+        medicineId: json['medicine_id']?.toString(),
         name: json['name'] as String? ?? '',
+        genericName: json['generic_name'] as String? ?? '',
+        strength: json['strength'] as String? ?? '',
+        dosageForm: json['dosage_form'] as String? ?? '',
+        dose: json['dose'] as String? ?? '',
+        frequency: json['frequency'] as String? ?? '',
+        duration: json['duration']?.toString(),
+        durationUnit: json['duration_unit'] as String? ?? 'days',
+        route: json['route'] as String? ?? '',
+        timing: json['timing'] as String? ?? '',
+        instructions: json['instructions'] as String? ?? '',
+        displayOrder: int.tryParse(json['display_order']?.toString() ?? '') ?? 0,
         category: json['category'] as String? ?? 'Tablet',
         dosage: (json['dosage'] ?? '').toString(),
         unit: json['unit'] as String? ?? 'mg',
-        morning: json['morning'] as int? ?? 0,
-        afternoon: json['afternoon'] as int? ?? 0,
-        night: json['night'] as int? ?? 0,
-        days: json['days'] as int? ?? 5,
-        instructions: json['instructions'] as String? ?? '',
+        morning: int.tryParse(json['morning']?.toString() ?? '') ?? 0,
+        afternoon: int.tryParse(json['afternoon']?.toString() ?? '') ?? 0,
+        night: int.tryParse(json['night']?.toString() ?? '') ?? 0,
+        days: int.tryParse(json['days']?.toString() ?? '') ?? 0,
       );
 
   Map<String, dynamic> toJson() => {
@@ -250,6 +399,23 @@ class PrescriptionItem {
       };
 }
 
+/// Prescription lifecycle status.
+enum PrescriptionStatus {
+  draft('DRAFT', 'Draft'),
+  issued('ISSUED', 'Issued'),
+  cancelled('CANCELLED', 'Cancelled');
+
+  const PrescriptionStatus(this.apiValue, this.label);
+
+  final String apiValue;
+  final String label;
+
+  static PrescriptionStatus fromApi(String? value) => values.firstWhere(
+        (s) => s.apiValue == (value ?? '').toUpperCase(),
+        orElse: () => PrescriptionStatus.draft,
+      );
+}
+
 class Prescription {
   const Prescription({
     required this.id,
@@ -257,6 +423,14 @@ class Prescription {
     required this.date,
     required this.notes,
     required this.medicines,
+    this.patientId = '',
+    this.doctorId,
+    this.consultationId,
+    this.status = PrescriptionStatus.draft,
+    this.issuedAt,
+    this.createdAt,
+    this.updatedAt,
+    this.additionalInstructions = '',
   });
 
   final String id;
@@ -264,17 +438,36 @@ class Prescription {
   final String date;
   final String notes;
   final List<PrescriptionItem> medicines;
+  final String patientId;
+  final String? doctorId;
+  final String? consultationId;
+  final PrescriptionStatus status;
+  final String? issuedAt;
+  final String? createdAt;
+  final String? updatedAt;
+  final String additionalInstructions;
+
+  bool get isDraft => status == PrescriptionStatus.draft;
+  bool get isIssued => status == PrescriptionStatus.issued;
 
   factory Prescription.fromJson(Map<String, dynamic> json) => Prescription(
-        id: json['id'] as String? ?? '',
+        id: json['id']?.toString() ?? '',
+        patientId: json['patient_id'] as String? ?? '',
+        doctorId: json['doctor_id']?.toString(),
         doctorName: json['doctor_name'] as String? ?? '',
+        consultationId: json['consultation_id']?.toString(),
         date: json['date'] as String? ?? '',
         notes: json['notes'] as String? ?? '',
-        medicines: (json['medicines'] as List?)
-                ?.map((e) =>
-                    PrescriptionItem.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            const [],
+        status: PrescriptionStatus.fromApi(json['status'] as String?),
+        issuedAt: json['issued_at']?.toString(),
+        createdAt: json['created_at']?.toString(),
+        updatedAt: json['updated_at']?.toString(),
+        additionalInstructions:
+            json['additional_instructions'] as String? ?? '',
+        medicines: (json['medicines'] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => PrescriptionItem.fromJson(e.cast<String, dynamic>()))
+            .toList(),
       );
 }
 
@@ -718,10 +911,78 @@ Future<List<DoctorPatient>> fetchDoctorPatients() async {
       .toList();
 }
 
+/// Fetches the backend risk-sorted queue (waiting + consulting + summary).
+Future<QueueData> fetchDoctorQueue() async {
+  final res = await ApiClient.instance.get('/api/doctor/queue') as Map;
+  return QueueData.fromJson(res.cast<String, dynamic>());
+}
+
+/// Applies a doctor's triage override and returns the updated patient.
+Future<DoctorPatient> overridePatientTriage({
+  required String patientId,
+  required TriageBand level,
+  required String reason,
+}) async {
+  final res = await ApiClient.instance
+      .post('/api/doctor/patients/$patientId/triage/override', {
+    'triage_level': level.apiValue,
+    'reason': reason,
+    'changed_by': DoctorState.doctorName,
+  }) as Map;
+  return DoctorPatient.fromJson(
+      (res['patient'] as Map).cast<String, dynamic>());
+}
+
+/// Moves a waiting patient into an active consultation.
+Future<DoctorPatient> startPatientConsultation(String patientId) async {
+  final res = await ApiClient.instance
+      .post('/api/doctor/patients/$patientId/consultation/start', {}) as Map;
+  return DoctorPatient.fromJson(
+      (res['patient'] as Map).cast<String, dynamic>());
+}
+
+/// Marks an active consultation as completed.
+Future<DoctorPatient> completePatientConsultation(String patientId) async {
+  final res = await ApiClient.instance
+      .post('/api/doctor/patients/$patientId/consultation/complete', {}) as Map;
+  return DoctorPatient.fromJson(
+      (res['patient'] as Map).cast<String, dynamic>());
+}
+
 Future<PatientCase> fetchPatientCase(String patientId) async {
   final res = await ApiClient.instance
       .get('/api/doctor/patients/$patientId') as Map;
   return PatientCase.fromJson((res['case'] as Map).cast<String, dynamic>());
+}
+
+/// Fetches the aggregated pre-consultation case file (single request).
+Future<CaseFile> fetchCaseFile(String patientId) async {
+  final res = await ApiClient.instance
+      .get('/api/doctor/patients/$patientId/case-file') as Map;
+  return CaseFile.fromJson(
+      (res['case_file'] as Map).cast<String, dynamic>());
+}
+
+/// Regenerates the case file from the latest patient data.
+Future<CaseFile> generateCaseFile(String patientId) async {
+  final res = await ApiClient.instance
+      .post('/api/doctor/patients/$patientId/case-file/generate', {}) as Map;
+  return CaseFile.fromJson(
+      (res['case_file'] as Map).cast<String, dynamic>());
+}
+
+/// Applies the doctor's edited summary; the original AI content is preserved
+/// server-side and returned alongside.
+Future<CaseFile> updateCaseFileSummary({
+  required String patientId,
+  required String doctorSummary,
+}) async {
+  final res = await ApiClient.instance.patch(
+    '/api/doctor/patients/$patientId/case-file/summary',
+    {'doctor_summary': doctorSummary},
+  ) as Map;
+  return CaseFile.fromJson(
+      (res['case_file'] as Map).cast<String, dynamic>());
 }
 
 Future<List<DoctorAppointment>> fetchDoctorAppointments() async {
@@ -744,10 +1005,198 @@ Future<DoctorPatient?> fetchUrgentCase() async {
   return DoctorPatient.fromJson((raw as Map).cast<String, dynamic>());
 }
 
-Future<List<String>> searchMedicines(String query) async {
+/// Structured medicine search (generic name, brand, category, strength).
+Future<List<Medicine>> searchMedicines(String query) async {
   final res = await ApiClient.instance.get('/api/doctor/medicines',
       query: {'q': query}) as Map;
-  return (res['medicines'] as List? ?? const []).cast<String>();
+  return (res['medicines'] as List? ?? const [])
+      .map((e) => Medicine.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+/// Configurable common-medicine quick-select set from the backend.
+Future<List<Medicine>> fetchCommonMedicines() async {
+  final res = await ApiClient.instance
+      .get('/api/doctor/medicines/common') as Map;
+  return (res['medicines'] as List? ?? const [])
+      .map((e) => Medicine.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+/// Creates (or reopens) the patient's prescription draft.
+Future<Prescription> createPrescriptionDraft({
+  required String patientId,
+  String? consultationId,
+}) async {
+  final res = await ApiClient.instance.post('/api/doctor/prescriptions', {
+    'patient_id': patientId,
+    'consultation_id': ?consultationId,
+  }) as Map;
+  return Prescription.fromJson(
+      (res['prescription'] as Map).cast<String, dynamic>());
+}
+
+/// Recovers the patient's unfinished draft (draft recovery).
+Future<Prescription?> fetchPrescriptionDraft(String patientId) async {
+  try {
+    final res = await ApiClient.instance.get('/api/doctor/prescriptions/drafts',
+        query: {'patient_id': patientId}) as Map;
+    return Prescription.fromJson(
+        (res['prescription'] as Map).cast<String, dynamic>());
+  } on ApiException catch (e) {
+    if (e.statusCode == 404) return null;
+    rethrow;
+  }
+}
+
+/// Issued prescription history for a patient (doctor view).
+Future<List<Prescription>> fetchPrescriptionHistory(String patientId) async {
+  final res = await ApiClient.instance.get('/api/doctor/prescriptions/history',
+      query: {'patient_id': patientId}) as Map;
+  return (res['prescriptions'] as List? ?? const [])
+      .map((e) => Prescription.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+/// Adds a configured medicine to the draft; returns the prescription and any
+/// safety warnings (allergy / duplicate / interaction-unavailable).
+Future<({Prescription prescription, List<dynamic> warnings})>
+    addPrescriptionItem({
+  required String prescriptionId,
+  required String medicineId,
+  required String dose,
+  required String frequency,
+  String? duration,
+  String durationUnit = 'days',
+  required String route,
+  String? strength,
+  String? dosageForm,
+  String? timing,
+  String? instructions,
+  String? genericName,
+}) async {
+  final res = await ApiClient.instance
+      .post('/api/doctor/prescriptions/$prescriptionId/items', {
+    'medicine_id': medicineId,
+    'dose': dose,
+    'frequency': frequency,
+    'duration': duration,
+    'duration_unit': durationUnit,
+    'route': route,
+    'strength': strength,
+    'dosage_form': dosageForm,
+    'timing': timing,
+    'instructions': instructions,
+    'generic_name': genericName,
+  }) as Map;
+  return (
+    prescription: Prescription.fromJson(
+        (res['prescription'] as Map).cast<String, dynamic>()),
+    warnings: res['safety']?['warnings'] as List? ?? const [],
+  );
+}
+
+/// Updates an item on the draft.
+Future<Prescription> updatePrescriptionItem({
+  required String prescriptionId,
+  required int itemId,
+  Map<String, dynamic> fields = const {},
+}) async {
+  final res = await ApiClient.instance.patch(
+    '/api/doctor/prescriptions/$prescriptionId/items/$itemId',
+    fields,
+  ) as Map;
+  return Prescription.fromJson(
+      (res['prescription'] as Map).cast<String, dynamic>());
+}
+
+/// Removes an item from the draft.
+Future<Prescription> removePrescriptionItem({
+  required String prescriptionId,
+  required int itemId,
+}) async {
+  final res = await ApiClient.instance
+      .delete('/api/doctor/prescriptions/$prescriptionId/items/$itemId') as Map;
+  return Prescription.fromJson(
+      (res['prescription'] as Map).cast<String, dynamic>());
+}
+
+/// Autosaves the additional instructions (never issues anything).
+Future<Prescription> savePrescriptionNotes({
+  required String prescriptionId,
+  required String additionalInstructions,
+}) async {
+  final res = await ApiClient.instance.patch(
+    '/api/doctor/prescriptions/$prescriptionId/notes',
+    {'additional_instructions': additionalInstructions},
+  ) as Map;
+  return Prescription.fromJson(
+      (res['prescription'] as Map).cast<String, dynamic>());
+}
+
+/// Issues the prescription (server revalidates everything).
+Future<Prescription> issuePrescription(String prescriptionId) async {
+  final res = await ApiClient.instance
+      .post('/api/doctor/prescriptions/$prescriptionId/issue', {}) as Map;
+  return Prescription.fromJson(
+      (res['prescription'] as Map).cast<String, dynamic>());
+}
+
+/// Cancels a prescription (draft or issued) - the original record is
+/// preserved and the action is audited server-side.
+Future<Prescription> cancelPrescription(
+  String prescriptionId, {
+  required String reason,
+}) async {
+  final res = await ApiClient.instance.post(
+    '/api/doctor/prescriptions/$prescriptionId/cancel',
+    {'reason': reason},
+  ) as Map;
+  return Prescription.fromJson(
+      (res['prescription'] as Map).cast<String, dynamic>());
+}
+
+/// Downloads the issued prescription PDF as bytes (authenticated).
+Future<List<int>> downloadPrescriptionPdf(String prescriptionId) async {
+  return ApiClient.instance
+      .download('/api/doctor/prescriptions/$prescriptionId/pdf');
+}
+
+// ---------------------------------------------------------------------------
+// Local draft persistence (offline recovery - never issues anything)
+// ---------------------------------------------------------------------------
+
+/// Local draft storage is scoped per doctor + patient so a shared clinic
+/// device never exposes one doctor's draft to another user (spec: "Ensure
+/// local draft recovery does not expose prescription data to other users of
+/// the device"). The local copy is only an offline fallback - the server
+/// remains the source of truth and only the server can ISSUE.
+String _draftKey(String patientId) =>
+    'rx_draft_${DoctorState.doctorName}_$patientId';
+
+/// Stores the working draft JSON on this device only, keyed per patient.
+Future<void> saveLocalDraft(String patientId, Map<String, dynamic> json) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_draftKey(patientId), jsonEncode(json));
+}
+
+/// Loads the locally-preserved draft, if any.
+Future<Prescription?> loadLocalDraft(String patientId) async {
+  final prefs = await SharedPreferences.getInstance();
+  final raw = prefs.getString(_draftKey(patientId));
+  if (raw == null || raw.isEmpty) return null;
+  try {
+    final decoded = jsonDecode(raw);
+    return Prescription.fromJson((decoded as Map).cast<String, dynamic>());
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Clears the local draft once it has been issued or discarded.
+Future<void> clearLocalDraft(String patientId) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove(_draftKey(patientId));
 }
 
 // ---------------------------------------------------------------------------
@@ -820,8 +1269,8 @@ Future<void> markReminderDone(String reminderId, {bool done = true}) async {
 // Misc helpers
 // ---------------------------------------------------------------------------
 
-/// Debounced medicine search used by the prescription builder.
-Future<List<String>> medicineSearch(String query) async {
+/// Medicine search used by the prescription writer (structured results).
+Future<List<Medicine>> medicineSearch(String query) async {
   final q = query.trim();
   if (q.isEmpty) return const [];
   return searchMedicines(q);

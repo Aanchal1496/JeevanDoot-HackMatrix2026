@@ -207,12 +207,34 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
                           .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${prescription.medicines.length} medicine${prescription.medicines.length == 1 ? '' : 's'}',
-                      style: AppTextStyles.labelSm.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '${prescription.medicines.length} medicine${prescription.medicines.length == 1 ? '' : 's'}',
+                          style: AppTextStyles.labelSm.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'ISSUED',
+                            style: AppTextStyles.labelSm.copyWith(
+                              color: const Color(0xFF15803D),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -349,7 +371,16 @@ class _PrescriptionDetailScreen extends StatelessWidget {
                           .copyWith(color: scheme.onSurface),
                     ),
                     Text(
-                      '${item.dosage} ${item.unit} ${item.category}',
+                      item.dose.isNotEmpty
+                          ? item.doseLine
+                          : '${item.dosage} ${item.unit} ${item.category}'
+                              .replaceAll(RegExp(r'\s+'), ' ')
+                              .trim()
+                              .isEmpty
+                              ? '—'
+                              : '${item.dosage} ${item.unit} ${item.category}'
+                                  .replaceAll(RegExp(r'\s+'), ' ')
+                                  .trim(),
                       style: AppTextStyles.bodyMd
                           .copyWith(color: scheme.onSurfaceVariant),
                     ),
@@ -366,7 +397,11 @@ class _PrescriptionDetailScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  '${item.days} Days',
+                  item.days > 0
+                      ? '${item.days} Days'
+                      : (item.duration != null && item.duration!.isNotEmpty
+                          ? '${item.duration} ${item.durationUnit}'
+                          : '—'),
                   style: AppTextStyles.labelLg
                       .copyWith(color: scheme.onSecondaryContainer),
                 ),
@@ -379,33 +414,59 @@ class _PrescriptionDetailScreen extends StatelessWidget {
               color: scheme.outlineVariant.withValues(alpha: 0.3),
             ),
           ),
-          Row(
-            children: [
-              _doseCell(
-                scheme,
-                emoji: '☀️',
-                label: 'Morning',
-                value: item.morning > 0 ? '${item.morning}' : '-',
-                muted: item.morning == 0,
-              ),
-              const SizedBox(width: 8),
-              _doseCell(
-                scheme,
-                emoji: '🍽️',
-                label: 'Afternoon',
-                value: item.afternoon > 0 ? '${item.afternoon}' : '-',
-                muted: item.afternoon == 0,
-              ),
-              const SizedBox(width: 8),
-              _doseCell(
-                scheme,
-                emoji: '🌙',
-                label: 'Night',
-                value: item.night > 0 ? '${item.night}' : '-',
-                muted: item.night == 0,
-              ),
-            ],
-          ),
+          if (item.morning > 0 || item.afternoon > 0 || item.night > 0) ...[
+            Row(
+              children: [
+                _doseCell(
+                  scheme,
+                  emoji: '☀️',
+                  label: 'Morning',
+                  value: item.morning > 0 ? '${item.morning}' : '-',
+                  muted: item.morning == 0,
+                ),
+                const SizedBox(width: 8),
+                _doseCell(
+                  scheme,
+                  emoji: '🍽️',
+                  label: 'Afternoon',
+                  value: item.afternoon > 0 ? '${item.afternoon}' : '-',
+                  muted: item.afternoon == 0,
+                ),
+                const SizedBox(width: 8),
+                _doseCell(
+                  scheme,
+                  emoji: '🌙',
+                  label: 'Night',
+                  value: item.night > 0 ? '${item.night}' : '-',
+                  muted: item.night == 0,
+                ),
+              ],
+            ),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _doseCell(
+                    scheme,
+                    emoji: '💊',
+                    label: 'Dose',
+                    value: item.dose.isNotEmpty ? item.dose : '—',
+                    muted: item.dose.isEmpty,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _doseCell(
+                    scheme,
+                    emoji: '🕐',
+                    label: 'Frequency',
+                    value: item.frequency.isNotEmpty ? item.frequency : '—',
+                    muted: item.frequency.isEmpty,
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (item.instructions.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.stackSm),
             Align(
