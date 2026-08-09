@@ -109,14 +109,25 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> delete(String endpoint) async {
+Future<dynamic> delete(String endpoint,
+      {Map<String, String>? query, Duration? timeout}) async {
+    var uri = ApiConfig.path(endpoint);
+    if (query != null && query.isNotEmpty) {
+      final parts = query.entries
+          .map((e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
+          .join('&');
+      uri = '$uri?$parts';
+    }
     try {
       final res = await http
-          .delete(Uri.parse(ApiConfig.path(endpoint)), headers: _headers())
-          .timeout(_timeout);
+          .delete(Uri.parse(uri), headers: _headers())
+          .timeout(timeout ?? _timeout);
       return _decode(res);
     } on ApiException {
       rethrow;
+    } on TimeoutException {
+      throw ApiException('Request timed out. Please try again.', statusCode: 408);
     } catch (_) {
       throw ApiException('Could not reach the server. Is the backend running?');
     }

@@ -28,6 +28,7 @@ from .routers import (
     health,
     prescriptions,
     profile,
+    reminders,
     symptoms,
 )
 from .seed import seed_if_empty, seed_teleconsultation
@@ -66,6 +67,7 @@ app.include_router(doctor_prescriptions.router)
 app.include_router(case_file.router)
 app.include_router(prescriptions.router)
 app.include_router(profile.router)
+app.include_router(reminders.router)
 app.include_router(symptoms.router)
 
 
