@@ -8,6 +8,9 @@ import 'package:jeevandoot/services/api_client.dart';
 import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/services/prescription_i18n.dart';
 import 'package:jeevandoot/services/prescription_store.dart';
+import 'package:jeevandoot/services/reminder_i18n.dart';
+import 'package:jeevandoot/services/reminder_notification_service.dart';
+import 'package:jeevandoot/services/reminder_store.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -329,6 +332,7 @@ class _PrescriptionDetailScreenState extends State<PrescriptionDetailScreen> {
         enabled: true,
         time: _formatHhMm(picked.hour, picked.minute),
       );
+      await _createServerReminder(item, next.time);
       await PrescriptionLocalStore.saveReminder(_reminders, key, next);
       if (!mounted) return;
       setState(() => _reminders = {..._reminders, key: next});
@@ -341,9 +345,93 @@ class _PrescriptionDetailScreenState extends State<PrescriptionDetailScreen> {
     }
   }
 
+  /// Persists a real medicine reminder (from the prescription item) and
+  /// schedules its local notification. Doses come from the backend; a
+  /// notification is scheduled for the first upcoming dose.
+  Future<void> _createServerReminder(PrescriptionItem item, String time) async {
+    // Choose the first period the medicine is prescribed for; otherwise use
+    // the picked time with the medicine's morning/afternoon/night structure.
+    final period = item.morning > 0
+        ? 'morning'
+        : (item.afternoon > 0 ? 'afternoon' : 'night');
+    final instruction = item.instructions.isEmpty ? 'After food' : item.instructions;
+    try {
+      final granted = await ReminderNotificationService.instance.requestPermission();
+      if (!granted && mounted) {
+        final s = ReminderStrings.of(_lang);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.notificationsDisabled)),
+        );
+      }
+      final created = await createMedicineReminder(
+        medicineName: item.name,
+        prescriptionId: widget.prescription.id,
+        medicineId: item.name,
+        category: item.category,
+        dosage: item.dosage,
+        unit: item.unit,
+        quantity: item.morning + item.afternoon + item.night,
+        period: period,
+        mealInstruction: instruction,
+        time: time,
+        durationDays: item.days,
+      );
+      // Schedule local notification for the first upcoming dose.
+      final first = created.doses.firstOrNull;
+      final scheduledAt = DateTime.tryParse(first?.scheduledTime ?? '');
+      if (first != null && scheduledAt != null) {
+        final rs = ReminderStrings.of(_lang);
+        final body = rs.notificationBody
+            .replaceAll('{n}', '${created.quantity}')
+            .replaceAll('{unit}', _unitWord(item.category))
+            .replaceAll('{medicine}', created.medicineName)
+            .replaceAll('{period}', _periodName(created.period))
+            .replaceAll('{meal}', _mealLabel(created.mealInstruction));
+        await ReminderNotificationService.instance.scheduleMedicine(
+          id: _notificationId(created.id),
+          title: rs.notificationTitle,
+          body: body,
+          scheduledAt: scheduledAt,
+        );
+      }
+      // Keep a local copy for offline display + later sync.
+      final locals = await ReminderLocalStore.loadMedicineReminders();
+      final merged = [...locals.where((r) => r.id != created.id), created];
+      await ReminderLocalStore.saveMedicineReminders(merged);
+    } catch (_) {
+      // Offline — the reminder is still kept in PrescriptionLocalStore and
+      // will sync when a connection returns.
+    }
+  }
+
+  static int _notificationId(String reminderId) =>
+      reminderId.codeUnits.fold(0, (a, b) => a + b) & 0x7fffffff;
+
+  String _unitWord(String category) =>
+      ReminderStrings.of(_lang).unitFor(category);
+
+  String _periodName(String period) => switch (period) {
+        'morning' => _s.morning,
+        'afternoon' => _s.afternoon,
+        _ => _s.night,
+      };
+
+  String _mealLabel(String instruction) {
+    final i = instruction.toLowerCase();
+    if (i.contains('before')) return _s.beforeFood;
+    if (i.contains('after')) return _s.afterFood;
+    return _s.anytime;
+  }
+
   Future<void> _toggleFollowUp() async {
     final next = !_followUpSet;
     await PrescriptionLocalStore.setFollowUpReminder(next);
+    if (next) {
+      await _createServerFollowUp();
+    } else {
+      // Soft-remove locally; matching server rows are removed via the
+      // Reminders screen.
+    }
     if (!mounted) return;
     setState(() => _followUpSet = next);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -351,6 +439,44 @@ class _PrescriptionDetailScreenState extends State<PrescriptionDetailScreen> {
         content: Text(next ? _s.followUpReminderAdded : _s.followUpReminderRemoved),
       ),
     );
+  }
+
+  /// Creates a real follow-up reminder + schedules its local notification,
+  /// using the prescription's follow-up date/time and doctor.
+  Future<void> _createServerFollowUp() async {
+    final p = widget.prescription;
+    final dateIso = p.followUpDate.isEmpty
+        ? _todayIso()
+        : (DateTime.tryParse(p.followUpDate)?.toIso8601String() ??
+            p.followUpDate);
+    final time = p.followUpTime.isEmpty ? '10:00' : p.followUpTime;
+    try {
+      final created = await createFollowUpReminder(
+        followupDate: dateIso,
+        prescriptionId: p.id,
+        doctorName: p.doctorName.isEmpty ? 'Dr. Priya Sharma' : p.doctorName,
+        followupTime: time,
+      );
+      final scheduledAt = DateTime.tryParse(created.followupDate);
+      if (scheduledAt != null) {
+        final parts = time.split(':');
+        final hh = int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? 10;
+        final mm = int.tryParse(parts.length > 1 ? parts[1] : '') ?? 0;
+        final at = DateTime(scheduledAt.year, scheduledAt.month, scheduledAt.day, hh, mm);
+        final rs = ReminderStrings.of(_lang);
+        await ReminderNotificationService.instance.scheduleFollowUp(
+          id: _notificationId('fu-${created.id}'),
+          title: rs.followUpDate,
+          body: created.reason,
+          scheduledAt: at,
+        );
+      }
+      final locals = await ReminderLocalStore.loadFollowUps();
+      final merged = [...locals.where((f) => f.id != created.id), created];
+      await ReminderLocalStore.saveFollowUps(merged);
+    } catch (_) {
+      // Offline fallback handled by the local store + sync.
+    }
   }
 
   // -------------------------------------------------------------------------

@@ -166,6 +166,65 @@ class ReminderDone(BaseModel):
     done: bool = True
 
 
+# ---------------------------------------------------------------------------
+# Medicine / follow-up reminders
+# ---------------------------------------------------------------------------
+class MedicineReminderCreate(BaseModel):
+    patient_id: str
+    prescription_id: Optional[str] = None
+    medicine_id: Optional[str] = None
+    medicine_name: str
+    category: str = "Tablet"
+    dosage: str = ""
+    unit: str = "mg"
+    quantity: int = 1
+    period: str = "morning"
+    meal_instruction: str = "After food"
+    time: str = "08:00"
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    duration_days: int = 5
+    reminder_type: str = "medicine"
+    voice_enabled: bool = False
+    language: str = "hi"
+
+
+class MedicineReminderUpdate(BaseModel):
+    time: Optional[str] = None
+    period: Optional[str] = None
+    meal_instruction: Optional[str] = None
+    voice_enabled: Optional[bool] = None
+    language: Optional[str] = None
+    status: Optional[str] = None
+    end_date: Optional[str] = None
+    duration_days: Optional[int] = None
+
+
+class DoseAction(BaseModel):
+    taken_at: Optional[str] = None
+
+
+class FollowUpCreate(BaseModel):
+    patient_id: str
+    prescription_id: Optional[str] = None
+    doctor_name: str = "Dr. Priya Sharma"
+    followup_date: str
+    followup_time: str = "10:00"
+    reason: str = "Follow-up consultation"
+    voice_enabled: bool = False
+    language: str = "hi"
+
+
+class FollowUpUpdate(BaseModel):
+    followup_date: Optional[str] = None
+    followup_time: Optional[str] = None
+    reason: Optional[str] = None
+    doctor_name: Optional[str] = None
+    voice_enabled: Optional[bool] = None
+    language: Optional[str] = None
+    enabled: Optional[bool] = None
+
+
 class ApiMessage(BaseModel):
     message: str = ""
     data: Any = None

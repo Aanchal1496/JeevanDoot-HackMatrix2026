@@ -300,6 +300,158 @@ class ReminderItem {
 }
 
 // ---------------------------------------------------------------------------
+// Medicine + follow-up reminder models
+// ---------------------------------------------------------------------------
+
+/// A single scheduled dose of a medicine reminder.
+class MedicineDose {
+  const MedicineDose({
+    required this.id,
+    required this.reminderId,
+    required this.scheduledTime,
+    required this.status,
+    this.takenAt,
+  });
+
+  final String id;
+  final String reminderId;
+  final String scheduledTime;
+  final String status; // upcoming | due | taken | skipped | missed
+  final String? takenAt;
+
+  factory MedicineDose.fromJson(Map<String, dynamic> json) => MedicineDose(
+        id: json['id'] as String? ?? '',
+        reminderId: json['reminder_id'] as String? ?? '',
+        scheduledTime: json['scheduled_time'] as String? ?? '',
+        status: json['status'] as String? ?? 'upcoming',
+        takenAt: json['taken_at'] as String?,
+      );
+}
+
+/// A medicine reminder created from a prescription item.
+class MedicineReminderModel {
+  const MedicineReminderModel({
+    required this.id,
+    required this.patientId,
+    required this.medicineName,
+    this.prescriptionId,
+    this.medicineId,
+    this.category = 'Tablet',
+    this.dosage = '',
+    this.unit = 'mg',
+    this.quantity = 1,
+    this.period = 'morning',
+    this.mealInstruction = 'After food',
+    this.time = '08:00',
+    this.startDate,
+    this.endDate,
+    this.durationDays = 5,
+    this.voiceEnabled = false,
+    this.language = 'hi',
+    this.status = 'active',
+    this.doses = const [],
+  });
+
+  final String id;
+  final String patientId;
+  final String medicineName;
+  final String? prescriptionId;
+  final String? medicineId;
+  final String category;
+  final String dosage;
+  final String unit;
+  final int quantity;
+  final String period;
+  final String mealInstruction;
+  final String time;
+  final String? startDate;
+  final String? endDate;
+  final int durationDays;
+  final bool voiceEnabled;
+  final String language;
+  final String status;
+  final List<MedicineDose> doses;
+
+  /// Returns the next dose yet to be taken (upcoming/due), if any.
+  MedicineDose? get nextDose {
+    for (final d in doses) {
+      if (d.status == 'upcoming' || d.status == 'due') return d;
+    }
+    return null;
+  }
+
+  /// Whether any dose was taken today (used for the timeline "done" state).
+  bool get anyTaken => doses.any((d) => d.status == 'taken');
+
+  factory MedicineReminderModel.fromJson(Map<String, dynamic> json) =>
+      MedicineReminderModel(
+        id: json['id'] as String? ?? '',
+        patientId: json['patient_id'] as String? ?? '',
+        medicineName: json['medicine_name'] as String? ?? '',
+        prescriptionId: json['prescription_id'] as String?,
+        medicineId: json['medicine_id'] as String?,
+        category: json['category'] as String? ?? 'Tablet',
+        dosage: json['dosage'] as String? ?? '',
+        unit: json['unit'] as String? ?? 'mg',
+        quantity: json['quantity'] as int? ?? 1,
+        period: json['period'] as String? ?? 'morning',
+        mealInstruction: json['meal_instruction'] as String? ?? 'After food',
+        time: json['time'] as String? ?? '08:00',
+        startDate: json['start_date'] as String?,
+        endDate: json['end_date'] as String?,
+        durationDays: json['duration_days'] as int? ?? 5,
+        voiceEnabled: (json['voice_enabled'] as int? ?? 0) == 1,
+        language: json['language'] as String? ?? 'hi',
+        status: json['status'] as String? ?? 'active',
+        doses: (json['doses'] as List? ?? const [])
+            .map((e) =>
+                MedicineDose.fromJson((e as Map).cast<String, dynamic>()))
+            .toList(),
+      );
+}
+
+/// A follow-up visit reminder.
+class FollowUpReminderModel {
+  const FollowUpReminderModel({
+    required this.id,
+    required this.patientId,
+    required this.followupDate,
+    this.prescriptionId,
+    this.doctorName = 'Dr. Priya Sharma',
+    this.followupTime = '10:00',
+    this.reason = 'Follow-up consultation',
+    this.voiceEnabled = false,
+    this.language = 'hi',
+    this.enabled = true,
+  });
+
+  final String id;
+  final String patientId;
+  final String? prescriptionId;
+  final String doctorName;
+  final String followupDate;
+  final String followupTime;
+  final String reason;
+  final bool voiceEnabled;
+  final String language;
+  final bool enabled;
+
+  factory FollowUpReminderModel.fromJson(Map<String, dynamic> json) =>
+      FollowUpReminderModel(
+        id: json['id'] as String? ?? '',
+        patientId: json['patient_id'] as String? ?? '',
+        prescriptionId: json['prescription_id'] as String?,
+        doctorName: json['doctor_name'] as String? ?? 'Dr. Priya Sharma',
+        followupDate: json['followup_date'] as String? ?? '',
+        followupTime: json['followup_time'] as String? ?? '10:00',
+        reason: json['reason'] as String? ?? 'Follow-up consultation',
+        voiceEnabled: (json['voice_enabled'] as int? ?? 0) == 1,
+        language: json['language'] as String? ?? 'hi',
+        enabled: (json['enabled'] as int? ?? 1) == 1,
+      );
+}
+
+// ---------------------------------------------------------------------------
 // Auth session
 // ---------------------------------------------------------------------------
 
@@ -874,6 +1026,142 @@ Future<List<ReminderItem>> fetchReminders() async {
 Future<void> markReminderDone(String reminderId, {bool done = true}) async {
   await ApiClient.instance
       .post('/api/reminders/$reminderId/done', {'done': done});
+}
+
+// ---------------------------------------------------------------------------
+// Medicine + follow-up reminder API
+// ---------------------------------------------------------------------------
+
+Map<String, String> _patientQuery([String? pid]) => {
+      'patient_id': pid ?? AppState.patientId,
+    };
+
+/// Creates a medicine reminder (and its scheduled doses) from a prescription.
+Future<MedicineReminderModel> createMedicineReminder({
+  required String medicineName,
+  String? prescriptionId,
+  String? medicineId,
+  String category = 'Tablet',
+  String dosage = '',
+  String unit = 'mg',
+  int quantity = 1,
+  String period = 'morning',
+  String mealInstruction = 'After food',
+  String time = '08:00',
+  int durationDays = 5,
+  bool voiceEnabled = false,
+}) async {
+  final res = await ApiClient.instance
+      .post('/api/reminders/medicines', {
+        'patient_id': AppState.patientId,
+        'prescription_id': prescriptionId,
+        'medicine_id': medicineId,
+        'medicine_name': medicineName,
+        'category': category,
+        'dosage': dosage,
+        'unit': unit,
+        'quantity': quantity,
+        'period': period,
+        'meal_instruction': mealInstruction,
+        'time': time,
+        'duration_days': durationDays,
+        'voice_enabled': voiceEnabled,
+        'language': AppState.selectedLanguage,
+      })
+      as Map;
+  return MedicineReminderModel.fromJson(
+      (res['reminder'] as Map).cast<String, dynamic>());
+}
+
+Future<List<MedicineReminderModel>> fetchMedicineReminders() async {
+  final res = await ApiClient.instance
+      .get('/api/reminders/medicines', query: _patientQuery()) as Map;
+  return (res['reminders'] as List? ?? const [])
+      .map((e) =>
+          MedicineReminderModel.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+Future<void> updateMedicineReminder(String reminderId,
+    {bool? voiceEnabled, String? status, String? language}) async {
+  await ApiClient.instance.put(
+      '/api/reminders/medicines/$reminderId',
+      {
+        'patient_id': AppState.patientId,
+        'voice_enabled': ?voiceEnabled,
+        'status': ?status,
+        'language': ?language,
+      });
+}
+
+Future<void> deleteMedicineReminder(String reminderId) async {
+  await ApiClient.instance.delete(
+      '/api/reminders/medicines/$reminderId',
+      query: _patientQuery());
+}
+
+Future<void> markDoseTaken(String reminderId, {String? takenAt}) async {
+  await ApiClient.instance.post(
+      '/api/reminders/medicines/$reminderId/taken',
+      {
+        'patient_id': AppState.patientId,
+        'taken_at': ?takenAt,
+      });
+}
+
+Future<void> markDoseSkipped(String reminderId) async {
+  await ApiClient.instance.post(
+      '/api/reminders/medicines/$reminderId/skip',
+      _patientQuery());
+}
+
+Future<FollowUpReminderModel> createFollowUpReminder({
+  required String followupDate,
+  String? prescriptionId,
+  String doctorName = 'Dr. Priya Sharma',
+  String followupTime = '10:00',
+  String reason = 'Follow-up consultation',
+}) async {
+  final res = await ApiClient.instance
+      .post('/api/reminders/followups', {
+        'patient_id': AppState.patientId,
+        'prescription_id': prescriptionId,
+        'doctor_name': doctorName,
+        'followup_date': followupDate,
+        'followup_time': followupTime,
+        'reason': reason,
+        'language': AppState.selectedLanguage,
+      })
+      as Map;
+  return FollowUpReminderModel.fromJson(
+      (res['followup'] as Map).cast<String, dynamic>());
+}
+
+Future<List<FollowUpReminderModel>> fetchFollowUpReminders() async {
+  final res = await ApiClient.instance
+      .get('/api/reminders/followups', query: _patientQuery()) as Map;
+  return (res['followups'] as List? ?? const [])
+      .map((e) => FollowUpReminderModel.fromJson(
+          (e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+Future<void> updateFollowUpReminder(String id,
+    {bool? voiceEnabled, bool? enabled, String? language}) async {
+  await ApiClient.instance.put(
+      '/api/reminders/followups/$id',
+      {
+        'patient_id': AppState.patientId,
+        'voice_enabled': ?voiceEnabled,
+        'enabled': ?enabled,
+        'language': ?language,
+      });
+}
+
+Future<void> deleteFollowUpReminder(String id) async {
+  await ApiClient.instance.delete(
+      '/api/reminders/followups/$id',
+      query: _patientQuery());
 }
 
 // ---------------------------------------------------------------------------

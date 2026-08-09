@@ -142,6 +142,56 @@ CREATE TABLE IF NOT EXISTS reminders (
     done INTEGER DEFAULT 0
 );
 
+-- Medicine reminders created from a prescription (patient-facing).
+CREATE TABLE IF NOT EXISTS medicine_reminders (
+    id TEXT PRIMARY KEY,
+    patient_id TEXT NOT NULL,
+    prescription_id TEXT,
+    medicine_id TEXT,
+    medicine_name TEXT NOT NULL,
+    category TEXT DEFAULT 'Tablet',
+    dosage TEXT DEFAULT '',
+    unit TEXT DEFAULT 'mg',
+    quantity INTEGER DEFAULT 1,
+    period TEXT DEFAULT 'morning',
+    meal_instruction TEXT DEFAULT 'After food',
+    time TEXT DEFAULT '08:00',
+    start_date TEXT,
+    end_date TEXT,
+    duration_days INTEGER DEFAULT 5,
+    reminder_type TEXT DEFAULT 'medicine',
+    voice_enabled INTEGER DEFAULT 0,
+    language TEXT DEFAULT 'hi',
+    status TEXT DEFAULT 'active',
+    created_at TEXT,
+    updated_at TEXT
+);
+
+-- Individual dose tracking for a medicine reminder.
+CREATE TABLE IF NOT EXISTS medicine_doses (
+    id TEXT PRIMARY KEY,
+    reminder_id TEXT NOT NULL,
+    scheduled_time TEXT NOT NULL,
+    status TEXT DEFAULT 'upcoming',
+    taken_at TEXT
+);
+
+-- Follow-up visit reminders (one per prescription).
+CREATE TABLE IF NOT EXISTS followup_reminders (
+    id TEXT PRIMARY KEY,
+    patient_id TEXT NOT NULL,
+    prescription_id TEXT,
+    doctor_name TEXT,
+    followup_date TEXT,
+    followup_time TEXT DEFAULT '10:00',
+    reason TEXT DEFAULT 'Follow-up consultation',
+    voice_enabled INTEGER DEFAULT 0,
+    language TEXT DEFAULT 'hi',
+    enabled INTEGER DEFAULT 1,
+    created_at TEXT,
+    updated_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS auth_tokens (
     token TEXT PRIMARY KEY,
     role TEXT NOT NULL,

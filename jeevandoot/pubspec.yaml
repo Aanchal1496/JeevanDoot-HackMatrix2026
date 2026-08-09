@@ -41,6 +41,8 @@ dependencies:
   flutter_tts: ^4.2.5
   flutter_webrtc: ^1.6.0
   web_socket_channel: ^3.0.3
+  flutter_local_notifications: ^19.4.2
+  timezone: ^0.10.1
 
 dev_dependencies:
   flutter_test:
