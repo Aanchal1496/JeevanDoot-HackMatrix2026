@@ -1,14 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_new_prescription_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
 class DoctorPrescriptionPreviewScreen extends StatelessWidget {
-  const DoctorPrescriptionPreviewScreen({super.key, required this.patient});
+  const DoctorPrescriptionPreviewScreen({
+    super.key,
+    required this.patient,
+    this.prescription,
+  });
 
   final DoctorPatient patient;
+
+  /// The prescription just saved by the doctor. When null the screen shows
+  /// demo content (e.g. opened straight from the consultation notes flow).
+  final Prescription? prescription;
+
+  String get _date => prescription?.date.isNotEmpty == true
+      ? prescription!.date
+      : '08 Aug 2026';
+
+  List<PrescriptionItem> get _medicines =>
+      prescription?.medicines ?? const [];
+
+  String get _notes => prescription?.notes ?? '';
+
+  String _dose(PrescriptionItem m) => '${m.dosage}${m.unit}';
+
+  String _times(PrescriptionItem m) {
+    final parts = <String>[
+      if (m.morning > 0) 'M',
+      if (m.afternoon > 0) 'A',
+      if (m.night > 0) 'N',
+    ];
+    return parts.isEmpty ? '—' : parts.join(' / ');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +148,7 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                       child: _infoBlock(
                         scheme,
                         label: 'DATE',
-                        value: '08 Aug 2026',
+                        value: _date,
                       ),
                     ),
                   ],
@@ -141,18 +170,17 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.unit),
-                _medicineRow(scheme,
-                    name: 'Paracetamol',
-                    dose: '650mg',
-                    times: 'M / N'),
-                _medicineRow(scheme,
-                    name: 'Azithromycin',
-                    dose: '500mg',
-                    times: 'A'),
-                _medicineRow(scheme,
-                    name: 'Cough Syrup',
-                    dose: '10ml',
-                    times: 'M / A / N'),
+                if (_medicines.isEmpty) ...[
+                  _medicineRow(scheme,
+                      name: 'Paracetamol', dose: '650mg', times: 'M / N'),
+                  _medicineRow(scheme,
+                      name: 'Azithromycin', dose: '500mg', times: 'A'),
+                  _medicineRow(scheme,
+                      name: 'Cough Syrup', dose: '10ml', times: 'M / A / N'),
+                ] else
+                  for (final m in _medicines)
+                    _medicineRow(scheme,
+                        name: m.name, dose: _dose(m), times: _times(m)),
                 const SizedBox(height: AppSpacing.stackMd),
                 const Divider(),
                 const SizedBox(height: AppSpacing.stackMd),
@@ -165,10 +193,15 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 Text(
-                  '1. Take medicines with food. 2. Drink plenty of fluids. '
-                  '3. Follow up in 5 days if symptoms persist.',
-                  style: AppTextStyles.bodyMd
-                      .copyWith(color: scheme.onSurface, fontSize: 14, height: 1.5),
+                  _notes.isNotEmpty
+                      ? _notes
+                      : '1. Take medicines with food. 2. Drink plenty of fluids. '
+                          '3. Follow up in 5 days if symptoms persist.',
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.stackLg),
                 Row(
@@ -189,7 +222,7 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            'Dr. Priya Sharma',
+                            DoctorState.doctorName,
                             textAlign: TextAlign.center,
                             style: AppTextStyles.labelLg
                                 .copyWith(color: scheme.onSurface),

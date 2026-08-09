@@ -44,6 +44,29 @@ class DoctorPatient {
   final String waitTime;
   final String? startTime;
   final String consultType;
+
+  factory DoctorPatient.fromJson(Map<String, dynamic> json) {
+    return DoctorPatient(
+      name: json['name'] as String? ?? 'Patient',
+      id: json['id'] as String? ?? 'PT-0000',
+      age: (json['age'] ?? '').toString(),
+      gender: json['gender'] as String? ?? 'Male',
+      risk: DoctorRisk(
+        DoctorRiskLevel.values.firstWhere(
+          (l) => l.name == json['risk'],
+          orElse: () => DoctorRiskLevel.medium,
+        ),
+        json['risk_label'] as String? ??
+            (json['risk'] as String? ?? 'Medium'),
+      ),
+      symptoms: (json['symptoms'] as List?)?.cast<String>() ??
+          <String>[],
+      waitTime: json['wait_time'] as String? ?? '00 MIN WAIT',
+      startTime: json['start_time'] as String?,
+      consultType:
+          json['consult_type'] as String? ?? 'Video Consultation',
+    );
+  }
 }
 
 const List<DoctorPatient> kDoctorPatients = [
@@ -104,6 +127,26 @@ class DoctorAppointment {
   final DoctorRisk risk;
   final String consultType;
   final String? startTime;
+
+  factory DoctorAppointment.fromJson(Map<String, dynamic> json) {
+    return DoctorAppointment(
+      name: json['name'] as String? ?? 'Patient',
+      id: json['id'] as String? ?? 'APT-0000',
+      time: json['time'] as String? ?? '--:--',
+      status: json['status'] as String? ?? 'Upcoming',
+      risk: DoctorRisk(
+        DoctorRiskLevel.values.firstWhere(
+          (l) => l.name == json['risk'],
+          orElse: () => DoctorRiskLevel.medium,
+        ),
+        json['risk_label'] as String? ??
+            (json['risk'] as String? ?? 'Medium'),
+      ),
+      consultType:
+          json['consult_type'] as String? ?? 'Video Consultation',
+      startTime: json['start_time'] as String?,
+    );
+  }
 }
 
 const List<DoctorAppointment> kDoctorAppointments = [

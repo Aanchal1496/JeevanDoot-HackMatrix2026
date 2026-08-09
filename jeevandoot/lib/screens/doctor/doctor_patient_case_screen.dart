@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_pre_check_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_referral_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -17,6 +18,23 @@ class DoctorPatientCaseScreen extends StatefulWidget {
 
 class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
   final Set<int> _expanded = {};
+  PatientCase? _case;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final caseData = await fetchPatientCase(widget.patient.id);
+      if (!mounted) return;
+      setState(() => _case = caseData);
+    } catch (_) {
+      // Fall back to the header-only patient data when offline.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -266,7 +284,9 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
               border: Border(left: BorderSide(color: scheme.error, width: 4)),
             ),
             child: Text(
-              'Summary: Patient-reported symptoms indicate that urgent clinical evaluation may be appropriate.',
+              _case?.aiSummary.isNotEmpty ?? false
+                  ? _case!.aiSummary
+                  : 'Summary: Patient-reported symptoms indicate that urgent clinical evaluation may be appropriate.',
               style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurface, fontSize: 14),
             ),
           ),
@@ -292,11 +312,12 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
   }
 
   Widget _vitalsCard(ColorScheme scheme) {
+    final v = _case?.vitals ?? const {};
     final vitals = [
-      (icon: Icons.device_thermostat, label: 'Temp', value: '38.7', unit: '°C', color: scheme.tertiary, alert: false),
-      (icon: Icons.favorite, label: 'HR', value: '102', unit: 'bpm', color: scheme.tertiary, alert: false),
-      (icon: Icons.air, label: 'SpO2', value: '94', unit: '%', color: scheme.onErrorContainer, alert: true),
-      (icon: Icons.bloodtype, label: 'BP', value: '138/90', unit: 'mmHg', color: scheme.primary, alert: false),
+      (icon: Icons.device_thermostat, label: 'Temp', value: v['temp'] ?? '38.7', unit: '°C', color: scheme.tertiary, alert: false),
+      (icon: Icons.favorite, label: 'HR', value: v['hr'] ?? '102', unit: 'bpm', color: scheme.tertiary, alert: false),
+      (icon: Icons.air, label: 'SpO2', value: v['spo2'] ?? '94', unit: '%', color: scheme.onErrorContainer, alert: true),
+      (icon: Icons.bloodtype, label: 'BP', value: v['bp'] ?? '138/90', unit: 'mmHg', color: scheme.primary, alert: false),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,30 +411,39 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
   }
 
   Widget _historyCard(ColorScheme scheme) {
+    final h = _case?.history ?? const {};
     final sections = [
       (
         icon: Icons.medical_information,
         color: scheme.primary,
         title: 'Previous Conditions',
-        items: ['Hypertension (Diagnosed 2018)', 'Type 2 Diabetes (Diagnosed 2020)'],
+        items: h['conditions']?.isNotEmpty == true
+            ? h['conditions']!
+            : ['Hypertension (Diagnosed 2018)', 'Type 2 Diabetes (Diagnosed 2020)'],
       ),
       (
         icon: Icons.healing,
         color: scheme.tertiary,
         title: 'Allergies',
-        items: ['Penicillin (Mild rash)', 'Dust mites'],
+        items: h['allergies']?.isNotEmpty == true
+            ? h['allergies']!
+            : ['Penicillin (Mild rash)', 'Dust mites'],
       ),
       (
         icon: Icons.medication,
         color: scheme.primary,
         title: 'Current Medications',
-        items: ['Metformin 500mg (Daily)', 'Lisinopril 10mg (Daily)'],
+        items: h['medications']?.isNotEmpty == true
+            ? h['medications']!
+            : ['Metformin 500mg (Daily)', 'Lisinopril 10mg (Daily)'],
       ),
       (
         icon: Icons.history,
         color: scheme.primary,
         title: 'Previous Consultations',
-        items: ['Routine Checkup — Dr. Sharma · 12 Oct 2023'],
+        items: h['consultations']?.isNotEmpty == true
+            ? h['consultations']!
+            : ['Routine Checkup — Dr. Sharma · 12 Oct 2023'],
       ),
     ];
     return Column(

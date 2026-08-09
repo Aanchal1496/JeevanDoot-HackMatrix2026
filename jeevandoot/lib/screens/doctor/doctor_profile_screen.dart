@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
+import 'package:jeevandoot/screens/login_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -36,6 +38,8 @@ class DoctorProfileTab extends StatelessWidget {
             _detailsCard(scheme),
             const SizedBox(height: AppSpacing.stackMd),
             _stats(scheme),
+            const SizedBox(height: AppSpacing.stackMd),
+            _logoutButton(context, scheme),
           ],
         ),
       ),
@@ -223,6 +227,61 @@ class DoctorProfileTab extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _logoutButton(BuildContext context, ColorScheme scheme) {
+    return Material(
+      color: scheme.surfaceContainerLowest,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () async {
+          await logout();
+          if (!context.mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.gutter),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: scheme.errorContainer.withValues(alpha: 0.4),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.logout, color: scheme.error, size: 20),
+              const SizedBox(width: AppSpacing.gutter),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Logout',
+                      style: AppTextStyles.headlineMd.copyWith(
+                        color: scheme.onSurface,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'Sign out of your account on this device',
+                      style: AppTextStyles.bodyMd.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: scheme.outline),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

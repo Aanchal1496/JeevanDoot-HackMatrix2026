@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -12,13 +13,53 @@ class RemindersScreen extends StatefulWidget {
 }
 
 class _RemindersScreenState extends State<RemindersScreen> {
-  final Set<String> _done = {'8am'};
+  List<ReminderItem> _reminders = const [];
+  final Set<String> _done = {};
+  bool _loading = true;
 
-  void _markDone(String id) {
-    setState(() => _done.add(id));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reminder marked as done.')),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final reminders = await fetchReminders();
+      if (!mounted) return;
+      setState(() {
+        _reminders = reminders;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  IconData _iconFor(String icon) {
+    return switch (icon) {
+      'medication' => Icons.medication,
+      'event' => Icons.event,
+      'water_drop' => Icons.water_drop,
+      _ => Icons.alarm,
+    };
+  }
+
+  bool _isDone(ReminderItem item) =>
+      _done.contains(item.id) || item.done;
+
+  Future<void> _markDone(ReminderItem item) async {
+    setState(() => _done.add(item.id));
+    try {
+      await markReminderDone(item.id, done: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reminder marked as done.')),
+      );
+    } catch (_) {
+      // Keep the local state; the server sync is best-effort.
+    }
   }
 
   void _remindLater() {
@@ -37,75 +78,65 @@ class _RemindersScreenState extends State<RemindersScreen> {
         title: 'JeevanDoot',
         onTrailing: () => openOfflineScreen(context),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.containerMargin,
-          AppSpacing.stackMd,
-          AppSpacing.containerMargin,
-          AppSpacing.stackLg,
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.containerMargin,
+            AppSpacing.stackMd,
+            AppSpacing.containerMargin,
+            AppSpacing.stackLg,
+          ),
+          children: [
+            Text(
+              'Your Reminders',
+              style: AppTextStyles.displayHeroMobile
+                  .copyWith(color: scheme.onSurface),
+            ),
+            const SizedBox(height: AppSpacing.unit),
+            Text(
+              'Stay on track with your health plan.',
+              style: AppTextStyles.bodyMd.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.stackLg),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 80),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_reminders.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 80),
+                child: Center(
+                  child: Text(
+                    'No reminders yet.',
+                    style: AppTextStyles.bodyMd
+                        .copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ),
+              )
+            else
+              for (var i = 0; i < _reminders.length; i++) ...[
+                _timelineItem(
+                  scheme,
+                  item: _reminders[i],
+                ),
+                if (i < _reminders.length - 1)
+                  const SizedBox(height: AppSpacing.stackMd),
+              ],
+          ],
         ),
-        children: [
-          Text(
-            'Your Reminders',
-            style: AppTextStyles.displayHeroMobile.copyWith(color: scheme.onSurface),
-          ),
-          const SizedBox(height: AppSpacing.unit),
-          Text(
-            'Stay on track with your health plan.',
-            style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: AppSpacing.stackLg),
-          _timelineItem(
-            scheme,
-            time: '8:00 AM',
-            active: false,
-            done: _done.contains('8am'),
-            icon: Icons.medication,
-            title: 'Paracetamol',
-            subtitle: '1 tablet • After Breakfast',
-            badge: _done.contains('8am') ? 'Taken' : null,
-          ),
-          const SizedBox(height: AppSpacing.stackMd),
-          _timelineItem(
-            scheme,
-            time: '10:00 AM',
-            active: true,
-            done: _done.contains('10am'),
-            icon: Icons.event,
-            title: 'Doctor Follow-up',
-            subtitle: 'August 13 • Dr. Sharma Clinic',
-            actions: true,
-            onDone: () => _markDone('10am'),
-            onLater: _remindLater,
-          ),
-          const SizedBox(height: AppSpacing.stackMd),
-          _timelineItem(
-            scheme,
-            time: '2:00 PM',
-            active: false,
-            done: false,
-            icon: Icons.water_drop,
-            title: 'Hydration Goal',
-            subtitle: 'Drink 2 glasses of water',
-          ),
-        ],
       ),
     );
   }
 
-  Widget _timelineItem(
-    ColorScheme scheme, {
-    required String time,
-    required bool active,
-    required bool done,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    String? badge,
-    bool actions = false,
-    VoidCallback? onDone,
-    VoidCallback? onLater,
-  }) {
+  Widget _timelineItem(ColorScheme scheme, {required ReminderItem item}) {
+    final done = _isDone(item);
+    final active = item.active && !done;
+    final icon = _iconFor(item.icon);
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,7 +148,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    time,
+                    item.time,
                     style: AppTextStyles.labelLg.copyWith(
                       color: active ? scheme.primary : scheme.onSurfaceVariant,
                       fontWeight: active ? FontWeight.bold : FontWeight.w600,
@@ -131,7 +162,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
                   decoration: BoxDecoration(
                     color: active
                         ? scheme.primaryContainer
-                        : (done ? scheme.primary : scheme.surfaceContainerHighest),
+                        : (done
+                            ? scheme.primary
+                            : scheme.surfaceContainerHighest),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: scheme.surface,
@@ -191,26 +224,27 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              title,
+                              item.title,
                               style: AppTextStyles.headlineMd
                                   .copyWith(color: scheme.onSurface),
                             ),
                             Text(
-                              subtitle,
+                              item.subtitle,
                               style: AppTextStyles.bodyMd
                                   .copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
                         ),
                       ),
-                      if (badge != null)
+                      if (done)
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.primaryContainer.withValues(alpha: 0.2),
+                            color:
+                                scheme.primaryContainer.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Row(
@@ -223,7 +257,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                badge,
+                                'Taken',
                                 style: AppTextStyles.labelLg
                                     .copyWith(color: scheme.primary),
                               ),
@@ -232,7 +266,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         ),
                     ],
                   ),
-                  if (actions) ...[
+                  if (active) ...[
                     const SizedBox(height: AppSpacing.stackMd),
                     Row(
                       children: [
@@ -241,7 +275,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             label: 'Mark as Done',
                             icon: Icons.check,
                             height: 48,
-                            onPressed: done ? null : onDone,
+                            onPressed: () => _markDone(item),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.unit),
@@ -251,7 +285,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             height: 48,
                             backgroundColor: scheme.surfaceContainerHigh,
                             foregroundColor: scheme.onSurface,
-                            onPressed: onLater,
+                            onPressed: _remindLater,
                           ),
                         ),
                       ],

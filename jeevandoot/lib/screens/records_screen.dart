@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
 import 'package:jeevandoot/screens/prescription_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -34,38 +35,47 @@ class RecordsTab extends StatefulWidget {
 
 class _RecordsTabState extends State<RecordsTab> {
   String _filter = 'All Visits';
+  List<_RecordEvent> _events = const [];
+  bool _loading = true;
 
   static const List<String> _filters = ['All Visits', 'Prescriptions', 'Reports'];
 
-  static const List<_RecordEvent> _events = [
-    _RecordEvent(
-      date: 'August 10, 2023',
-      type: 'Consultation',
-      title: 'Consultation',
-      detail: 'Dr. Priya Sharma',
-      icon: Icons.medical_services,
-      iconBg: AppColors.primaryContainer,
-      iconColor: AppColors.onPrimaryContainer,
-    ),
-    _RecordEvent(
-      date: 'August 05, 2023',
-      type: 'Prescription',
-      title: 'Prescription',
-      detail: 'Paracetamol 500mg',
-      icon: Icons.medication,
-      iconBg: AppColors.tertiaryContainer,
-      iconColor: AppColors.onTertiaryContainer,
-    ),
-    _RecordEvent(
-      date: 'July 28, 2023',
-      type: 'Consultation',
-      title: 'Consultation',
-      detail: 'Dr. Amit',
-      icon: Icons.medical_services,
-      iconBg: AppColors.primaryContainer,
-      iconColor: AppColors.onPrimaryContainer,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final records = await fetchRecords();
+      if (!mounted) return;
+      setState(() {
+        _events = records.map(_recordEventFromApi).toList();
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  _RecordEvent _recordEventFromApi(RecordEvent e) {
+    final isPrescription = e.type.toLowerCase().contains('prescription');
+    return _RecordEvent(
+      date: e.date,
+      type: isPrescription ? 'Prescription' : 'Consultation',
+      title: e.title.isNotEmpty ? e.title : (isPrescription ? 'Prescription' : 'Consultation'),
+      detail: e.detail,
+      icon: isPrescription ? Icons.medication : Icons.medical_services,
+      iconBg: isPrescription
+          ? AppColors.tertiaryContainer
+          : AppColors.primaryContainer,
+      iconColor: isPrescription
+          ? AppColors.onTertiaryContainer
+          : AppColors.onPrimaryContainer,
+    );
+  }
 
   List<_RecordEvent> get _visibleEvents => _filter == 'All Visits'
       ? _events
@@ -80,15 +90,18 @@ class _RecordsTabState extends State<RecordsTab> {
         subtitle: 'My Health',
         onTrailing: () => openOfflineScreen(context),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.containerMargin),
-        children: [
-          Text(
-            'My Health',
-            style: AppTextStyles.displayHeroMobile.copyWith(
-              color: scheme.onPrimaryFixedVariant,
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(AppSpacing.containerMargin),
+          children: [
+            Text(
+              'My Health',
+              style: AppTextStyles.displayHeroMobile.copyWith(
+                color: scheme.onPrimaryFixedVariant,
+              ),
             ),
-          ),
           const SizedBox(height: AppSpacing.gutter),
           SizedBox(
             height: 40,
@@ -133,7 +146,12 @@ class _RecordsTabState extends State<RecordsTab> {
             ),
           ),
           const SizedBox(height: AppSpacing.stackMd),
-          if (_visibleEvents.isEmpty)
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 80),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_visibleEvents.isEmpty)
             Padding(
               padding: const EdgeInsets.all(AppSpacing.stackLg),
               child: Center(
@@ -145,7 +163,8 @@ class _RecordsTabState extends State<RecordsTab> {
               ),
             ),
           for (var i = 0; i < _visibleEvents.length; i++) _timelineEvent(scheme, _visibleEvents[i], i),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -147,6 +147,7 @@ class PillButton extends StatelessWidget {
     this.border,
     this.shadowColor,
     this.expanded = true,
+    this.loading = false,
   });
 
   final String label;
@@ -158,6 +159,7 @@ class PillButton extends StatelessWidget {
   final BoxBorder? border;
   final Color? shadowColor;
   final bool expanded;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +167,21 @@ class PillButton extends StatelessWidget {
     final bg = backgroundColor ?? scheme.primary;
     final fg = foregroundColor ?? scheme.onPrimary;
     final content = [
-      if (icon != null) Icon(icon, color: fg, size: 22),
+      if (loading)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.4,
+              color: fg,
+            ),
+          ),
+        )
+      else ...[
+        if (icon != null) Icon(icon, color: fg, size: 22),
+      ],
       Flexible(
         child: Text(
           label,
@@ -179,7 +195,7 @@ class PillButton extends StatelessWidget {
       color: bg,
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
-        onTap: onPressed,
+        onTap: loading ? null : onPressed,
         borderRadius: BorderRadius.circular(999),
         child: Container(
           height: height,

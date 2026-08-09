@@ -7,6 +7,7 @@ import 'package:jeevandoot/screens/doctor/doctor_new_prescription_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_patient_case_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_patient_queue_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_profile_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -46,7 +47,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   }
 }
 
-class DoctorDashboardTab extends StatelessWidget {
+class DoctorDashboardTab extends StatefulWidget {
   const DoctorDashboardTab({
     super.key,
     required this.onOpenQueue,
@@ -57,12 +58,48 @@ class DoctorDashboardTab extends StatelessWidget {
   final VoidCallback onOpenAppointments;
 
   @override
+  State<DoctorDashboardTab> createState() => _DoctorDashboardTabState();
+}
+
+class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
+  DoctorStats? _stats;
+  DoctorPatient? _urgentCase;
+  DoctorAppointment? _nextConsultation;
+  final DoctorPatient _fallbackPatient = kDoctorPatients.first;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final stats = await fetchDoctorStats();
+      final urgent = await fetchUrgentCase();
+      if (!mounted) return;
+      setState(() {
+        _stats = stats;
+        _urgentCase = urgent;
+      });
+    } catch (_) {
+      // Fall back to the seeded demo values when offline.
+    }
+    try {
+      final appointments = await fetchDoctorAppointments();
+      if (!mounted) return;
+      final next = appointments.where((a) => a.status != 'Completed').firstOrNull;
+      setState(() => _nextConsultation = next);
+    } catch (_) {}
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppTopBar(
         avatarUrl: AppAssets.doctorAvatar,
-        subtitle: 'General Physician',
+        subtitle: DoctorState.specialization,
         onTrailing: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No new notifications.')),
@@ -81,11 +118,15 @@ class DoctorDashboardTab extends StatelessWidget {
           children: [
             _greeting(scheme),
             const SizedBox(height: AppSpacing.stackMd),
-            _stats(scheme),
-            const SizedBox(height: AppSpacing.stackMd),
-            _urgentCase(context, scheme),
-            const SizedBox(height: AppSpacing.stackMd),
-            _nextConsultation(context, scheme),
+            _statsGrid(scheme),
+            if (_urgentCase != null) ...[
+              const SizedBox(height: AppSpacing.stackMd),
+              _urgentCaseCard(context, scheme),
+            ],
+            if (_nextConsultation != null) ...[
+              const SizedBox(height: AppSpacing.stackMd),
+              _nextConsultationCard(context, scheme),
+            ],
             const SizedBox(height: AppSpacing.stackMd),
             _quickActions(context, scheme),
           ],
@@ -153,12 +194,13 @@ class DoctorDashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _stats(ColorScheme scheme) {
-    final stats = [
-      (label: 'Patients', value: '12', color: scheme.onSurface),
-      (label: 'Waiting', value: '4', color: scheme.secondary),
-      (label: 'Urgent', value: '2', color: scheme.error),
-      (label: 'Completed', value: '8', color: scheme.primary),
+  Widget _statsGrid(ColorScheme scheme) {
+    final stats = _stats;
+    final rows = [
+      (label: 'Patients', value: stats?.patients ?? '0', color: scheme.onSurface),
+      (label: 'Waiting', value: stats?.waiting ?? '0', color: scheme.secondary),
+      (label: 'Urgent', value: stats?.urgent ?? '0', color: scheme.error),
+      (label: 'Completed', value: stats?.completed ?? '0', color: scheme.primary),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,9 +216,9 @@ class DoctorDashboardTab extends StatelessWidget {
         const SizedBox(height: AppSpacing.unit),
         Row(
           children: [
-            for (var i = 0; i < stats.length; i++) ...[
-              Expanded(child: _statCard(scheme, stats[i].label, stats[i].value, stats[i].color)),
-              if (i < stats.length - 1) const SizedBox(width: AppSpacing.unit),
+            for (var i = 0; i < rows.length; i++) ...[
+              Expanded(child: _statCard(scheme, rows[i].label, rows[i].value, rows[i].color)),
+              if (i < rows.length - 1) const SizedBox(width: AppSpacing.unit),
             ],
           ],
         ),
@@ -218,7 +260,9 @@ class DoctorDashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _urgentCase(BuildContext context, ColorScheme scheme) {
+  Widget _urgentCaseCard(BuildContext context, ColorScheme scheme) {
+    final patient = _urgentCase!;
+    final caseTarget = patient;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.gutter),
       decoration: BoxDecoration(
@@ -263,11 +307,11 @@ class DoctorDashboardTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.stackSm),
           Text(
-            'Rahul Kumar',
+            patient.name,
             style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
           ),
           Text(
-            '54 · Male',
+            '${patient.age} · ${patient.gender}',
             style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.gutter),
@@ -281,7 +325,7 @@ class DoctorDashboardTab extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Breathing difficulty + chest discomfort',
+                  patient.symptoms.join(', '),
                   style: AppTextStyles.bodyMd.copyWith(
                     color: scheme.onSurface,
                     fontWeight: FontWeight.w600,
@@ -293,7 +337,7 @@ class DoctorDashboardTab extends StatelessWidget {
                     Icon(Icons.schedule, size: 16, color: scheme.error),
                     const SizedBox(width: 4),
                     Text(
-                      'Waiting: 04 min',
+                      'Waiting: ${patient.waitTime.toLowerCase().replaceFirst(' wait', '')}',
                       style: AppTextStyles.bodyMd.copyWith(
                         color: scheme.error,
                         fontSize: 14,
@@ -315,7 +359,7 @@ class DoctorDashboardTab extends StatelessWidget {
                   onTap: () =>
                       Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) =>
-                        DoctorPatientCaseScreen(patient: kDoctorPatients.first),
+                        DoctorPatientCaseScreen(patient: caseTarget),
                   )),
                 ),
               ),
@@ -328,7 +372,7 @@ class DoctorDashboardTab extends StatelessWidget {
                   backgroundColor: scheme.error,
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) =>
-                        DoctorPatientCaseScreen(patient: kDoctorPatients.first),
+                        DoctorPatientCaseScreen(patient: caseTarget),
                   )),
                 ),
               ),
@@ -339,7 +383,8 @@ class DoctorDashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _nextConsultation(BuildContext context, ColorScheme scheme) {
+  Widget _nextConsultationCard(BuildContext context, ColorScheme scheme) {
+    final next = _nextConsultation!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -379,7 +424,7 @@ class DoctorDashboardTab extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sunita Devi',
+                          next.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.headlineMd
@@ -393,7 +438,7 @@ class DoctorDashboardTab extends StatelessWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                '5:30 PM',
+                                next.time,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTextStyles.bodyMd
@@ -428,7 +473,7 @@ class DoctorDashboardTab extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Medium Risk',
+                              next.risk.label,
                               style: AppTextStyles.labelSm.copyWith(
                                 color: const Color(0xFFB45309),
                                 fontWeight: FontWeight.w600,
@@ -448,11 +493,12 @@ class DoctorDashboardTab extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.videocam,
-                                size: 14, color: scheme.onSurfaceVariant),
+                            Icon(next.consultType.contains('Video')
+                                ? Icons.videocam
+                                : Icons.mic, size: 14, color: scheme.onSurfaceVariant),
                             const SizedBox(width: 4),
                             Text(
-                              'Video',
+                              next.consultType.contains('Video') ? 'Video' : 'Audio',
                               style: AppTextStyles.labelSm.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -471,7 +517,7 @@ class DoctorDashboardTab extends StatelessWidget {
                 filled: false,
                 textColor: scheme.secondary,
                 borderColor: scheme.secondary,
-                onTap: onOpenAppointments,
+                onTap: widget.onOpenAppointments,
               ),
             ],
           ),
@@ -481,20 +527,21 @@ class DoctorDashboardTab extends StatelessWidget {
   }
 
   Widget _quickActions(BuildContext context, ColorScheme scheme) {
+    final caseTarget = _urgentCase ?? _fallbackPatient;
     final actions = [
       (
         icon: Icons.group,
         color: scheme.primary,
         bg: scheme.primaryContainer.withValues(alpha: 0.2),
         label: 'Patients',
-        onTap: onOpenQueue,
+        onTap: widget.onOpenQueue,
       ),
       (
         icon: Icons.calendar_month,
         color: scheme.secondary,
         bg: scheme.secondaryContainer.withValues(alpha: 0.2),
         label: 'Appointments',
-        onTap: onOpenAppointments,
+        onTap: widget.onOpenAppointments,
       ),
       (
         icon: Icons.medical_services,
@@ -502,8 +549,7 @@ class DoctorDashboardTab extends StatelessWidget {
         bg: scheme.tertiaryContainer.withValues(alpha: 0.2),
         label: 'Start Consultation',
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) =>
-              DoctorPatientCaseScreen(patient: kDoctorPatients.first),
+          builder: (_) => DoctorPatientCaseScreen(patient: caseTarget),
         )),
       ),
       (
@@ -512,8 +558,7 @@ class DoctorDashboardTab extends StatelessWidget {
         bg: scheme.primaryContainer.withValues(alpha: 0.2),
         label: 'Prescriptions',
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) =>
-              DoctorNewPrescriptionScreen(patient: kDoctorPatients.first),
+          builder: (_) => DoctorNewPrescriptionScreen(patient: caseTarget),
         )),
       ),
     ];

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
 import 'package:jeevandoot/screens/language_selection_screen.dart';
+import 'package:jeevandoot/screens/login_screen.dart';
 import 'package:jeevandoot/screens/profile_settings.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -14,11 +16,36 @@ class ProfileTab extends StatefulWidget {
 }
 
 class _ProfileTabState extends State<ProfileTab> {
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  /// Hydrates [UserData] from the live profile endpoint when reachable.
+  Future<void> _load() async {
+    try {
+      await fetchProfile();
+      if (mounted) setState(() {});
+    } catch (_) {
+      // Keep the in-memory fallback profile when offline.
+    }
+  }
+
   Future<void> _open(BuildContext context, Widget screen) async {
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => screen),
     );
     if (mounted) setState(() {});
+  }
+
+  Future<void> _logout() async {
+    await logout();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -62,8 +89,77 @@ class _ProfileTabState extends State<ProfileTab> {
           _settingsGrid(scheme),
           const SizedBox(height: AppSpacing.stackLg),
           _familySection(context, scheme),
+          const SizedBox(height: AppSpacing.stackLg),
+          _logoutSection(scheme),
         ],
       ),
+    );
+  }
+
+  Widget _logoutSection(ColorScheme scheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Account',
+          style: AppTextStyles.headlineLgMobile
+              .copyWith(color: scheme.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.gutter),
+        Material(
+          color: scheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: _logout,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.gutter),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: scheme.outlineVariant.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: scheme.errorContainer.withValues(alpha: 0.4),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.logout, color: scheme.error, size: 20),
+                  ),
+                  const SizedBox(width: AppSpacing.gutter),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Logout',
+                          style: AppTextStyles.headlineMd.copyWith(
+                            color: scheme.onSurface,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          'Sign out of your account on this device',
+                          style: AppTextStyles.bodyMd.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: scheme.outline),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

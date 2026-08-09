@@ -1,9 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jeevandoot/screens/doctor/doctor_home_screen.dart';
 import 'package:jeevandoot/screens/home_screen.dart';
+import 'package:jeevandoot/services/api_client.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
@@ -22,93 +22,95 @@ class _LoginScreenState extends State<LoginScreen> {
 
   LoginRole _role = LoginRole.patient;
 
+  final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _otpControllers = List.generate(6, (_) => TextEditingController());
-  final _otpFocusNodes = List.generate(6, (_) => FocusNode());
-
-  final _doctorIdController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _doctorIdController = TextEditingController();
   bool _obscurePassword = true;
 
-  bool _otpVisible = false;
-  int _secondsRemaining = 59;
-  Timer? _timer;
+  bool _isSignUp = true;
+  bool _busy = false;
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _nameController.dispose();
     _phoneController.dispose();
-    for (final c in _otpControllers) {
-      c.dispose();
-    }
-    for (final f in _otpFocusNodes) {
-      f.dispose();
-    }
-    _doctorIdController.dispose();
     _passwordController.dispose();
+    _doctorIdController.dispose();
     super.dispose();
   }
 
-  void _startCountdown() {
-    _timer?.cancel();
-    setState(() => _secondsRemaining = 59);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
-      setState(() {
-        _secondsRemaining--;
-        if (_secondsRemaining <= 0) timer.cancel();
-      });
-    });
-  }
-
-  void _requestOtp() {
-    final phone = _phoneController.text.trim();
-    if (phone.length != 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid 10-digit mobile number.')),
-      );
-      return;
-    }
-    setState(() => _otpVisible = true);
-    _startCountdown();
-    // Autofocus the first OTP box once revealed.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _otpFocusNodes.first.requestFocus();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP sent to your mobile number.')),
-    );
-  }
-
-  void _verifyOtp() {
-    final otp = _otpControllers.map((c) => c.text).join();
-    if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the complete 6-digit OTP.')),
-      );
-      return;
-    }
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-      (route) => false,
-    );
-  }
-
-  void _doctorSignIn() {
-    final id = _doctorIdController.text.trim();
+  Future<void> _submit() async {
+    final isDoctor = _role == LoginRole.doctor;
+    final identifier = isDoctor ? _doctorIdController.text : _phoneController.text;
+    final name = _nameController.text;
     final password = _passwordController.text;
-    if (id.isEmpty || password.isEmpty) {
+    if (_isSignUp && name.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your name.')),
+      );
+      return;
+    }
+    if (!isDoctor && identifier.length != 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter your Medical ID and password.'),
+          content: Text('Please enter a valid 10-digit mobile number.'),
         ),
       );
       return;
     }
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const DoctorHomeScreen()),
-      (route) => false,
-    );
+    if (identifier.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              isDoctor ? 'Please enter your Medical ID.' : 'Please enter your mobile number.'),
+        ),
+      );
+      return;
+    }
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your password.')),
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final roleKey = isDoctor ? 'doctor' : 'patient';
+      final role = _isSignUp
+          ? await signUpLocal(
+              role: roleKey,
+              name: name,
+              phone: identifier,
+              password: password,
+            )
+          : await loginLocal(
+              role: roleKey,
+              phone: identifier,
+              password: password,
+            );
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => role == 'doctor'
+              ? const DoctorHomeScreen()
+              : const HomeScreen(),
+        ),
+        (route) => false,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Something went wrong. Please try again.')),
+      );
+    }
   }
 
   @override
@@ -146,32 +148,129 @@ class _LoginScreenState extends State<LoginScreen> {
                       AppSpacing.stackMd,
                       AppSpacing.stackMd,
                     ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _roleTabs(scheme),
-                          const SizedBox(height: AppSpacing.stackMd),
-                          if (_role == LoginRole.patient) ...[
-                            _welcomeHeader(scheme),
-                            const SizedBox(height: AppSpacing.stackLg),
-                            _phoneField(scheme),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _roleTabs(scheme),
+                        const SizedBox(height: AppSpacing.stackMd),
+                        if (_role == LoginRole.patient) ...[
+                          _welcomeHeader(scheme),
+                          const SizedBox(height: AppSpacing.stackLg),
+                          if (_isSignUp) ...[
+                            _fieldLabel(scheme, 'Full Name'),
+                            const SizedBox(height: AppSpacing.unit),
+                            _authField(
+                              scheme,
+                              controller: _nameController,
+                              icon: Icons.person_outline,
+                              hint: 'Enter your name',
+                            ),
                             const SizedBox(height: AppSpacing.stackMd),
-                            _getOtpButton(scheme),
-                            if (_otpVisible) ...[
-                              const SizedBox(height: AppSpacing.stackMd),
-                              _divider(scheme),
-                              const SizedBox(height: AppSpacing.stackMd),
-                              _otpSection(scheme),
-                              const SizedBox(height: AppSpacing.stackMd),
-                              _verifyButton(scheme),
-                              const SizedBox(height: AppSpacing.stackMd),
-                              _resendRow(scheme),
-                            ],
-                          ] else ...[
-                            _doctorForm(scheme),
                           ],
+                          _fieldLabel(scheme, 'Mobile Number'),
+                          const SizedBox(height: AppSpacing.unit),
+                          _phoneField(scheme),
+                          const SizedBox(height: AppSpacing.stackMd),
+                          _fieldLabel(scheme, 'Password'),
+                          const SizedBox(height: AppSpacing.unit),
+                          _authField(
+                            scheme,
+                            controller: _passwordController,
+                            icon: Icons.lock_outline,
+                            hint: 'Minimum 4 characters',
+                            obscure: true,
+                            obscureToggle: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
+                          ),
+                        ] else ...[
+                          _doctorHeader(scheme),
+                          const SizedBox(height: AppSpacing.stackLg),
+                          if (_isSignUp) ...[
+                            _fieldLabel(scheme, 'Full Name'),
+                            const SizedBox(height: AppSpacing.unit),
+                            _authField(
+                              scheme,
+                              controller: _nameController,
+                              icon: Icons.person_outline,
+                              hint: 'Enter your name',
+                            ),
+                            const SizedBox(height: AppSpacing.stackMd),
+                          ],
+                          _fieldLabel(scheme, 'Medical ID / Email'),
+                          const SizedBox(height: AppSpacing.unit),
+                          _authField(
+                            scheme,
+                            controller: _doctorIdController,
+                            icon: Icons.badge_outlined,
+                            hint: 'Enter ID or Email',
+                          ),
+                          const SizedBox(height: AppSpacing.stackMd),
+                          _fieldLabel(scheme, 'Password'),
+                          const SizedBox(height: AppSpacing.unit),
+                          _authField(
+                            scheme,
+                            controller: _passwordController,
+                            icon: Icons.lock_outline,
+                            hint: 'Minimum 4 characters',
+                            obscure: true,
+                            obscureToggle: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Password reset link sent.')),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: scheme.secondary,
+                                textStyle: AppTextStyles.bodyMd,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                              child: const Text('Forgot Password?'),
+                            ),
+                          ),
                         ],
-                      ),
+                        const SizedBox(height: AppSpacing.stackMd),
+                        PillButton(
+                          label: _busy
+                              ? 'Please wait…'
+                              : (_isSignUp ? 'Create Account' : 'Login'),
+                          icon: _isSignUp ? Icons.person_add : Icons.login,
+                          backgroundColor: scheme.primary,
+                          foregroundColor: scheme.onPrimary,
+                          loading: _busy,
+                          onPressed: _submit,
+                        ),
+                        const SizedBox(height: AppSpacing.stackSm),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _isSignUp
+                                  ? 'Already have an account?'
+                                  : 'New to JeevanDoot?',
+                              style: AppTextStyles.bodyMd
+                                  .copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                            TextButton(
+                              onPressed: _busy
+                                  ? null
+                                  : () => setState(
+                                      () => _isSignUp = !_isSignUp),
+                              style: TextButton.styleFrom(
+                                foregroundColor: scheme.primary,
+                                textStyle: AppTextStyles.labelLg,
+                              ),
+                              child: Text(_isSignUp ? 'Login' : 'Create Account'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -264,99 +363,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _doctorForm(ColorScheme scheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: 'Welcome, Doctor ',
-                style: AppTextStyles.displayHeroMobile
-                    .copyWith(color: scheme.onSurface),
-              ),
-              const TextSpan(text: '🩺'),
-            ],
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.unit),
-        Text(
-          'Sign in to manage your consultations and patients.',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: AppSpacing.stackLg),
-        _fieldLabel(scheme, 'Medical ID / Email'),
-        const SizedBox(height: AppSpacing.unit),
-        _doctorField(
-          scheme,
-          controller: _doctorIdController,
-          icon: Icons.badge_outlined,
-          hint: 'Enter ID or Email',
-        ),
-        const SizedBox(height: AppSpacing.stackMd),
-        _fieldLabel(scheme, 'Password'),
-        const SizedBox(height: AppSpacing.unit),
-        _doctorField(
-          scheme,
-          controller: _passwordController,
-          icon: Icons.lock_outline,
-          hint: '••••••••',
-          obscure: true,
-          obscureToggle: () =>
-              setState(() => _obscurePassword = !_obscurePassword),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Password reset link sent.')),
-              );
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: scheme.secondary,
-              textStyle: AppTextStyles.bodyMd,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-            ),
-            child: const Text('Forgot Password?'),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.stackMd),
-        PillButton(
-          label: 'Sign In',
-          icon: Icons.login,
-          backgroundColor: scheme.primary,
-          foregroundColor: scheme.onPrimary,
-          onPressed: _doctorSignIn,
-        ),
-        const SizedBox(height: AppSpacing.stackMd),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.verified_user, size: 18, color: scheme.primary),
-            const SizedBox(width: 6),
-            Text(
-              'SECURE DOCTOR ACCESS',
-              style: AppTextStyles.labelSm.copyWith(
-                color: scheme.primary,
-                letterSpacing: 1,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.unit),
-        Text(
-          'Verified medical professionals only',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.labelSm.copyWith(color: scheme.outline),
-        ),
-      ],
-    );
-  }
-
   Widget _fieldLabel(ColorScheme scheme, String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -367,13 +373,14 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _doctorField(
+  Widget _authField(
     ColorScheme scheme, {
     required TextEditingController controller,
     required IconData icon,
     required String hint,
     bool obscure = false,
     VoidCallback? obscureToggle,
+    TextInputType? keyboardType,
   }) {
     return Container(
       height: AppSpacing.touchTargetMin,
@@ -392,6 +399,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: TextField(
               controller: controller,
               obscureText: obscure,
+              keyboardType: keyboardType,
               onChanged: (_) => setState(() {}),
               style: AppTextStyles.bodyLg.copyWith(color: scheme.onSurface),
               decoration: InputDecoration(
@@ -412,6 +420,60 @@ class _LoginScreenState extends State<LoginScreen> {
                       )
                     : null,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _phoneField(ColorScheme scheme) {
+    return Container(
+      height: AppSpacing.touchTargetMin,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLow,
+              borderRadius:
+                  const BorderRadius.horizontal(left: Radius.circular(16)),
+              border: Border(
+                right: BorderSide(color: scheme.outlineVariant),
+              ),
+            ),
+            child: Text(
+              '+91',
+              style:
+                  AppTextStyles.bodyLg.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ),
+          Expanded(
+            child: TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              maxLength: 10,
+              style: AppTextStyles.bodyLg.copyWith(
+                color: scheme.onSurface,
+                letterSpacing: 1,
+              ),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                counterText: '',
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
+                hintText: 'XXXXX XXXXX',
+                hintStyle: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+              onChanged: (_) => setState(() {}),
             ),
           ),
         ],
@@ -472,9 +534,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
             child: Text(
-              'Enter your mobile number to continue.',
+              'Create an account or login to continue.',
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
+              style:
+                  AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
         ),
@@ -482,233 +545,38 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _phoneField(ColorScheme scheme) {
+  Widget _doctorHeader(ColorScheme scheme) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            'Mobile Number',
-            style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
+        Transform.translate(
+          offset: const Offset(0, -24),
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Welcome, Doctor ',
+                  style: AppTextStyles.displayHeroMobile
+                      .copyWith(color: scheme.onSurface),
+                ),
+                const TextSpan(text: '🩺'),
+              ],
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
-        const SizedBox(height: AppSpacing.unit),
-        Container(
-          height: AppSpacing.touchTargetMin,
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: scheme.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerLow,
-                  borderRadius:
-                      const BorderRadius.horizontal(left: Radius.circular(16)),
-                  border: Border(
-                    right: BorderSide(color: scheme.outlineVariant),
-                  ),
-                ),
-                child: Text(
-                  '+91',
-                  style: AppTextStyles.bodyLg.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  maxLength: 10,
-                  style: AppTextStyles.bodyLg.copyWith(
-                    color: scheme.onSurface,
-                    letterSpacing: 1,
-                  ),
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    counterText: '',
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    hintText: 'XXXXX XXXXX',
-                    hintStyle: TextStyle(color: scheme.onSurfaceVariant),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-            ],
+        Transform.translate(
+          offset: const Offset(0, -16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+            child: Text(
+              'Sign in to manage your consultations and patients.',
+              textAlign: TextAlign.center,
+              style:
+                  AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
+            ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _getOtpButton(ColorScheme scheme) {
-    return PillButton(
-      label: 'Get OTP',
-      icon: Icons.arrow_forward,
-      backgroundColor: scheme.secondaryContainer,
-      foregroundColor: scheme.onSecondaryContainer,
-      onPressed: _otpVisible ? null : _requestOtp,
-    );
-  }
-
-  Widget _divider(ColorScheme scheme) {
-    return Opacity(
-      opacity: 0.5,
-      child: Row(
-        children: [
-          Expanded(child: Divider(color: scheme.outlineVariant)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Icon(Icons.lock, size: 16, color: scheme.outlineVariant),
-          ),
-          Expanded(child: Divider(color: scheme.outlineVariant)),
-        ],
-      ),
-    );
-  }
-
-  Widget _otpSection(ColorScheme scheme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Flexible(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  'Enter 6-digit OTP',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
-                ),
-              ),
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                _secondsRemaining > 0
-                    ? '00:${_secondsRemaining.toString().padLeft(2, '0')}'
-                    : 'Resend available',
-                maxLines: 1,
-                style: AppTextStyles.bodyMd.copyWith(color: scheme.primary),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.unit),
-        Row(
-          children: [
-            for (var i = 0; i < 6; i++)
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: i < 5 ? 6 : 0),
-                  child: _otpBox(scheme, i),
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _otpBox(ColorScheme scheme, int index) {
-    return SizedBox(
-      height: 56,
-      child: TextField(
-        controller: _otpControllers[index],
-        focusNode: _otpFocusNodes[index],
-        keyboardType: TextInputType.number,
-        maxLength: 1,
-        textAlign: TextAlign.center,
-        style: AppTextStyles.headlineLg.copyWith(color: scheme.onSurface),
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        onChanged: (value) {
-          setState(() {});
-          if (value.isNotEmpty) {
-            if (index < 5) {
-              _otpFocusNodes[index + 1].requestFocus();
-            } else {
-              _otpFocusNodes[index].unfocus();
-            }
-          }
-        },
-        onTapOutside: (_) => _otpFocusNodes[index].unfocus(),
-        decoration: InputDecoration(
-          counterText: '',
-          filled: true,
-          fillColor: _otpControllers[index].text.isNotEmpty
-              ? scheme.primaryContainer.withValues(alpha: 0.1)
-              : scheme.surfaceContainerLowest,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: _otpControllers[index].text.isNotEmpty
-                  ? scheme.primary
-                  : scheme.outlineVariant,
-            ),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: _otpControllers[index].text.isNotEmpty
-                  ? scheme.primary
-                  : scheme.outlineVariant,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2),
-          ),
-          contentPadding: EdgeInsets.zero,
-        ),
-      ),
-    );
-  }
-
-  Widget _verifyButton(ColorScheme scheme) {
-    return PillButton(
-      label: 'Verify & Continue',
-      icon: Icons.verified_user,
-      backgroundColor: scheme.primary,
-      foregroundColor: scheme.onPrimary,
-      onPressed: _verifyOtp,
-    );
-  }
-
-  Widget _resendRow(ColorScheme scheme) {
-    return Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Didn't receive the code?",
-            style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
-          ),
-          TextButton(
-            onPressed: _secondsRemaining > 0 ? null : _requestOtp,
-            style: TextButton.styleFrom(
-              foregroundColor: scheme.primary,
-              textStyle: AppTextStyles.labelLg,
-            ),
-            child: const Text('Resend'),
-          ),
-        ],
-      ),
     );
   }
 }

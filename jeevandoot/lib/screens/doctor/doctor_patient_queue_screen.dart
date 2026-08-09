@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_patient_case_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -15,10 +16,32 @@ class DoctorPatientQueueTab extends StatefulWidget {
 class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
   final TextEditingController _searchController = TextEditingController();
   String _filter = 'All';
+  List<DoctorPatient> _patients = kDoctorPatients;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final patients = await fetchDoctorPatients();
+      if (!mounted) return;
+      setState(() {
+        _patients = patients;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
 
   List<DoctorPatient> get _filtered {
     final query = _searchController.text.trim().toLowerCase();
-    return kDoctorPatients.where((p) {
+    return _patients.where((p) {
       final matchesQuery =
           query.isEmpty || p.name.toLowerCase().contains(query);
       final matchesFilter = switch (_filter) {
@@ -78,18 +101,44 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
           ),
           const SizedBox(height: AppSpacing.gutter),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.containerMargin,
-                0,
-                AppSpacing.containerMargin,
-                AppSpacing.stackMd,
-              ),
-              itemCount: _filtered.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: AppSpacing.gutter),
-              itemBuilder: (context, index) =>
-                  _patientCard(context, scheme, _filtered[index]),
+            child: RefreshIndicator(
+              onRefresh: _load,
+              child: _loading
+                  ? ListView(
+                      children: const [
+                        SizedBox(height: 120),
+                        Center(child: CircularProgressIndicator()),
+                      ],
+                    )
+                  : _filtered.isEmpty
+                      ? ListView(
+                          children: [
+                            const SizedBox(height: 120),
+                            Center(
+                              child: Text(
+                                'No patients match your search.',
+                                style: AppTextStyles.bodyMd.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.containerMargin,
+                            0,
+                            AppSpacing.containerMargin,
+                            AppSpacing.stackMd,
+                          ),
+                          itemCount: _filtered.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: AppSpacing.gutter),
+                          itemBuilder: (context, index) =>
+                              _patientCard(context, scheme, _filtered[index]),
+                        ),
             ),
           ),
         ],

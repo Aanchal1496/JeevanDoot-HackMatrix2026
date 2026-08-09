@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/screens/doctor/doctor_home_screen.dart';
+import 'package:jeevandoot/screens/home_screen.dart';
 import 'package:jeevandoot/screens/language_selection_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 
 /// Launch splash shown briefly before the language selection screen.
@@ -34,6 +37,20 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _navigateAfterDelay() async {
     await Future.delayed(const Duration(milliseconds: 2200));
     if (!mounted) return;
+    final role = await sessionRole();
+    if (!mounted) return;
+    if (role != null) {
+      await restoreSession();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => role == 'doctor'
+              ? const DoctorHomeScreen()
+              : const HomeScreen(),
+        ),
+      );
+      return;
+    }
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
     );

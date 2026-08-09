@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/screens/appointment_confirmation_screen.dart';
+import 'package:jeevandoot/services/api_client.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -15,33 +17,78 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
   String _consultType = 'video';
   String _date = 'today';
   String _time = '17:30';
+  bool _busy = false;
 
   static const String _doctorImageUrl =
       'https://lh3.googleusercontent.com/aida-public/AB6AXuArT-hqVoCBioIJOGfbSVFY6f1_XJroH4snPQUuLqWGbReBDAAwOz2oQqtNlzOWCOP74xhvB7XrZbJP_JykgaXK45P49efo5L3SuNBXUUBuoD1QrBD76DWAeFcvna_p_EkXHiTpt3wdokKm8xUo4ket5WdE3fmYhUifKYQ65w2Mp7aCcwTDr3e6JV7-hAugaTIwiwerQiL8-vGw-UPygrAAT7HI1iNYcUTcK4sKrgrxDZsB1G_RheSm';
 
-  static const List<({String id, String label, int day, String month})> _dates = [
-    (id: 'today', label: 'Today', day: 10, month: 'Aug'),
-    (id: 'tomorrow', label: 'Tom', day: 11, month: 'Aug'),
-    (id: 'mon', label: 'Mon', day: 12, month: 'Aug'),
-    (id: 'tue', label: 'Tue', day: 13, month: 'Aug'),
+  static const List<SlotDate> _fallbackDates = [
+    SlotDate(id: 'today', label: 'Today', day: 10, month: 'Aug', full: '', weekday: ''),
+    SlotDate(id: 'tomorrow', label: 'Tom', day: 11, month: 'Aug', full: '', weekday: ''),
+    SlotDate(id: 'mon', label: 'Mon', day: 12, month: 'Aug', full: '', weekday: ''),
+    SlotDate(id: 'tue', label: 'Tue', day: 13, month: 'Aug', full: '', weekday: ''),
   ];
 
-  static const List<({String id, String label})> _slots = [
-    (id: '17:00', label: '5:00 PM'),
-    (id: '17:30', label: '5:30 PM'),
-    (id: '18:00', label: '6:00 PM'),
-    (id: '18:30', label: '6:30 PM'),
+  static const List<SlotTime> _fallbackSlots = [
+    SlotTime(id: '17:00', label: '5:00 PM'),
+    SlotTime(id: '17:30', label: '5:30 PM'),
+    SlotTime(id: '18:00', label: '6:00 PM'),
+    SlotTime(id: '18:30', label: '6:30 PM'),
   ];
 
-  void _confirm() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AppointmentConfirmationScreen(
-          type: _consultType,
-          time: _time,
+  List<SlotDate> _dates = _fallbackDates;
+  List<SlotTime> _slots = _fallbackSlots;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSlots();
+  }
+
+  Future<void> _loadSlots() async {
+    try {
+      final dates = await fetchSlotDates();
+      final slots = await fetchSlotTimes();
+      if (!mounted) return;
+      setState(() {
+        _dates = dates;
+        _slots = slots;
+      });
+    } catch (_) {
+      // Keep the local fallback dates/slots when offline.
+    }
+  }
+
+  Future<void> _confirm() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final appointment = await bookAppointment(
+        consultType: _consultType,
+        dateId: _date,
+        time: _time,
+      );
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => AppointmentConfirmationScreen(
+            appointment: appointment,
+          ),
         ),
-      ),
-    );
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not book the appointment. Please try again.')),
+      );
+    }
   }
 
   @override
@@ -98,8 +145,9 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               PillButton(
-                label: 'Confirm Appointment',
+                label: _busy ? 'Confirming…' : 'Confirm Appointment',
                 icon: Icons.check_circle,
+                loading: _busy,
                 onPressed: _confirm,
               ),
               const SizedBox(height: 4),
@@ -315,7 +363,7 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
     );
   }
 
-  Widget _dateChip(ColorScheme scheme, ({String id, String label, int day, String month}) date) {
+  Widget _dateChip(ColorScheme scheme, SlotDate date) {
     final selected = _date == date.id;
     return InkWell(
       onTap: () => setState(() => _date = date.id),
@@ -394,7 +442,7 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
     );
   }
 
-  Widget _slotChip(ColorScheme scheme, ({String id, String label}) slot) {
+  Widget _slotChip(ColorScheme scheme, SlotTime slot) {
     final selected = _time == slot.id;
     return Material(
       color: selected ? scheme.primary : scheme.surfaceContainerLowest,

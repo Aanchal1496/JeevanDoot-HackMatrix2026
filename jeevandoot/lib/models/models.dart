@@ -45,5 +45,7 @@ class AppState {
   static String selectedLanguage = 'hi';
   static String patientName = 'Ramesh';
   static String phone = '+91 98765 43210';
+  static String patientId = 'PT-RAMESH';
+  static String token = '';
   static bool medicineReminderTaken = false;
 }

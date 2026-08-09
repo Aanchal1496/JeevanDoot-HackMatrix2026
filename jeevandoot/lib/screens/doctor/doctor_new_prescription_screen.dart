@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
+import 'package:jeevandoot/screens/doctor/doctor_prescription_preview_screen.dart';
+import 'package:jeevandoot/services/api_client.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -18,19 +23,56 @@ class _DoctorNewPrescriptionScreenState
     extends State<DoctorNewPrescriptionScreen> {
   final TextEditingController _searchController = TextEditingController();
   final List<MedicineEntry> _medicines = [];
-  String _searchQuery = '';
+  Timer? _debounce;
+  List<String> _searchResults = const [];
   bool _showResults = false;
-
-  List<String> get _results => _searchQuery.isEmpty
-      ? []
-      : kMedicineSearchResults
-          .where((m) => m.toLowerCase().contains(_searchQuery.toLowerCase()))
-          .toList();
+  bool _searching = false;
+  bool _busy = false;
+  int _searchSeq = 0;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() {
+      _showResults = value.isNotEmpty;
+      _searching = value.isNotEmpty;
+    });
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), _search);
+  }
+
+  Future<void> _search() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = const [];
+        _searching = false;
+      });
+      return;
+    }
+    final seq = ++_searchSeq;
+    try {
+      final results = await medicineSearch(query);
+      if (!mounted || seq != _searchSeq) return;
+      setState(() {
+        _searchResults = results;
+        _searching = false;
+      });
+    } catch (_) {
+      if (!mounted || seq != _searchSeq) return;
+      // Fall back to the bundled demo medicines when offline.
+      setState(() {
+        _searchResults = kMedicineSearchResults
+            .where((m) => m.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+        _searching = false;
+      });
+    }
   }
 
   void _addMedicine(String name) {
@@ -47,7 +89,7 @@ class _DoctorNewPrescriptionScreenState
         instructions: 'After food',
       ));
       _searchController.clear();
-      _searchQuery = '';
+      _searchResults = const [];
       _showResults = false;
     });
     FocusScope.of(context).unfocus();
@@ -72,6 +114,51 @@ class _DoctorNewPrescriptionScreenState
     setState(() => _medicines.removeAt(index));
   }
 
+  Future<void> _save() async {
+    if (_busy || _medicines.isEmpty) return;
+    setState(() => _busy = true);
+    try {
+      final prescription = await createPrescription(
+        patientId: widget.patient.id,
+        medicines: _medicines
+            .map((m) => PrescriptionItem(
+                  name: m.name,
+                  category: m.category,
+                  dosage: m.dosage,
+                  unit: m.unit,
+                  morning: m.morning,
+                  afternoon: m.afternoon,
+                  night: m.night,
+                  days: m.days,
+                  instructions: m.instructions,
+                ))
+            .toList(),
+        notes: 'Take after food. Drink plenty of water.',
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => DoctorPrescriptionPreviewScreen(
+            patient: widget.patient,
+            prescription: prescription,
+          ),
+        ),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Could not save the prescription. Please try again.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -90,8 +177,8 @@ class _DoctorNewPrescriptionScreenState
               children: [
                 _searchCard(scheme),
                 const SizedBox(height: AppSpacing.stackMd),
-                if (_showResults && _results.isNotEmpty) ...[
-                  for (final medicine in _results)
+                if (_showResults && _searchResults.isNotEmpty) ...[
+                  for (final medicine in _searchResults)
                     InkWell(
                       onTap: () => _addMedicine(medicine),
                       child: Container(
@@ -121,6 +208,17 @@ class _DoctorNewPrescriptionScreenState
                       ),
                     ),
                   const SizedBox(height: AppSpacing.stackSm),
+                ] else if (_showResults && _searching) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
                 ],
                 Text(
                   'ADDED MEDICINES (${_medicines.length})',
@@ -136,8 +234,8 @@ class _DoctorNewPrescriptionScreenState
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(16),
-                      border:
-                          Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                      border: Border.all(
+                          color: scheme.outlineVariant.withValues(alpha: 0.5)),
                     ),
                     child: Center(
                       child: Column(
@@ -147,8 +245,8 @@ class _DoctorNewPrescriptionScreenState
                           const SizedBox(height: AppSpacing.unit),
                           Text(
                             'Search and add medicines above',
-                            style: AppTextStyles.bodyMd
-                                .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
+                            style: AppTextStyles.bodyMd.copyWith(
+                                color: scheme.onSurfaceVariant, fontSize: 14),
                           ),
                         ],
                       ),
@@ -175,15 +273,11 @@ class _DoctorNewPrescriptionScreenState
                 ),
               ),
               child: PillButton(
-                label: 'Save Prescription',
+                label: _busy ? 'Saving…' : 'Save Prescription',
                 icon: Icons.check_circle_outline,
                 height: 48,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Prescription updated.')),
-                  );
-                },
+                loading: _busy,
+                onPressed: _save,
               ),
             ),
         ],
@@ -205,23 +299,20 @@ class _DoctorNewPrescriptionScreenState
         const SizedBox(height: AppSpacing.unit),
         TextField(
           controller: _searchController,
-          onChanged: (value) => setState(() {
-            _searchQuery = value;
-            _showResults = value.isNotEmpty;
-          }),
+          onChanged: _onSearchChanged,
           decoration: InputDecoration(
             hintText: 'Search medicine name...',
             hintStyle: AppTextStyles.bodyMd
                 .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
             prefixIcon: Icon(Icons.search, color: scheme.onSurfaceVariant),
-            suffixIcon: _searchQuery.isNotEmpty
+            suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
                     icon: Icon(Icons.close, color: scheme.onSurfaceVariant),
                     onPressed: () {
                       _searchController.clear();
                       setState(() {
-                        _searchQuery = '';
                         _showResults = false;
+                        _searchResults = const [];
                       });
                     },
                   )
@@ -319,7 +410,8 @@ class _DoctorNewPrescriptionScreenState
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
                 child: Text(
                   '${medicine.days} days',
                   style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
@@ -388,8 +480,8 @@ class _DoctorNewPrescriptionScreenState
                   child: Center(
                     child: Text(
                       '$value',
-                      style: AppTextStyles.labelLg
-                          .copyWith(color: scheme.primary, fontWeight: FontWeight.bold),
+                      style: AppTextStyles.labelLg.copyWith(
+                          color: scheme.primary, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

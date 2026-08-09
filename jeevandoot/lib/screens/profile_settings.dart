@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -81,6 +84,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       UserData.gender = _gender;
       UserData.bloodGroup = _blood;
     });
+    unawaited(_syncProfile(context, {
+      'name': UserData.name,
+      'phone': UserData.phone,
+      'age': UserData.age,
+      'gender': UserData.gender,
+      'blood_group': UserData.bloodGroup,
+    }));
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile updated.')),
@@ -217,6 +227,17 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       UserData.bloodGroup = _blood;
       _editing = false;
     });
+    unawaited(_syncProfile(context, {
+      'name': UserData.name,
+      'dob': UserData.dob,
+      'age': UserData.age,
+      'phone': UserData.phone,
+      'email': UserData.email,
+      'address': UserData.address,
+      'id_number': UserData.idNumber,
+      'gender': UserData.gender,
+      'blood_group': UserData.bloodGroup,
+    }));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Personal information updated.')),
     );
@@ -372,6 +393,14 @@ class _HealthInfoScreenState extends State<HealthInfoScreen> {
       if (_medications.text.trim().isNotEmpty) UserData.medications = _medications.text.trim();
       _editing = false;
     });
+    unawaited(_syncProfile(context, {
+      'blood_group': UserData.bloodGroup,
+      'height': UserData.height,
+      'weight': UserData.weight,
+      'allergies': UserData.allergies,
+      'chronic_conditions': UserData.chronicConditions,
+      'medications': UserData.medications,
+    }));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Health information updated.')),
     );
@@ -482,7 +511,10 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             title: 'SMS alerts',
             subtitle: 'Text messages for reports and payments',
             value: UserData.smsAlerts,
-            onChanged: (v) => setState(() => UserData.smsAlerts = v),
+            onChanged: (v) {
+              setState(() => UserData.smsAlerts = v);
+              unawaited(_syncProfile(context, {'sms_alerts': v}));
+            },
           ),
           const SizedBox(height: AppSpacing.gutter),
           _switchTile(
@@ -491,7 +523,10 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             title: 'App alerts',
             subtitle: 'In-app notifications for activity',
             value: UserData.appAlerts,
-            onChanged: (v) => setState(() => UserData.appAlerts = v),
+            onChanged: (v) {
+              setState(() => UserData.appAlerts = v);
+              unawaited(_syncProfile(context, {'app_alerts': v}));
+            },
           ),
           const SizedBox(height: AppSpacing.gutter),
           _switchTile(
@@ -500,7 +535,10 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             title: 'Email updates',
             subtitle: 'Weekly health summaries by email',
             value: UserData.emailUpdates,
-            onChanged: (v) => setState(() => UserData.emailUpdates = v),
+            onChanged: (v) {
+              setState(() => UserData.emailUpdates = v);
+              unawaited(_syncProfile(context, {'email_updates': v}));
+            },
           ),
           const SizedBox(height: AppSpacing.gutter),
           _switchTile(
@@ -509,7 +547,10 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             title: 'Reminder alerts',
             subtitle: 'Medicines and follow-up reminders',
             value: UserData.reminderAlerts,
-            onChanged: (v) => setState(() => UserData.reminderAlerts = v),
+            onChanged: (v) {
+              setState(() => UserData.reminderAlerts = v);
+              unawaited(_syncProfile(context, {'reminder_alerts': v}));
+            },
           ),
           const SizedBox(height: AppSpacing.gutter),
           _switchTile(
@@ -518,7 +559,10 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             title: 'Appointment alerts',
             subtitle: 'Booking and confirmation updates',
             value: UserData.appointmentAlerts,
-            onChanged: (v) => setState(() => UserData.appointmentAlerts = v),
+            onChanged: (v) {
+              setState(() => UserData.appointmentAlerts = v);
+              unawaited(_syncProfile(context, {'appointment_alerts': v}));
+            },
           ),
         ],
       ),
@@ -558,7 +602,10 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
             title: 'Share data with doctors',
             subtitle: 'Allow doctors to view your health records',
             value: UserData.dataSharing,
-            onChanged: (v) => setState(() => UserData.dataSharing = v),
+            onChanged: (v) {
+              setState(() => UserData.dataSharing = v);
+              unawaited(_syncProfile(context, {'data_sharing': v}));
+            },
           ),
           const SizedBox(height: AppSpacing.gutter),
           _switchTile(
@@ -567,7 +614,10 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
             title: 'App lock',
             subtitle: 'Require a PIN to open JeevanDoot',
             value: UserData.appLock,
-            onChanged: (v) => setState(() => UserData.appLock = v),
+            onChanged: (v) {
+              setState(() => UserData.appLock = v);
+              unawaited(_syncProfile(context, {'app_lock': v}));
+            },
           ),
           const SizedBox(height: AppSpacing.gutter),
           _switchTile(
@@ -576,7 +626,10 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
             title: 'Biometric unlock',
             subtitle: 'Use fingerprint or face to unlock',
             value: UserData.biometricLock,
-            onChanged: (v) => setState(() => UserData.biometricLock = v),
+            onChanged: (v) {
+              setState(() => UserData.biometricLock = v);
+              unawaited(_syncProfile(context, {'biometric_lock': v}));
+            },
           ),
           const SizedBox(height: AppSpacing.gutter),
           _switchTile(
@@ -585,7 +638,10 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
             title: 'Share health reports',
             subtitle: 'Share reports with family members',
             value: UserData.shareHealthReports,
-            onChanged: (v) => setState(() => UserData.shareHealthReports = v),
+            onChanged: (v) {
+              setState(() => UserData.shareHealthReports = v);
+              unawaited(_syncProfile(context, {'share_health_reports': v}));
+            },
           ),
           const SizedBox(height: AppSpacing.gutter),
           _switchTile(
@@ -594,7 +650,10 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
             title: 'Marketing updates',
             subtitle: 'Health tips and promotional messages',
             value: UserData.marketingUpdates,
-            onChanged: (v) => setState(() => UserData.marketingUpdates = v),
+            onChanged: (v) {
+              setState(() => UserData.marketingUpdates = v);
+              unawaited(_syncProfile(context, {'marketing_updates': v}));
+            },
           ),
         ],
       ),
@@ -786,4 +845,22 @@ Widget _switchTile(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   );
+}
+
+/// Best-effort sync of the in-memory profile to the backend. Local edits
+/// always win; failures are surfaced quietly so the user is not blocked.
+Future<void> _syncProfile(
+    BuildContext context, Map<String, dynamic> updates) async {
+  try {
+    await updateProfile(updates);
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Could not sync with the server. Changes kept locally.'),
+        ),
+      );
+    }
+  }
 }

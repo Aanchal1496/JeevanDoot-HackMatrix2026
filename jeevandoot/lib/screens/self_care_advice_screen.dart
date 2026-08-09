@@ -1,15 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/screens/book_consultation_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
-class SelfCareAdviceScreen extends StatelessWidget {
+class SelfCareAdviceScreen extends StatefulWidget {
   const SelfCareAdviceScreen({super.key});
+
+  @override
+  State<SelfCareAdviceScreen> createState() => _SelfCareAdviceScreenState();
+}
+
+class _SelfCareAdviceScreenState extends State<SelfCareAdviceScreen> {
+  List<AdviceItem>? _advice;
+
+  static const List<AdviceItem> _fallback = [
+    AdviceItem(
+      title: 'Hydration',
+      body:
+          'Drink enough water. Keep a bottle nearby and take small sips regularly throughout the day.',
+    ),
+    AdviceItem(
+      title: 'Rest',
+      body:
+          'Get plenty of rest. Allow your body the time it needs to heal in a quiet, comfortable space.',
+    ),
+    AdviceItem(
+      title: 'Monitor',
+      body:
+          'Keep track of your temperature. Note any changes and record them in your daily log.',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final advice = await fetchSelfCare();
+      if (!mounted) return;
+      setState(() => _advice = advice);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _advice = _fallback);
+    }
+  }
+
+  IconData _iconFor(String title) {
+    final t = title.toLowerCase();
+    if (t.contains('water') || t.contains('hydrat')) {
+      return Icons.water_drop;
+    }
+    if (t.contains('rest') || t.contains('sleep')) {
+      return Icons.bedtime;
+    }
+    if (t.contains('monitor') || t.contains('track') || t.contains('temper')) {
+      return Icons.thermostat;
+    }
+    if (t.contains('medic')) {
+      return Icons.medication_outlined;
+    }
+    if (t.contains('doctor') || t.contains('consult') || t.contains('book')) {
+      return Icons.medical_services;
+    }
+    return Icons.health_and_safety;
+  }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final advice = _advice ?? _fallback;
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
@@ -35,26 +99,15 @@ class SelfCareAdviceScreen extends StatelessWidget {
               style: AppTextStyles.bodyLg.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.stackMd),
-            const _AdviceCard(
-              title: 'Hydration',
-              icon: Icons.water_drop,
-              body:
-                  'Drink enough water. Keep a bottle nearby and take small sips regularly throughout the day.',
-            ),
-            const SizedBox(height: AppSpacing.gutter),
-            const _AdviceCard(
-              title: 'Rest',
-              icon: Icons.bedtime,
-              body:
-                  'Get plenty of rest. Allow your body the time it needs to heal in a quiet, comfortable space.',
-            ),
-            const SizedBox(height: AppSpacing.gutter),
-            const _AdviceCard(
-              title: 'Monitor',
-              icon: Icons.thermostat,
-              body:
-                  'Keep track of your temperature. Note any changes and record them in your daily log.',
-            ),
+            for (final item in advice) ...[
+              _AdviceCard(
+                title: item.title,
+                icon: _iconFor(item.title),
+                body: item.body,
+              ),
+              if (item != advice.last)
+                const SizedBox(height: AppSpacing.gutter),
+            ],
             const SizedBox(height: AppSpacing.stackLg),
             Container(
               padding: const EdgeInsets.all(AppSpacing.gutter),

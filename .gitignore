@@ -1,13 +1,60 @@
-# Root-level ignores
-backend/.env
-backend/node_modules/
-backend/.venv/
+# ---------------------------------------------------------------------------
+# OS / editor cruft
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.Trash-*
 
-# Flutter local config (contains machine-specific SDK paths)
+# ---------------------------------------------------------------------------
+# IDE
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+*.iml
+
+# ---------------------------------------------------------------------------
+# Python / FastAPI backend
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.env
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local SQLite database (auto-created and seeded on startup by app/seed.py)
+backend/app/*.db
+*.db
+
+# Node (kept in case the backend ever uses npm tooling)
+backend/node_modules/
+
+# ---------------------------------------------------------------------------
+# Flutter (root-level safety; jeevandoot/.gitignore already covers the rest)
+# ---------------------------------------------------------------------------
+jeevandoot/.dart_tool/
+jeevandoot/build/
+jeevandoot/.flutter-plugins
+jeevandoot/.flutter-plugins-dependencies
+jeevandoot/.packages
 jeevandoot/android/local.properties
 jeevandoot/ios/Flutter/Generated.xcconfig
 jeevandoot/ios/Flutter/ephemeral/
 jeevandoot/ios/Flutter/flutter_export_environment.sh
+jeevandoot/ios/Flutter/.last_build_id
 jeevandoot/macos/Flutter/ephemeral/
 jeevandoot/linux/flutter/ephemeral/
 jeevandoot/windows/flutter/ephemeral/
+
+# ---------------------------------------------------------------------------
+# Logs / misc
+# ---------------------------------------------------------------------------
+*.log

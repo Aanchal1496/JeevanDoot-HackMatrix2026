@@ -2,22 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/screens/home_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
 class AppointmentConfirmationScreen extends StatefulWidget {
-  const AppointmentConfirmationScreen({
-    super.key,
-    this.type = 'audio',
-    this.time = '5:30 PM',
-    this.date = 'August 10, 2026',
-    this.weekday = 'Monday',
-  });
+  const AppointmentConfirmationScreen({super.key, required this.appointment});
 
-  final String type;
-  final String time;
-  final String date;
-  final String weekday;
+  final BookedAppointment appointment;
 
   @override
   State<AppointmentConfirmationScreen> createState() =>
@@ -75,7 +67,7 @@ class _AppointmentConfirmationScreenState
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isAudio = widget.type == 'audio';
+    final isAudio = widget.appointment.consultType.contains('Audio');
     return Scaffold(
       backgroundColor: scheme.surface,
       body: Stack(
@@ -220,13 +212,13 @@ class _AppointmentConfirmationScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Dr. Priya Sharma',
+                      widget.appointment.doctorName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                     ),
                     Text(
-                      'General Physician',
+                      widget.appointment.specialization,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.bodyMd.copyWith(color: scheme.primary),
@@ -240,14 +232,21 @@ class _AppointmentConfirmationScreenState
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.gutter),
             child: Divider(color: scheme.surfaceContainerHighest),
           ),
-          _detailRow(scheme, Icons.calendar_today, widget.date, widget.weekday),
+          _detailRow(
+            scheme,
+            Icons.confirmation_number,
+            widget.appointment.id,
+            'Booking reference',
+          ),
           const SizedBox(height: AppSpacing.stackSm),
-          _detailRow(scheme, Icons.schedule, widget.time, '15 min duration'),
+          _detailRow(scheme, Icons.calendar_today, widget.appointment.date, widget.appointment.weekday),
+          const SizedBox(height: AppSpacing.stackSm),
+          _detailRow(scheme, Icons.schedule, widget.appointment.time, '15 min duration'),
           const SizedBox(height: AppSpacing.stackSm),
           _detailRow(
             scheme,
             isAudio ? Icons.mic : Icons.videocam,
-            isAudio ? 'Audio Consultation' : 'Video Consultation',
+            widget.appointment.consultType,
             isAudio
                 ? 'We will call you on your registered number.'
                 : 'Join from the app at the scheduled time.',

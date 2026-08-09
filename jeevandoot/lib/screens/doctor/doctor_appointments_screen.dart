@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_patient_case_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -14,6 +15,40 @@ class DoctorAppointmentsTab extends StatefulWidget {
 
 class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
   String _tab = 'Today';
+  List<DoctorAppointment> _appointments = kDoctorAppointments;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final appointments = await fetchDoctorAppointments();
+      if (!mounted) return;
+      setState(() {
+        _appointments = appointments;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  List<DoctorAppointment> get _visible {
+    return switch (_tab) {
+      'Completed' => _appointments
+          .where((a) => a.status == 'Completed')
+          .toList(),
+      'Upcoming' => _appointments
+          .where((a) => a.status != 'Completed')
+          .toList(),
+      _ => _appointments,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,21 +89,47 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
           ),
           const SizedBox(height: AppSpacing.gutter),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.containerMargin,
-                0,
-                AppSpacing.containerMargin,
-                AppSpacing.stackMd,
-              ),
-              itemCount: kDoctorAppointments.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: AppSpacing.gutter),
-              itemBuilder: (context, index) => _appointmentCard(
-                context,
-                scheme,
-                kDoctorAppointments[index],
-              ),
+            child: RefreshIndicator(
+              onRefresh: _load,
+              child: _loading
+                  ? ListView(
+                      children: const [
+                        SizedBox(height: 120),
+                        Center(child: CircularProgressIndicator()),
+                      ],
+                    )
+                  : _visible.isEmpty
+                      ? ListView(
+                          children: [
+                            const SizedBox(height: 120),
+                            Center(
+                              child: Text(
+                                'No appointments in this view.',
+                                style: AppTextStyles.bodyMd.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.containerMargin,
+                            0,
+                            AppSpacing.containerMargin,
+                            AppSpacing.stackMd,
+                          ),
+                          itemCount: _visible.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: AppSpacing.gutter),
+                          itemBuilder: (context, index) => _appointmentCard(
+                            context,
+                            scheme,
+                            _visible[index],
+                          ),
+                        ),
             ),
           ),
         ],
@@ -98,7 +159,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                   style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
                 ),
                 Text(
-                  '5 Appointments',
+                  '${_visible.length} Appointment${_visible.length == 1 ? '' : 's'}',
                   style: AppTextStyles.bodyMd
                       .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
                 ),
@@ -152,6 +213,16 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
   Widget _appointmentCard(
       BuildContext context, ColorScheme scheme, DoctorAppointment appointment) {
     final completed = appointment.status == 'Completed';
+    final casePatient = DoctorPatient(
+      name: appointment.name,
+      id: appointment.id,
+      age: '',
+      gender: '',
+      risk: appointment.risk,
+      symptoms: const [],
+      waitTime: '00 MIN WAIT',
+      consultType: appointment.consultType,
+    );
     final riskColors = switch (appointment.risk.level) {
       DoctorRiskLevel.low => (bar: const Color(0xFF22C55E), badge: const Color(0xFFDCFCE7), text: const Color(0xFF15803D)),
       DoctorRiskLevel.medium => (bar: const Color(0xFFFACC15), badge: const Color(0xFFFEF9C3), text: const Color(0xFFA16207)),
@@ -275,7 +346,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => DoctorPatientCaseScreen(
-                            patient: kDoctorPatients.first,
+                            patient: casePatient,
                           ),
                         ),
                       ),
@@ -288,7 +359,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                         onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => DoctorPatientCaseScreen(
-                                  patient: kDoctorPatients.first,
+                                  patient: casePatient,
                                 ),
                               ),
                             )),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/triage_result_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
@@ -33,11 +34,29 @@ class _ListeningScreenState extends State<ListeningScreen>
     super.dispose();
   }
 
-  void _finish() {
-    final level = computeTriage(widget.selectedSymptoms);
+  bool _busy = false;
+
+  Future<void> _finish() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    TriageResult? result;
+    try {
+      result = await runTriage(widget.selectedSymptoms.toList());
+    } catch (_) {
+      // Fall back to the local rule engine so the flow still completes.
+      final localLevel = computeTriage(widget.selectedSymptoms);
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => TriageResultScreen(level: localLevel),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => TriageResultScreen(level: level),
+        builder: (_) => TriageResultScreen(result: result),
       ),
     );
   }
@@ -122,8 +141,9 @@ class _ListeningScreenState extends State<ListeningScreen>
             children: [
               Expanded(
                 child: PillButton(
-                  label: 'Done',
+                  label: _busy ? 'Analyzing…' : 'Done',
                   icon: Icons.check,
+                  loading: _busy,
                   onPressed: _finish,
                 ),
               ),

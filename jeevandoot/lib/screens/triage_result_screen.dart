@@ -2,25 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/book_consultation_screen.dart';
 import 'package:jeevandoot/screens/self_care_advice_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
 class TriageResultScreen extends StatelessWidget {
-  const TriageResultScreen({super.key, required this.level});
+  const TriageResultScreen({super.key, this.result, this.level});
 
-  final TriageLevel level;
+  final TriageResult? result;
+  final TriageLevel? level;
 
   @override
   Widget build(BuildContext context) {
-    switch (level) {
-      case TriageLevel.low:
-        return _LowRiskScreen();
-      case TriageLevel.consult:
-        return _ConsultRecommendedScreen();
-      case TriageLevel.urgent:
-        return _UrgentCareScreen();
-    }
+    final lvl = result?.triageLevel ?? level;
+    return switch (lvl) {
+      TriageLevel.low => _LowRiskScreen(result: result),
+      TriageLevel.consult => _ConsultRecommendedScreen(result: result),
+      TriageLevel.urgent => _UrgentCareScreen(result: result),
+      null => const SizedBox.shrink(),
+    };
   }
 }
 
@@ -28,9 +29,30 @@ class TriageResultScreen extends StatelessWidget {
 // Low Risk
 // ---------------------------------------------------------------------------
 class _LowRiskScreen extends StatelessWidget {
+  const _LowRiskScreen({this.result});
+
+  final TriageResult? result;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final advice = (result?.advice.isNotEmpty ?? false)
+        ? result!.advice
+        : const [
+            AdviceItem(
+              title: 'Stay hydrated',
+              body: 'Drink plenty of water and clear fluids.',
+            ),
+            AdviceItem(
+              title: 'Get adequate rest',
+              body: 'Allow your body time to recover and heal.',
+            ),
+            AdviceItem(
+              title: 'Monitor your temperature',
+              body:
+                  'Check your temperature twice a day and watch for changes in your symptoms.',
+            ),
+          ];
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
@@ -121,7 +143,9 @@ class _LowRiskScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 Text(
-                  "Your symptoms don't currently show signs of an emergency.",
+                  result?.summary.isNotEmpty ?? false
+                      ? result!.summary
+                      : "Your symptoms don't currently show signs of an emergency.",
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyLg.copyWith(
                     color: scheme.onSurfaceVariant,
@@ -135,26 +159,16 @@ class _LowRiskScreen extends StatelessWidget {
               style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.stackSm),
-            _adviceTile(
-              scheme,
-              icon: Icons.water_drop,
-              title: 'Stay hydrated',
-              body: 'Drink plenty of water and clear fluids.',
-            ),
-            const SizedBox(height: AppSpacing.unit),
-            _adviceTile(
-              scheme,
-              icon: Icons.bed,
-              title: 'Get adequate rest',
-              body: 'Allow your body time to recover and heal.',
-            ),
-            const SizedBox(height: AppSpacing.unit),
-            _adviceTile(
-              scheme,
-              icon: Icons.thermostat,
-              title: 'Monitor your temperature',
-              body: 'Check your temperature twice a day and watch for changes in your symptoms.',
-            ),
+            for (final item in advice) ...[
+              _adviceTile(
+                scheme,
+                icon: Icons.check_circle_outline,
+                title: item.title,
+                body: item.body,
+              ),
+              if (item != advice.last)
+                const SizedBox(height: AppSpacing.unit),
+            ],
             const SizedBox(height: AppSpacing.stackLg),
             Container(
               padding: const EdgeInsets.all(AppSpacing.gutter),
@@ -277,12 +291,30 @@ class _LowRiskScreen extends StatelessWidget {
 // Consultation Recommended
 // ---------------------------------------------------------------------------
 class _ConsultRecommendedScreen extends StatelessWidget {
+  const _ConsultRecommendedScreen({this.result});
+
+  final TriageResult? result;
+
   static const String _avatarUrl =
       'https://lh3.googleusercontent.com/aida-public/AB6AXuBjEQW8XRhQwFEG-PZEUhfbu0KqQyC23_d0yBxla-jI7jFOsvpSlLxd5Zd91mzHvfC54BNbGEb1F_k9sKUxu5LAHoQa_ocM3yaT9Q-J9ULEcWNwSm6tnBKh6U2V-QjiVqGBqw84uCED9mVj6WKCfGwOUsQUuCY5IgN5mkUwnmkQ7MEH5T9BqZ69AqDJH7CPU3OiIJQu4AzUSOZlnRzR-MzCsdOR-vr7Y4aInGejSpmdd_j9tMljS3ax';
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final reasons = (result?.reasons.isNotEmpty ?? false)
+        ? result!.reasons
+        : const [
+            AdviceItem(
+              title: 'Persistent High Fever',
+              body:
+                  'Your reported fever has lasted more than 3 days, which requires medical evaluation.',
+            ),
+            AdviceItem(
+              title: 'Mild Shortness of Breath',
+              body:
+                  'Coupled with fever, respiratory symptoms should be monitored by a healthcare professional.',
+            ),
+          ];
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
@@ -344,7 +376,9 @@ class _ConsultRecommendedScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.unit),
             Text(
-              'Some of your symptoms may need to be checked by a doctor to ensure your well-being.',
+              result?.summary.isNotEmpty ?? false
+                  ? result!.summary
+                  : 'Some of your symptoms may need to be checked by a doctor to ensure your well-being.',
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyLg.copyWith(color: scheme.onSurfaceVariant),
             ),
@@ -370,64 +404,42 @@ class _ConsultRecommendedScreen extends StatelessWidget {
               style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.stackMd),
-            SoftCard(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _factorIcon(scheme, Icons.thermostat, scheme.errorContainer, scheme.error),
-                  const SizedBox(width: AppSpacing.gutter),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Persistent High Fever',
-                          style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
-                        ),
-                        Text(
-                          'Your reported fever has lasted more than 3 days, which requires medical evaluation.',
-                          style: AppTextStyles.bodyMd.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+            for (final reason in reasons) ...[
+              SoftCard(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _factorIcon(
+                      scheme,
+                      Icons.thermostat,
+                      scheme.errorContainer,
+                      scheme.error,
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.unit),
-            SoftCard(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _factorIcon(
-                    scheme,
-                    Icons.air,
-                    scheme.tertiaryContainer.withValues(alpha: 0.2),
-                    scheme.tertiaryContainer,
-                  ),
-                  const SizedBox(width: AppSpacing.gutter),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mild Shortness of Breath',
-                          style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
-                        ),
-                        Text(
-                          'Coupled with fever, respiratory symptoms should be monitored by a healthcare professional.',
-                          style: AppTextStyles.bodyMd.copyWith(
-                            color: scheme.onSurfaceVariant,
+                    const SizedBox(width: AppSpacing.gutter),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            reason.title,
+                            style: AppTextStyles.labelLg
+                                .copyWith(color: scheme.onSurface),
                           ),
-                        ),
-                      ],
+                          Text(
+                            reason.body,
+                            style: AppTextStyles.bodyMd.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+              if (reason != reasons.last)
+                const SizedBox(height: AppSpacing.unit),
+            ],
           ],
         ),
       ),
@@ -448,6 +460,10 @@ class _ConsultRecommendedScreen extends StatelessWidget {
 // Urgent Care
 // ---------------------------------------------------------------------------
 class _UrgentCareScreen extends StatelessWidget {
+  const _UrgentCareScreen({this.result});
+
+  final TriageResult? result;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -486,7 +502,9 @@ class _UrgentCareScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 Text(
-                  'Some of your symptoms may require immediate medical care.',
+                  result?.summary.isNotEmpty ?? false
+                      ? result!.summary
+                      : 'Some of your symptoms may require immediate medical care.',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyLg.copyWith(color: scheme.onSurfaceVariant),
                 ),
