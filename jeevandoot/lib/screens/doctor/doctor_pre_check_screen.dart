@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_ai_suggested_questions_screen.dart';
-import 'package:jeevandoot/screens/doctor/doctor_video_consult_screen.dart';
+import 'package:jeevandoot/screens/consultation_hub_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -257,7 +257,7 @@ class DoctorPreCheckScreen extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (_) =>
-                            DoctorVideoConsultScreen(patient: patient),
+                            const ConsultationHubScreen(role: 'doctor'),
                       ),
                     ),
                   ),
