@@ -141,8 +141,10 @@ class _ConsultationCompletedScreenState
                     icon: Icons.edit_note,
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) =>
-                            DoctorConsultationNotesScreen(patient: patient),
+                        builder: (_) => DoctorConsultationNotesScreen(
+                          patient: patient,
+                          consultationId: widget.consultationId,
+                        ),
                       ),
                     ),
                   ),

@@ -21,6 +21,7 @@ from .routers import (
     appointments,
     auth,
     case_file,
+    consultation_notes,
     consultation_session,
     consultations,
     doctor,
@@ -62,6 +63,8 @@ app.include_router(health.router)
 app.include_router(appointments.router)
 app.include_router(consultations.router)
 app.include_router(consultation_session.router)
+app.include_router(consultation_notes.router)
+app.include_router(consultation_notes.patient_router)
 app.include_router(doctor.router)
 app.include_router(doctor_prescriptions.router)
 app.include_router(case_file.router)

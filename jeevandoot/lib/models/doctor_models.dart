@@ -540,6 +540,7 @@ const List<String> kMedicineSearchResults = [
 class DoctorState {
   DoctorState._();
 
+  static String doctorId = 'DR-PRIYA';
   static String doctorName = 'Dr. Priya Sharma';
   static String specialization = 'General Physician';
   static String registrationId = 'MCI-78945612';

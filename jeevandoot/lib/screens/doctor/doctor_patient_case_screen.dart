@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/case_file_models.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
+import 'package:jeevandoot/screens/doctor/doctor_consultation_notes_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_pre_check_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_referral_screen.dart';
 import 'package:jeevandoot/services/backend.dart';
@@ -432,6 +433,20 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.unit),
+          PillButton(
+            label: 'Write Consultation Notes',
+            icon: Icons.edit_note,
+            backgroundColor: scheme.surfaceContainerLowest,
+            foregroundColor: scheme.secondary,
+            border: Border.all(color: scheme.secondary),
+            height: 48,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => DoctorConsultationNotesScreen(patient: _patient),
+              ),
+            ),
           ),
         ],
       ),

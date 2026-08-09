@@ -312,3 +312,34 @@ class ConsultationCreate(BaseModel):
 class ConsultationEnd(BaseModel):
     duration_seconds: Optional[int] = None
     connection_quality: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Doctor documentation (consultation notes + AI summary + follow-ups)
+# ---------------------------------------------------------------------------
+class ConsultationNotesCreate(BaseModel):
+    patient_id: str
+    doctor_id: str = ""
+    doctor_name: str = ""
+    consultation_id: str = ""
+    diagnosis: str = ""
+    notes: str = ""
+    vitals: dict = {}
+    symptoms: list = []
+    ai_summary: str = ""
+
+
+class AiSummaryRequest(BaseModel):
+    patient_id: str
+    notes: str = ""
+    diagnosis: str = ""
+
+
+class FollowUpCreate(BaseModel):
+    patient_id: str
+    doctor_id: str = ""
+    doctor_name: str = ""
+    date: str
+    time: str
+    reason: str = ""
+    consult_type: str = "Video Consultation"

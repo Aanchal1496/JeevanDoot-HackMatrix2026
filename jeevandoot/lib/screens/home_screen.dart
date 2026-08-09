@@ -5,6 +5,7 @@ import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/book_consultation_screen.dart';
 import 'package:jeevandoot/screens/consultation/appointment_detail_screen.dart';
 import 'package:jeevandoot/screens/consultation/consultations_screen.dart';
+import 'package:jeevandoot/screens/consultation/patient_consultation_summary_screen.dart';
 import 'package:jeevandoot/screens/offline_screen.dart';
 import 'package:jeevandoot/screens/profile_screen.dart';
 import 'package:jeevandoot/screens/records_screen.dart';
@@ -312,13 +313,31 @@ class _HomeTabState extends State<HomeTab> {
               child: _actionCard(
                 context,
                 scheme,
+                icon: Icons.fact_check_outlined,
+                bg: scheme.surfaceContainer,
+                color: scheme.onSurface,
+                label: 'Consultation Summary',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const PatientConsultationSummaryScreen(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.gutter),
+            Expanded(
+              child: _actionCard(
+                context,
+                scheme,
                 icon: Icons.battery_saver,
                 bg: scheme.surfaceContainer,
                 color: scheme.onSurface,
                 label: 'Low-Bandwidth Consult',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const ConsultationHubScreen(role: 'patient'),
+                    builder: (_) =>
+                        const ConsultationHubScreen(role: 'patient'),
                   ),
                 ),
               ),

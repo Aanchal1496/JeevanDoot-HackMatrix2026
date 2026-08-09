@@ -360,6 +360,20 @@ CREATE TABLE IF NOT EXISTS case_file_audit_log (
     timestamp TEXT,
     metadata TEXT
 );
+
+CREATE TABLE IF NOT EXISTS consultation_notes (
+    id TEXT PRIMARY KEY,
+    patient_id TEXT NOT NULL,
+    doctor_id TEXT,
+    doctor_name TEXT,
+    consultation_id TEXT,
+    diagnosis TEXT,
+    notes TEXT,
+    vitals TEXT,
+    symptoms TEXT,
+    ai_summary TEXT,
+    created_at TEXT
+);
 """
 
 # Columns added to pre-existing tables so the teleconsultation feature works

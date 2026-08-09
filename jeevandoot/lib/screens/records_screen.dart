@@ -1,31 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
-import 'package:jeevandoot/screens/prescription_screen.dart';
+import 'package:jeevandoot/screens/timeline_event_detail_screen.dart';
 import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
-class _RecordEvent {
-  const _RecordEvent({
-    required this.date,
-    required this.type,
-    required this.title,
-    required this.detail,
-    required this.icon,
-    required this.iconBg,
-    required this.iconColor,
-  });
-
-  final String date;
-  final String type;
-  final String title;
-  final String detail;
-  final IconData icon;
-  final Color iconBg;
-  final Color iconColor;
-}
-
+/// Personal health records / visit timeline: every consultation visit,
+/// prescription and health record the patient has, newest first.
 class RecordsTab extends StatefulWidget {
   const RecordsTab({super.key});
 
@@ -35,10 +17,15 @@ class RecordsTab extends StatefulWidget {
 
 class _RecordsTabState extends State<RecordsTab> {
   String _filter = 'All Visits';
-  List<_RecordEvent> _events = const [];
+  List<TimelineEvent> _events = const [];
   bool _loading = true;
 
-  static const List<String> _filters = ['All Visits', 'Prescriptions', 'Reports'];
+  static const List<String> _filters = [
+    'All Visits',
+    'Consultations',
+    'Prescriptions',
+    'Reports',
+  ];
 
   @override
   void initState() {
@@ -47,11 +34,12 @@ class _RecordsTabState extends State<RecordsTab> {
   }
 
   Future<void> _load() async {
+    setState(() => _loading = true);
     try {
-      final records = await fetchRecords();
+      final events = await fetchTimeline();
       if (!mounted) return;
       setState(() {
-        _events = records.map(_recordEventFromApi).toList();
+        _events = events;
         _loading = false;
       });
     } catch (_) {
@@ -60,26 +48,14 @@ class _RecordsTabState extends State<RecordsTab> {
     }
   }
 
-  _RecordEvent _recordEventFromApi(RecordEvent e) {
-    final isPrescription = e.type.toLowerCase().contains('prescription');
-    return _RecordEvent(
-      date: e.date,
-      type: isPrescription ? 'Prescription' : 'Consultation',
-      title: e.title.isNotEmpty ? e.title : (isPrescription ? 'Prescription' : 'Consultation'),
-      detail: e.detail,
-      icon: isPrescription ? Icons.medication : Icons.medical_services,
-      iconBg: isPrescription
-          ? AppColors.tertiaryContainer
-          : AppColors.primaryContainer,
-      iconColor: isPrescription
-          ? AppColors.onTertiaryContainer
-          : AppColors.onPrimaryContainer,
-    );
-  }
-
-  List<_RecordEvent> get _visibleEvents => _filter == 'All Visits'
-      ? _events
-      : _events.where((e) => e.type == _filter).toList();
+  List<TimelineEvent> get _visibleEvents => switch (_filter) {
+        'Consultations' =>
+          _events.where((e) => e.isConsultation).toList(),
+        'Prescriptions' =>
+          _events.where((e) => e.isPrescription).toList(),
+        'Reports' => _events.where((e) => e.type == 'record').toList(),
+        _ => _events,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -102,75 +78,102 @@ class _RecordsTabState extends State<RecordsTab> {
                 color: scheme.onPrimaryFixedVariant,
               ),
             ),
-          const SizedBox(height: AppSpacing.gutter),
-          SizedBox(
-            height: 40,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _filters.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final filter = _filters[index];
-                final selected = _filter == filter;
-                return InkWell(
-                  onTap: () => setState(() => _filter = filter),
-                  borderRadius: BorderRadius.circular(999),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.gutter,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? scheme.primaryContainer
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(999),
-                      border: selected
-                          ? null
-                          : Border.all(color: scheme.outlineVariant),
-                    ),
-                    child: Center(
-                      child: Text(
-                        filter,
-                        style: AppTextStyles.labelLg.copyWith(
-                          color: selected
-                              ? scheme.onPrimaryContainer
-                              : scheme.onSurfaceVariant,
+            const SizedBox(height: AppSpacing.unit),
+            Text(
+              'Your personal health records & visit timeline',
+              style: AppTextStyles.bodyMd.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.gutter),
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _filters.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final filter = _filters[index];
+                  final selected = _filter == filter;
+                  return InkWell(
+                    onTap: () => setState(() => _filter = filter),
+                    borderRadius: BorderRadius.circular(999),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.gutter,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? scheme.primaryContainer
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(999),
+                        border: selected
+                            ? null
+                            : Border.all(color: scheme.outlineVariant),
+                      ),
+                      child: Center(
+                        child: Text(
+                          filter,
+                          style: AppTextStyles.labelLg.copyWith(
+                            color: selected
+                                ? scheme.onPrimaryContainer
+                                : scheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: AppSpacing.stackMd),
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 80),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_visibleEvents.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.stackLg),
-              child: Center(
-                child: Text(
-                  'No records found.',
-                  style: AppTextStyles.bodyMd
-                      .copyWith(color: scheme.onSurfaceVariant),
-                ),
+                  );
+                },
               ),
             ),
-          for (var i = 0; i < _visibleEvents.length; i++) _timelineEvent(scheme, _visibleEvents[i], i),
+            const SizedBox(height: AppSpacing.stackMd),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 80),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_visibleEvents.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.stackLg),
+                child: Column(
+                  children: [
+                    Icon(Icons.timeline, size: 40, color: scheme.outline),
+                    const SizedBox(height: AppSpacing.gutter),
+                    Text(
+                      'No records found.',
+                      style: AppTextStyles.bodyMd
+                          .copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              )
+            else
+              for (var i = 0; i < _visibleEvents.length; i++)
+                _timelineEvent(scheme, _visibleEvents[i], i),
           ],
         ),
       ),
     );
   }
 
-  Widget _timelineEvent(ColorScheme scheme, _RecordEvent event, int index) {
+  Widget _timelineEvent(ColorScheme scheme, TimelineEvent event, int index) {
     final isLast = index == _visibleEvents.length - 1;
+    final icon = event.isConsultation
+        ? Icons.medical_services
+        : (event.isPrescription ? Icons.medication : Icons.folder_outlined);
+    final iconBg = event.isConsultation
+        ? AppColors.primaryContainer
+        : (event.isPrescription
+            ? AppColors.tertiaryContainer
+            : scheme.surfaceContainerHigh);
+    final iconColor = event.isConsultation
+        ? AppColors.onPrimaryContainer
+        : (event.isPrescription
+            ? AppColors.onTertiaryContainer
+            : scheme.onSurfaceVariant);
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +184,7 @@ class _RecordsTabState extends State<RecordsTab> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: event.iconBg,
+                  color: iconBg,
                   shape: BoxShape.circle,
                   border: Border.all(color: scheme.surface, width: 4),
                   boxShadow: [
@@ -191,7 +194,7 @@ class _RecordsTabState extends State<RecordsTab> {
                     ),
                   ],
                 ),
-                child: Icon(event.icon, size: 20, color: event.iconColor),
+                child: Icon(icon, size: 20, color: iconColor),
               ),
               if (!isLast)
                 Expanded(
@@ -211,14 +214,27 @@ class _RecordsTabState extends State<RecordsTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      event.date,
-                      style: AppTextStyles.labelLg.copyWith(color: scheme.primary),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            event.date,
+                            style: AppTextStyles.labelLg
+                                .copyWith(color: scheme.primary),
+                          ),
+                        ),
+                        Text(
+                          event.type.toUpperCase(),
+                          style: AppTextStyles.labelSm
+                              .copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       event.title,
-                      style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
+                      style:
+                          AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -228,13 +244,25 @@ class _RecordsTabState extends State<RecordsTab> {
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            event.detail,
+                            event.subtitle.isNotEmpty
+                                ? event.subtitle
+                                : event.detail,
                             style: AppTextStyles.bodyMd
                                 .copyWith(color: scheme.onSurfaceVariant),
                           ),
                         ),
                       ],
                     ),
+                    if (event.subtitle.isNotEmpty && event.detail.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        event.detail,
+                        style: AppTextStyles.bodyMd.copyWith(
+                          color: scheme.onSurface,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -245,15 +273,11 @@ class _RecordsTabState extends State<RecordsTab> {
     );
   }
 
-  void _openEvent(_RecordEvent event) {
-    if (event.type == 'Prescription') {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PrescriptionScreen()),
-      );
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Opening ${event.title} with ${event.detail}...')),
+  void _openEvent(TimelineEvent event) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TimelineEventDetailScreen(event: event),
+      ),
     );
   }
 }
