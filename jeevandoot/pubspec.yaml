@@ -37,6 +37,8 @@ dependencies:
   http: ^1.2.2
   shared_preferences: ^2.3.3
   speech_to_text: ^7.4.0
+  flutter_webrtc: ^1.6.0
+  web_socket_channel: ^3.0.3
 
 dev_dependencies:
   flutter_test:

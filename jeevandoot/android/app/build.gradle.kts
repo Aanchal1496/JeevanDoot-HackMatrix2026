@@ -24,6 +24,7 @@ android {
         applicationId = "com.example.jeevandoot"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // 23 is required by flutter_webrtc (WebRTC video consultations).
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

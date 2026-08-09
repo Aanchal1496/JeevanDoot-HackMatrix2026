@@ -20,6 +20,7 @@ from .db import init_db
 from .routers import (
     appointments,
     auth,
+    consultations,
     doctor,
     health,
     prescriptions,
@@ -58,6 +59,7 @@ app.include_router(doctor.router)
 app.include_router(prescriptions.router)
 app.include_router(profile.router)
 app.include_router(symptoms.router)
+app.include_router(consultations.router)
 
 
 @app.get("/")

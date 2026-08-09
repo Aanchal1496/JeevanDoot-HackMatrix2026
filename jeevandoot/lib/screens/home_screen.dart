@@ -8,7 +8,7 @@ import 'package:jeevandoot/screens/records_screen.dart';
 import 'package:jeevandoot/screens/reminders_screen.dart';
 import 'package:jeevandoot/screens/self_care_advice_screen.dart';
 import 'package:jeevandoot/screens/symptom_checker_screen.dart';
-import 'package:jeevandoot/screens/video_call_screen.dart';
+import 'package:jeevandoot/screens/consultation_hub_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/bottom_nav.dart';
@@ -382,7 +382,9 @@ class HomeTab extends StatelessWidget {
                 foregroundColor: scheme.onPrimary,
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const VideoCallScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const ConsultationHubScreen(role: 'patient'),
+                    ),
                   );
                 },
               ),

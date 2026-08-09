@@ -51,6 +51,61 @@ Interactive API docs: http://localhost:8000/docs
 | GET | `/api/records?patient_id=...` | Patient records |
 | GET | `/api/reminders?patient_id=...` | Patient reminders |
 | POST | `/api/reminders/{id}/done` | Mark reminder done |
+| POST | `/api/consultations` | Create (or return) the consultation for an appointment. Auth via `?token=...` |
+| GET | `/api/consultations/{id}` | Fetch a consultation. Only patient/doctor of the appointment may read it |
+| POST | `/api/consultations/{id}/end` | Mark a consultation COMPLETED, record duration + connection quality |
+| GET | `/api/consultations/turn-config` | ICE server list (STUN + optional TURN) for the WebRTC peer connection |
+| WS | `/api/consultations/{id}/signaling` | Authenticated WebSocket signaling (see below) |
+
+## Teleconsultation (video/audio) — WebSocket signaling
+
+Media never travels through this backend. WebRTC carries audio/video
+peer-to-peer; the WebSocket below only exchanges signaling, presence and chat.
+
+### WebSocket events
+
+**Client -> server** (all relayed to the peer except `LEAVE_ROOM`/`CALL_ENDED`):
+
+```json
+{ "type": "JOIN_ROOM", "consultation_id": "CONS-ABC123", "user_id": "PT-123", "role": "patient" }
+{ "type": "OFFER", "sdp": "..." }
+{ "type": "ANSWER", "sdp": "..." }
+{ "type": "ICE_CANDIDATE", "candidate": { "candidate": "...", "sdpMid": "0", "sdpMLineIndex": 0 } }
+{ "type": "MEDIA_STATE_CHANGED", "mic_on": true, "camera_on": false }
+{ "type": "CONNECTION_STATE_CHANGED", "state": "connected" }
+{ "type": "CHAT", "message": "Please check your temperature." }
+{ "type": "CALL_ENDED" }
+{ "type": "LEAVE_ROOM" }
+```
+
+**Server -> client**:
+
+```json
+{ "type": "JOINED", "consultation_id": "CONS-ABC123", "role": "doctor", "user_id": "DR-PRIYA", "peer_present": true }
+{ "type": "USER_JOINED", "role": "patient", "user_id": "PT-123" }
+{ "type": "USER_LEFT", "role": "patient", "user_id": "PT-123" }
+```
+
+Auth: the socket URL must carry `?token=<auth-token>`. The server resolves the
+role from the token — a caller-supplied `role`/`user_id` is never trusted. Only
+the patient and doctor on the appointment can join (others get close code 4403).
+A reconnecting client replaces its stale socket instead of creating duplicates.
+
+### TURN configuration
+
+Copy `.env.example` to `.env` and fill in the TURN vars when clients are behind
+strict NATs. Without them the backend serves public STUN servers, which works
+for most home/office networks. TURN credentials are served only to
+authenticated clients via `/api/consultations/turn-config`.
+
+```env
+TURN_SERVER_URL=turn:your-turn.example.com:3478?transport=udp
+TURN_USERNAME=user
+TURN_CREDENTIAL=secret
+```
+
+In production use short-lived credentials (e.g. coturn REST API or a TURN
+provider) and serve everything over HTTPS/wss.
 
 ## Optional AI explanations
 
@@ -68,12 +123,13 @@ AI_MODEL=llama-3.3-70b-versatile
 If the AI call fails or times out, the backend falls back to the built-in
 template explanations. The AI can never change the risk score or level.
 
-## Testing the symptom checker
+## Testing
 
 Run the deterministic logic tests:
 
 ```bat
 .venv\Scripts\python symptom_check_tests.py
+.venv\Scripts\python consultation_tests.py
 ```
 
 Or exercise the endpoint directly:
@@ -81,7 +137,7 @@ Or exercise the endpoint directly:
 ```bat
 curl -X POST http://localhost:8000/api/symptom-check ^
   -H "Content-Type: application/json" ^
-  -d "{"text": "I have a mild headache since this morning."}"
+  -d "{\"text\": \"I have a mild headache since this morning.\"}"
 ```
 
 ## Notes

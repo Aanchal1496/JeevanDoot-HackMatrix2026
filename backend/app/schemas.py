@@ -108,3 +108,16 @@ class ApiMessage(BaseModel):
 class SymptomCheckRequest(BaseModel):
     text: Optional[str] = None
     selected_symptoms: List[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Consultations (video/audio teleconsultation)
+# ---------------------------------------------------------------------------
+class ConsultationCreate(BaseModel):
+    appointment_id: str
+    requester_role: str
+
+
+class ConsultationEnd(BaseModel):
+    duration_seconds: Optional[int] = None
+    connection_quality: Optional[str] = None
