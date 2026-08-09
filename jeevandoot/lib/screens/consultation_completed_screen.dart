@@ -77,9 +77,8 @@ class _ConsultationCompletedScreenState
       id: widget.patientId,
       age: '',
       gender: '',
-      risk: const DoctorRisk(DoctorRiskLevel.medium, 'Medium'),
       symptoms: const [],
-      waitTime: '00 MIN WAIT',
+      waitMinutes: 0,
     );
     return Scaffold(
       backgroundColor: scheme.surface,

@@ -8,7 +8,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const JeevanDootApp());
 
-// Splash screen is shown first.
+    // Splash screen is shown first.
     expect(find.text('JeevanDoot'), findsWidgets);
     expect(find.text('Your health, closer to home.'), findsWidgets);
 

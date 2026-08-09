@@ -1,8 +1,9 @@
 """Auth endpoints: patient OTP login + doctor credentials login."""
 import secrets
 from datetime import datetime, timezone
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 
 from ..db import get_connection
 from ..schemas import DoctorLoginRequest, OtpRequest, VerifyOtpRequest
@@ -118,6 +119,41 @@ def doctor_login(payload: DoctorLoginRequest):
             "photo_url": data["photo_url"],
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# Authorization dependency for doctor-facing endpoints
+# ---------------------------------------------------------------------------
+
+
+def get_current_doctor(authorization: Optional[str] = Header(default=None)) -> dict:
+    """Resolve the calling doctor from the Bearer token.
+
+    Security model for this demo:
+    - A real server-issued token must exist and belong to a ``doctor`` role;
+      anything else is rejected (401 invalid / 403 wrong role).
+    - Device-local demo sessions issue ``local-...`` tokens that never touch
+      the server; those are accepted so the offline demo keeps working.
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    token = authorization.removeprefix("Bearer ").strip()
+    if token.startswith("local-"):
+        return {"role": "doctor", "user_id": None, "name": "Dr. Priya Sharma"}
+
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT * FROM auth_tokens WHERE token = ?", (token,)
+        ).fetchone()
+    finally:
+        conn.close()
+    if row is None:
+        raise HTTPException(status_code=401, detail="Invalid or expired token.")
+    data = dict(row)
+    if data["role"] != "doctor":
+        raise HTTPException(status_code=403, detail="Doctor access required.")
+    return {"role": "doctor", "user_id": data["user_id"], "name": None}
 
 
 @router.post("/logout")
