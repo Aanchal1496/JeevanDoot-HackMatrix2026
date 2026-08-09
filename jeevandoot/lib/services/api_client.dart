@@ -37,7 +37,7 @@ class ApiClient {
   }
 
   Future<dynamic> get(String endpoint,
-      {Map<String, String>? query, bool raw = false}) async {
+      {Map<String, String>? query, bool raw = false, Duration? timeout}) async {
     var uri = ApiConfig.path(endpoint);
     if (query != null && query.isNotEmpty) {
       final parts = query.entries
@@ -47,40 +47,49 @@ class ApiClient {
       uri = '$uri?$parts';
     }
     try {
-      final res = await http.get(Uri.parse(uri), headers: _headers()).timeout(_timeout);
-      return _decode(res);
-    } on ApiException {
-      rethrow;
-    } catch (e) {
-      throw ApiException('Could not reach the server. Is the backend running?');
-    }
-  }
-
-  Future<dynamic> post(String endpoint, Map<String, dynamic> body,
-      {bool json = true}) async {
-    try {
       final res = await http
-          .post(Uri.parse(ApiConfig.path(endpoint)),
-              headers: _headers(json: json),
-              body: json ? jsonEncode(body) : null)
-          .timeout(_timeout);
+          .get(Uri.parse(uri), headers: _headers())
+          .timeout(timeout ?? _timeout);
       return _decode(res);
     } on ApiException {
       rethrow;
+    } on TimeoutException {
+      throw ApiException('Request timed out. Please try again.', statusCode: 408);
     } catch (_) {
       throw ApiException('Could not reach the server. Is the backend running?');
     }
   }
 
-  Future<dynamic> put(String endpoint, Map<String, dynamic> body) async {
+  Future<dynamic> post(String endpoint, Map<String, dynamic> body,
+      {bool json = true, Duration? timeout}) async {
+    try {
+      final res = await http
+          .post(Uri.parse(ApiConfig.path(endpoint)),
+              headers: _headers(json: json),
+              body: json ? jsonEncode(body) : null)
+          .timeout(timeout ?? _timeout);
+      return _decode(res);
+    } on ApiException {
+      rethrow;
+    } on TimeoutException {
+      throw ApiException('Request timed out. Please try again.', statusCode: 408);
+    } catch (_) {
+      throw ApiException('Could not reach the server. Is the backend running?');
+    }
+  }
+
+  Future<dynamic> put(String endpoint, Map<String, dynamic> body,
+      {Duration? timeout}) async {
     try {
       final res = await http
           .put(Uri.parse(ApiConfig.path(endpoint)),
               headers: _headers(), body: jsonEncode(body))
-          .timeout(_timeout);
+          .timeout(timeout ?? _timeout);
       return _decode(res);
     } on ApiException {
       rethrow;
+    } on TimeoutException {
+      throw ApiException('Request timed out. Please try again.', statusCode: 408);
     } catch (_) {
       throw ApiException('Could not reach the server. Is the backend running?');
     }

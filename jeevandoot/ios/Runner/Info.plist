@@ -24,6 +24,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>JeevanDoot uses the microphone to listen to your symptoms so we can check how urgent they may be.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>JeevanDoot uses speech recognition to turn your spoken symptoms into text for analysis.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

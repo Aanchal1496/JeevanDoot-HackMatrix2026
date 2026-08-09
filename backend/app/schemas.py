@@ -1,7 +1,7 @@
 """Pydantic request/response schemas for the JeevanDoot API."""
 from typing import Any, List, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # ---------------------------------------------------------------------------
@@ -100,3 +100,11 @@ class ReminderDone(BaseModel):
 class ApiMessage(BaseModel):
     message: str = ""
     data: Any = None
+
+
+# ---------------------------------------------------------------------------
+# Symptom check (AI triage)
+# ---------------------------------------------------------------------------
+class SymptomCheckRequest(BaseModel):
+    text: Optional[str] = None
+    selected_symptoms: List[str] = Field(default_factory=list)

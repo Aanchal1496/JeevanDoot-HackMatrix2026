@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:jeevandoot/models/models.dart';
-import 'package:jeevandoot/screens/listening_screen.dart';
-import 'package:jeevandoot/theme/app_theme.dart';
-import 'package:jeevandoot/widgets/app_top_bar.dart';
-import 'package:jeevandoot/widgets/common.dart';
 
+import '../screens/listening_screen.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_top_bar.dart';
+import '../widgets/common.dart';
+import '../widgets/microphone_button.dart';
+import '../widgets/symptom_selector.dart';
+
+/// Step 1 of the symptom checker: choose a voice, icon or typed input.
 class SymptomCheckerScreen extends StatefulWidget {
   const SymptomCheckerScreen({super.key});
 
@@ -14,6 +17,29 @@ class SymptomCheckerScreen extends StatefulWidget {
 
 class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
   final Set<String> _selected = {};
+
+  void _goToListening({bool textMode = false}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ListeningScreen(
+          selectedSymptoms: _selected.toSet(),
+          startInTextMode: textMode,
+        ),
+      ),
+    );
+  }
+
+  void _continue() {
+    if (_selected.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one symptom or use voice.'),
+        ),
+      );
+      return;
+    }
+    _goToListening();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +54,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
           AppSpacing.containerMargin,
           AppSpacing.stackSm,
           AppSpacing.containerMargin,
-          130,
+          140,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -42,7 +68,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
             ),
             const SizedBox(height: AppSpacing.unit),
             Text(
-              'Describe your symptoms in your own words.',
+              "Describe your symptoms and we'll help you understand how urgent they may be.",
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
             ),
@@ -63,7 +89,21 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.stackLg),
-            _symptomGrid(scheme),
+            SymptomSelector(
+              selected: _selected,
+              onChanged: (next) => setState(() => _selected..clear()..addAll(next)),
+            ),
+            const SizedBox(height: AppSpacing.stackMd),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => _goToListening(textMode: true),
+                icon: const Icon(Icons.keyboard),
+                label: const Text('Prefer to type? Enter symptoms manually'),
+                style: TextButton.styleFrom(
+                  foregroundColor: scheme.primary,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -88,30 +128,10 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
         child: SafeArea(
           top: false,
           child: PillButton(
-            label: 'Continue',
+            label: _selected.isEmpty ? 'Continue' : 'Continue (${_selected.length})',
             onPressed: _continue,
           ),
         ),
-      ),
-    );
-  }
-
-  void _continue() {
-    if (_selected.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one symptom or use voice.'),
-        ),
-      );
-      return;
-    }
-    _goToListening();
-  }
-
-  void _goToListening() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ListeningScreen(selectedSymptoms: _selected.toSet()),
       ),
     );
   }
@@ -166,108 +186,23 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
   Widget _voiceFirst(ColorScheme scheme) {
     return Column(
       children: [
-        InkWell(
-          onTap: () => _goToListening(),
-          borderRadius: BorderRadius.circular(999),
-          child: Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.primary.withValues(alpha: 0.1),
-                  blurRadius: 24,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(Icons.mic, size: 48, color: scheme.primary),
-          ),
+        MicrophoneButton(
+          listening: false,
+          onPressed: () => _goToListening(),
         ),
         const SizedBox(height: AppSpacing.stackSm),
         Text(
-          'Tap to speak',
+          'Tap the microphone and tell us how you\u2019re feeling.',
+          textAlign: TextAlign.center,
           style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.stackMd),
-      ],
-    );
-  }
-
-  Widget _symptomGrid(ColorScheme scheme) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: kSymptoms.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: AppSpacing.unit,
-        crossAxisSpacing: AppSpacing.unit,
-        childAspectRatio: 1.15,
-      ),
-      itemBuilder: (context, index) {
-        final symptom = kSymptoms[index];
-        final selected = _selected.contains(symptom.id);
-        return _symptomChip(scheme, symptom, selected);
-      },
-    );
-  }
-
-  Widget _symptomChip(ColorScheme scheme, Symptom symptom, bool selected) {
-    return Material(
-      color: selected ? scheme.primaryContainer : scheme.surface,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            if (selected) {
-              _selected.remove(symptom.id);
-            } else {
-              _selected.add(symptom.id);
-            }
-          });
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? scheme.primaryContainer : scheme.outlineVariant,
-            ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
-          ),
-          padding: const EdgeInsets.all(AppSpacing.gutter),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                symptom.icon,
-                size: 32,
-                color: selected ? scheme.onPrimaryContainer : scheme.secondary,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                symptom.label,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.labelLg.copyWith(
-                  color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
-                ),
-              ),
-            ],
-          ),
+        PillButton(
+          label: 'Start speaking',
+          icon: Icons.mic,
+          onPressed: () => _goToListening(),
         ),
-      ),
+      ],
     );
   }
 }

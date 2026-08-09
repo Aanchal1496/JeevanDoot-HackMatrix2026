@@ -23,46 +23,6 @@ class AdviceItem {
       );
 }
 
-class TriageResult {
-  const TriageResult({
-    required this.level,
-    required this.title,
-    required this.summary,
-    required this.symptoms,
-    required this.advice,
-    required this.reasons,
-  });
-
-  final String level;
-  final String title;
-  final String summary;
-  final List<String> symptoms;
-  final List<AdviceItem> advice;
-  final List<AdviceItem> reasons;
-
-  TriageLevel get triageLevel => switch (level) {
-        'urgent' => TriageLevel.urgent,
-        'consult' => TriageLevel.consult,
-        _ => TriageLevel.low,
-      };
-
-  factory TriageResult.fromJson(Map<String, dynamic> json) => TriageResult(
-        level: json['level'] as String? ?? 'low',
-        title: json['title'] as String? ?? '',
-        summary: json['summary'] as String? ?? '',
-        symptoms:
-            (json['symptoms'] as List?)?.cast<String>() ?? const [],
-        advice: (json['advice'] as List?)
-                ?.map((e) => AdviceItem.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            const [],
-        reasons: (json['reasons'] as List?)
-                ?.map((e) => AdviceItem.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            const [],
-      );
-}
-
 class SlotDate {
   const SlotDate({
     required this.id,
@@ -658,12 +618,6 @@ Future<void> logout() async {
 // ---------------------------------------------------------------------------
 // Health / triage API
 // ---------------------------------------------------------------------------
-
-Future<TriageResult> runTriage(List<String> symptomIds) async {
-  final res = await ApiClient.instance
-      .post('/api/triage', {'symptoms': symptomIds}) as Map;
-  return TriageResult.fromJson(res.cast<String, dynamic>());
-}
 
 Future<List<AdviceItem>> fetchSelfCare() async {
   final res = await ApiClient.instance.get('/api/self-care') as Map;

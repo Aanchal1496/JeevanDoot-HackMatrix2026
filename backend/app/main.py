@@ -9,6 +9,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+try:  # optional dependency
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:  # pragma: no cover
+    pass
+
 from .db import init_db
 from .routers import (
     appointments,
@@ -17,6 +24,7 @@ from .routers import (
     health,
     prescriptions,
     profile,
+    symptoms,
 )
 from .seed import seed_if_empty
 
@@ -49,6 +57,7 @@ app.include_router(appointments.router)
 app.include_router(doctor.router)
 app.include_router(prescriptions.router)
 app.include_router(profile.router)
+app.include_router(symptoms.router)
 
 
 @app.get("/")

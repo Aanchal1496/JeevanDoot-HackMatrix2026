@@ -1,41 +1,39 @@
-import 'package:flutter/material.dart';
+// Patient-side shared models.
 
-/// Triage outcome levels produced by the symptom checker flow.
-enum TriageLevel { low, consult, urgent }
-
-/// The selectable symptoms in the symptom checker.
+/// A selectable symptom category shown in the icon-based selector.
 class Symptom {
-  const Symptom(this.id, this.label, this.icon);
+  const Symptom(this.id, this.label, this.emoji);
 
   final String id;
   final String label;
-  final IconData icon;
+  final String emoji;
 }
 
+/// The 14 icon-based symptom categories available in the symptom checker.
+/// [id] values match the canonical ids used by the backend symptom extractor.
 const List<Symptom> kSymptoms = [
-  Symptom('fever', 'Fever', Icons.device_thermostat),
-  Symptom('cold', 'Cold/Cough', Icons.masks),
-  Symptom('headache', 'Headache', Icons.sentiment_very_dissatisfied),
-  Symptom('stomach', 'Stomach', Icons.medical_information),
-  Symptom('breathing', 'Breathing', Icons.air),
-  Symptom('chest', 'Chest', Icons.monitor_heart),
-  Symptom('body', 'Body Pain', Icons.accessibility_new),
-  Symptom('skin', 'Skin', Icons.face),
+  Symptom('fever', 'Fever', '\u{1F912}'),
+  Symptom('headache', 'Headache', '\u{1F915}'),
+  Symptom('cough', 'Cough', '\u{1F637}'),
+  Symptom('breathing', 'Breathing difficulty', '\u{1FAC1}'),
+  Symptom('chest', 'Chest discomfort', '\u2764\uFE0F'),
+  Symptom('nausea', 'Nausea', '\u{1F922}'),
+  Symptom('vomiting', 'Vomiting', '\u{1F92E}'),
+  Symptom('diarrhea', 'Diarrhea', '\u{1F4A9}'),
+  Symptom('dizziness', 'Dizziness', '\u{1F635}'),
+  Symptom('fatigue', 'Fatigue', '\u{1F634}'),
+  Symptom('cold', 'Cold', '\u{1F927}'),
+  Symptom('sore_throat', 'Sore throat', '\u{1F5E3}\uFE0F'),
+  Symptom('pain', 'Pain', '\u{1FA79}'),
+  Symptom('other', 'Other', '\u{1FA7A}'),
 ];
 
-/// Simple rule-based triage mirroring the demo app outcomes.
-TriageLevel computeTriage(Set<String> selectedIds) {
-  if (selectedIds.contains('chest') || selectedIds.contains('breathing')) {
-    return TriageLevel.urgent;
+/// Display label for a symptom id (fallback: readable id).
+String symptomLabel(String id) {
+  for (final s in kSymptoms) {
+    if (s.id == id) return s.label;
   }
-  if (selectedIds.contains('fever') &&
-      (selectedIds.contains('headache') || selectedIds.contains('body'))) {
-    return TriageLevel.consult;
-  }
-  if (selectedIds.length >= 3) {
-    return TriageLevel.consult;
-  }
-  return TriageLevel.low;
+  return id.replaceAll('_', ' ');
 }
 
 /// Persistent patient context shared across screens.

@@ -35,6 +35,7 @@ Interactive API docs: http://localhost:8000/docs
 | POST | `/api/auth/doctor-login` | Doctor login, returns token + doctor profile |
 | POST | `/api/auth/logout?token=...` | Invalidates a token |
 | POST | `/api/triage` | Rule-based triage from symptom ids |
+| POST | `/api/symptom-check` | AI symptom check: free text + icon selections -> risk score (LOW/MEDIUM/HIGH), explanation, precautions |
 | GET | `/api/self-care` | Self-care advice list |
 | GET | `/api/appointments/slots` | Available dates + time slots |
 | POST | `/api/appointments` | Book an appointment |
@@ -50,6 +51,38 @@ Interactive API docs: http://localhost:8000/docs
 | GET | `/api/records?patient_id=...` | Patient records |
 | GET | `/api/reminders?patient_id=...` | Patient reminders |
 | POST | `/api/reminders/{id}/done` | Mark reminder done |
+
+## Optional AI explanations
+
+The symptom checker is fully functional without any AI: symptom extraction,
+red-flag detection and the risk score are deterministic and computed locally.
+To get AI-polished plain-language explanations, copy `.env.example` to `.env`
+and add a Groq (or any OpenAI-compatible) API key:
+
+```env
+AI_API_KEY=your_groq_api_key
+AI_BASE_URL=https://api.groq.com/openai/v1
+AI_MODEL=llama-3.3-70b-versatile
+```
+
+If the AI call fails or times out, the backend falls back to the built-in
+template explanations. The AI can never change the risk score or level.
+
+## Testing the symptom checker
+
+Run the deterministic logic tests:
+
+```bat
+.venv\Scripts\python symptom_check_tests.py
+```
+
+Or exercise the endpoint directly:
+
+```bat
+curl -X POST http://localhost:8000/api/symptom-check ^
+  -H "Content-Type: application/json" ^
+  -d "{"text": "I have a mild headache since this morning."}"
+```
 
 ## Notes
 
