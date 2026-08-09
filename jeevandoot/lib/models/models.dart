@@ -48,4 +48,8 @@ class AppState {
   static String patientId = 'PT-RAMESH';
   static String token = '';
   static bool medicineReminderTaken = false;
+
+  /// Most recent symptom-checker summary. Shown to the doctor at booking as
+  /// an AI-generated pre-consultation summary (for clinician review only).
+  static String lastTriageSummary = '';
 }

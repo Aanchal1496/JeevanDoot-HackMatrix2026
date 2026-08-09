@@ -1,24 +1,88 @@
 import 'package:flutter/material.dart';
-import 'package:jeevandoot/screens/prescription_screen.dart';
+import 'package:jeevandoot/services/video_provider.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
+/// Patient-side video/audio consultation room.
+///
+/// Media is provided through [TeleconsultationVideoProvider] — currently a
+/// simulated provider, replaceable with a real WebRTC/Agora/Twilio/Daily
+/// backend without changing this screen.
 class VideoCallScreen extends StatefulWidget {
-  const VideoCallScreen({super.key});
+  const VideoCallScreen({
+    super.key,
+    this.doctorName,
+    this.specialization,
+    this.photoUrl,
+    this.meetingId,
+    this.isAudioOnly = false,
+  });
+
+  final String? doctorName;
+  final String? specialization;
+  final String? photoUrl;
+  final String? meetingId;
+  final bool isAudioOnly;
 
   @override
   State<VideoCallScreen> createState() => _VideoCallScreenState();
 }
 
 class _VideoCallScreenState extends State<VideoCallScreen> {
+  final TeleconsultationVideoProvider _provider =
+      TeleconsultationVideoProviderFactory.instance;
+
   bool _micOn = true;
   bool _cameraOn = true;
   bool _speakerOn = true;
+  VideoConnectionState _connection = VideoConnectionState.connecting;
+  String? _connectionError;
 
-  static const String _doctorImageUrl =
+  static const String _defaultDoctorImageUrl =
       'https://lh3.googleusercontent.com/aida-public/AB6AXuArYswFEKWUqY6KXPcK8lNOQPAuiHgksqnGPPxSQ576fLmtElUQtFDiY5tgllEsL6FBt71O2wcpcApw58B-pH3u4Mjqzvbgv2LlOXcneQ5YfGLGJqYUCq9y16ag6EoVYJ6Gn756klumOMkCLcpIsq1npMbPJQBZn9b3pz_91pZMaazsndp79KXLcOrRXZ34duBvYZaBfiqxfr-FTv_5d-5Lf55SlWROK3T2JC0VkPPlbmRiTMmn-Unk';
   static const String _patientImageUrl =
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCU72s8GQlG85GiW4WATEhPVsz2LOvGlpA5IzQGGVfj2kcd5CH9g6yXEsVfqs21w9_YYo0Giit4zs51fw22FObFZJElmDGjGDImhaNSyzNDnLYeu9dw_TahWgsCL-LkX1h8GFpkPEKpIPFuzJKmidt8bTC_GhUxh_p7-d0rUuWVUd-fWxXRZQ59PA4wmaiL0jjzLJHhEVwPkw1_-PXKGNkKrBjOuo8ENsNdaYzmAhjuBA3tVcK0C3uO';
+
+  String get _doctorName => widget.doctorName ?? 'Dr. Priya Sharma';
+  String get _specialization => widget.specialization ?? 'General Physician';
+  String get _photoUrl =>
+      widget.photoUrl == null || widget.photoUrl!.isEmpty
+          ? _defaultDoctorImageUrl
+          : widget.photoUrl!;
+  String get _meetingId => widget.meetingId ?? 'MEET-000000';
+
+  @override
+  void initState() {
+    super.initState();
+    _join();
+  }
+
+  @override
+  void dispose() {
+    _provider.leave();
+    super.dispose();
+  }
+
+  Future<void> _join() async {
+    setState(() => _connection = VideoConnectionState.connecting);
+    final result = await _provider.join(
+      meetingId: _meetingId,
+      audioOnly: widget.isAudioOnly,
+    );
+    if (!mounted) return;
+    setState(() {
+      if (result.success) {
+        _connection = VideoConnectionState.connected;
+      } else {
+        _connection = VideoConnectionState.ended;
+        _connectionError = result.message ?? 'Could not connect to the consultation.';
+      }
+    });
+  }
+
+  void _endCall() {
+    Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,19 +93,18 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         child: Column(
           children: [
             _header(scheme),
-            Expanded(
-              flex: 3,
-              child: _videoArea(scheme),
-            ),
-            Expanded(
-              flex: 2,
-              child: _patientPanel(scheme),
-            ),
+            Expanded(flex: 3, child: _videoArea(scheme)),
+            if (widget.isAudioOnly)
+              Expanded(flex: 2, child: _audioPanel(scheme))
+            else
+              Expanded(flex: 2, child: _patientPanel(scheme)),
           ],
         ),
       ),
     );
   }
+
+  // -- Header ---------------------------------------------------------------
 
   Widget _header(ColorScheme scheme) {
     return Container(
@@ -49,10 +112,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.9),
         boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withValues(alpha: 0.05),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: scheme.primary.withValues(alpha: 0.05), blurRadius: 8),
         ],
       ),
       child: Row(
@@ -62,7 +122,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               width: 48,
               height: 48,
               child: Image.network(
-                _doctorImageUrl,
+                _photoUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) =>
                     ColoredBox(color: scheme.surfaceContainerHigh, child: const Icon(Icons.person)),
@@ -75,13 +135,13 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Dr. Priya Sharma',
+                  _doctorName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                 ),
                 Text(
-                  'General Physician',
+                  _specialization,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
@@ -90,114 +150,95 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             ),
           ),
           const SizedBox(width: AppSpacing.stackSm),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: scheme.primary.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.signal_cellular_alt,
-                    size: 18, color: scheme.primary),
-                const SizedBox(width: 4),
-                Text(
-                  'Good',
-                  style: AppTextStyles.labelLg.copyWith(color: scheme.primary),
-                ),
-              ],
-            ),
-          ),
+          _connectionBadge(scheme),
         ],
       ),
     );
   }
 
+  Widget _connectionBadge(ColorScheme scheme) {
+    final (color, label, icon) = switch (_connection) {
+      VideoConnectionState.connecting => (scheme.warningColor, 'Connecting…', Icons.sync),
+      VideoConnectionState.connected => (scheme.primary, 'Good', Icons.signal_cellular_alt),
+      VideoConnectionState.ended => (scheme.error, 'Ended', Icons.call_end),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_connection == VideoConnectionState.connecting)
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: color),
+            )
+          else
+            Icon(icon, size: 18, color: color),
+          const SizedBox(width: 4),
+          Text(label, style: AppTextStyles.labelLg.copyWith(color: color)),
+        ],
+      ),
+    );
+  }
+
+  // -- Video area ------------------------------------------------------------
+
   Widget _videoArea(ColorScheme scheme) {
+    if (_connection == VideoConnectionState.connecting) {
+      return _connectingState(scheme);
+    }
+    if (_connection == VideoConnectionState.ended) {
+      return _endedState(scheme);
+    }
     return Stack(
       fit: StackFit.expand,
       children: [
         Image.network(
-          _doctorImageUrl,
+          _photoUrl,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) =>
-              ColoredBox(color: scheme.surfaceContainerHighest),
+          errorBuilder: (_, _, _) => ColoredBox(color: scheme.surfaceContainerHighest),
         ),
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                scheme.onSurface.withValues(alpha: 0.6),
-                Colors.transparent,
-              ],
+              colors: [scheme.onSurface.withValues(alpha: 0.6), Colors.transparent],
             ),
           ),
         ),
-        Positioned(
-          top: 12,
-          left: 0,
-          right: 0,
-          child: Center(
+        if (!widget.isAudioOnly)
+          Positioned(
+            top: 12,
+            right: AppSpacing.containerMargin,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              width: 96,
+              height: 128,
               decoration: BoxDecoration(
-                color: scheme.tertiaryContainer.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: scheme.tertiary.withValues(alpha: 0.2),
-                ),
+                color: scheme.surfaceDim,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: scheme.surface, width: 2),
+                boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 12)],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.warning, size: 20, color: scheme.onTertiaryContainer),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      'Switching to audio to improve quality',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.labelLg
-                          .copyWith(color: scheme.onTertiaryContainer),
+              clipBehavior: Clip.antiAlias,
+              child: _cameraOn
+                  ? Image.network(
+                      _patientImageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => ColoredBox(color: scheme.surfaceDim),
+                    )
+                  : ColoredBox(
+                      color: scheme.surfaceDim,
+                      child: const Icon(Icons.person, size: 40),
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
-        ),
-        Positioned(
-          top: 12,
-          right: AppSpacing.containerMargin,
-          child: Container(
-            width: 96,
-            height: 128,
-            decoration: BoxDecoration(
-              color: scheme.surfaceDim,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: scheme.surface, width: 2),
-              boxShadow: const [
-                BoxShadow(color: Color(0x33000000), blurRadius: 12),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: _cameraOn
-                ? Image.network(
-                    _patientImageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) =>
-                        ColoredBox(color: scheme.surfaceDim),
-                  )
-                : ColoredBox(
-                    color: scheme.surfaceDim,
-                    child: const Icon(Icons.person, size: 40),
-                  ),
-          ),
-        ),
         Align(
           alignment: Alignment.bottomCenter,
           child: Container(
@@ -221,20 +262,22 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _control(
-                  scheme,
-                  icon: _micOn ? Icons.mic : Icons.mic_off,
-                  active: _micOn,
-                  onTap: () => setState(() => _micOn = !_micOn),
-                ),
-                const SizedBox(width: 8),
-                _control(
-                  scheme,
-                  icon: _cameraOn ? Icons.videocam : Icons.videocam_off,
-                  active: _cameraOn,
-                  onTap: () => setState(() => _cameraOn = !_cameraOn),
-                ),
-                const SizedBox(width: 8),
+                if (!widget.isAudioOnly) ...[
+                  _control(
+                    scheme,
+                    icon: _micOn ? Icons.mic : Icons.mic_off,
+                    active: _micOn,
+                    onTap: () => setState(() => _micOn = !_micOn),
+                  ),
+                  const SizedBox(width: 8),
+                  _control(
+                    scheme,
+                    icon: _cameraOn ? Icons.videocam : Icons.videocam_off,
+                    active: _cameraOn,
+                    onTap: () => setState(() => _cameraOn = !_cameraOn),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 _control(
                   scheme,
                   icon: _speakerOn ? Icons.volume_up : Icons.volume_off,
@@ -253,13 +296,151 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   active: false,
                   color: scheme.error,
                   iconColor: scheme.onError,
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: _endCall,
                 ),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _endedState(ColorScheme scheme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.stackMd),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: scheme.errorContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.call_end, size: 32, color: scheme.error),
+            ),
+            const SizedBox(height: AppSpacing.stackMd),
+            Text(
+              _connectionError ?? 'Consultation ended',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
+            ),
+            const SizedBox(height: AppSpacing.gutter),
+            PillButton(
+              label: 'Close',
+              height: 48,
+              onPressed: _endCall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _connectingState(ColorScheme scheme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          PulsingRing(
+            child: Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Icon(
+                widget.isAudioOnly ? Icons.headphones : Icons.videocam,
+                size: 44,
+                color: scheme.onPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.stackMd),
+          Text(
+            'Connecting to $_doctorName…',
+            style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
+          ),
+          const SizedBox(height: AppSpacing.unit),
+          Text(
+            'Secure consultation • $_meetingId',
+            style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _audioPanel(ColorScheme scheme) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.containerMargin,
+        AppSpacing.stackSm,
+        AppSpacing.containerMargin,
+        AppSpacing.gutter,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border(top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.3))),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0D000000), offset: Offset(0, -10), blurRadius: 40),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: _micOn ? scheme.primaryContainer : scheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              _micOn ? Icons.mic : Icons.mic_off,
+              size: 32,
+              color: _micOn ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.stackSm),
+          Text(
+            _micOn ? 'You are on audio call' : 'Microphone muted',
+            style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: AppSpacing.stackMd),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _control(
+                scheme,
+                icon: _micOn ? Icons.mic : Icons.mic_off,
+                active: _micOn,
+                onTap: () => setState(() => _micOn = !_micOn),
+              ),
+              const SizedBox(width: AppSpacing.gutter),
+              _control(
+                scheme,
+                icon: Icons.call_end,
+                active: false,
+                color: scheme.error,
+                iconColor: scheme.onError,
+                onTap: _endCall,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -279,14 +460,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         width: 48,
         height: 48,
         decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-        child: Icon(
-          icon,
-          size: 24,
-          color: iconColor ?? scheme.onSurface,
-        ),
+        child: Icon(icon, size: 24, color: iconColor ?? scheme.onSurface),
       ),
     );
   }
+
+  // -- Lower panel ------------------------------------------------------------
 
   Widget _patientPanel(ColorScheme scheme) {
     return Container(
@@ -300,11 +479,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         color: scheme.surface,
         border: Border(top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.3))),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000),
-            offset: Offset(0, -10),
-            blurRadius: 40,
-          ),
+          BoxShadow(color: Color(0x0D000000), offset: Offset(0, -10), blurRadius: 40),
         ],
       ),
       child: Column(
@@ -314,7 +489,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Consultation Notes',
+                'Consultation',
                 style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
               ),
               Icon(Icons.info, color: scheme.onSurfaceVariant),
@@ -324,45 +499,24 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           Expanded(
             child: ListView(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: scheme.errorContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: scheme.error.withValues(alpha: 0.2)),
-                  ),
+                SoftCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: scheme.error,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.priority_high,
-                              size: 18,
-                              color: scheme.onError,
-                            ),
-                          ),
+                          Icon(Icons.lock_outline, color: scheme.secondary),
                           const SizedBox(width: 8),
                           Text(
-                            'Triage: Priority',
-                            style: AppTextStyles.labelLg
-                                .copyWith(color: scheme.onErrorContainer),
+                            'Private & secure',
+                            style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.stackSm),
                       Text(
-                        'High fever reported for 3 days. Patient flagged for immediate general physician review.',
-                        style: AppTextStyles.bodyMd.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                        'This consultation is end-to-end encrypted. Your doctor can see your consultation reason and any attachments you shared while booking.',
+                        style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -374,98 +528,23 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.medical_information, color: scheme.secondary),
+                          Icon(Icons.video_call_outlined, color: scheme.secondary),
                           const SizedBox(width: 8),
                           Text(
-                            'Reported Symptoms',
+                            'Meeting $_meetingId',
                             style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.stackSm),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          'Fever (102°F)',
-                          'Dry Cough',
-                          'Fatigue',
-                        ]
-                            .map(
-                              (s) => Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.gutter,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: scheme.surfaceContainerHigh,
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(color: scheme.surfaceDim),
-                                ),
-                                child: Text(
-                                  s,
-                                  style: AppTextStyles.labelLg
-                                      .copyWith(color: scheme.onSurface),
-                                ),
-                              ),
-                            )
-                            .toList(),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Provider: ${_provider.providerName}',
+                        style: AppTextStyles.bodyMd.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 14,
+                        ),
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.stackSm),
-                InkWell(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const PrescriptionScreen()),
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: scheme.primary.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: scheme.primaryContainer,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.folder_open,
-                            color: scheme.onPrimaryContainer,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.gutter),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Previous Records',
-                                style: AppTextStyles.labelLg
-                                    .copyWith(color: scheme.onPrimaryContainer),
-                              ),
-                              Text(
-                                '2 prescriptions, 1 lab report',
-                                style: AppTextStyles.bodyMd.copyWith(
-                                  color: scheme.onPrimaryFixedVariant,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(Icons.arrow_forward, color: scheme.primary),
-                      ],
-                    ),
                   ),
                 ),
               ],
@@ -475,4 +554,8 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       ),
     );
   }
+}
+
+extension on ColorScheme {
+  Color get warningColor => const Color(0xFFF59E0B);
 }

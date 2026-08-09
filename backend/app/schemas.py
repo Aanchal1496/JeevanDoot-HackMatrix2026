@@ -41,6 +41,75 @@ class AppointmentCreate(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Teleconsultations
+# ---------------------------------------------------------------------------
+class AttachmentMeta(BaseModel):
+    name: str
+    size: int = 0
+    type: str = ""
+
+
+class ConsultationBookRequest(BaseModel):
+    patient_id: str
+    doctor_id: str
+    date: str  # YYYY-MM-DD
+    start_time: str  # HH:MM
+    consult_type: str = "video"
+    reason: str = ""
+    attachments: List[AttachmentMeta] = []
+    booking_source: str = "SELF"  # SELF | ASHA
+    asha_request_id: Optional[str] = None
+    patient_name: Optional[str] = None
+    patient_phone: Optional[str] = None
+
+
+class ConsultationCancelRequest(BaseModel):
+    patient_id: str
+
+
+class ConsultationRescheduleRequest(BaseModel):
+    patient_id: str
+    date: str
+    start_time: str
+
+
+# ---------------------------------------------------------------------------
+# ASHA assistance
+# ---------------------------------------------------------------------------
+class AshaRequestCreate(BaseModel):
+    patient_id: str
+    patient_name: str = ""
+    specialty: str = ""
+    preferred_date: str = ""
+    preferred_time: str = ""
+    preferred_language: str = ""
+    reason: str = ""
+    notes: str = ""
+
+
+class AshaRequestUpdate(BaseModel):
+    status: Optional[str] = None
+    asha_id: Optional[str] = None
+    asha_name: Optional[str] = None
+
+
+class AshaBookRequest(BaseModel):
+    patient_id: str
+    doctor_id: str
+    date: str
+    start_time: str
+    consult_type: str = "video"
+    reason: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Notifications
+# ---------------------------------------------------------------------------
+class NotificationRead(BaseModel):
+    read: bool = True
+
+
+# ---------------------------------------------------------------------------
 # Prescriptions
 # ---------------------------------------------------------------------------
 class MedicineItem(BaseModel):

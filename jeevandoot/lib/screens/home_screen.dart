@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
+import 'package:jeevandoot/models/consultation_models.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/book_consultation_screen.dart';
+import 'package:jeevandoot/screens/consultation/appointment_detail_screen.dart';
+import 'package:jeevandoot/screens/consultation/consultations_screen.dart';
 import 'package:jeevandoot/screens/offline_screen.dart';
 import 'package:jeevandoot/screens/profile_screen.dart';
 import 'package:jeevandoot/screens/records_screen.dart';
@@ -9,10 +12,12 @@ import 'package:jeevandoot/screens/reminders_screen.dart';
 import 'package:jeevandoot/screens/self_care_advice_screen.dart';
 import 'package:jeevandoot/screens/symptom_checker_screen.dart';
 import 'package:jeevandoot/screens/video_call_screen.dart';
+import 'package:jeevandoot/services/backend.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/bottom_nav.dart';
 import 'package:jeevandoot/widgets/common.dart';
+import 'package:jeevandoot/widgets/consultation_widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -45,13 +50,88 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key, required this.onNavigateRecords});
 
   final VoidCallback onNavigateRecords;
 
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
   static const String _avatarUrl = AppAssets.patientAvatar;
-  static const String _doctorImageUrl = AppAssets.doctorImage;
+
+  List<ConsultationAppointment> _upcoming = const [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final list = await fetchUpcomingConsultations();
+      if (!mounted) return;
+      final sorted = [...list]..sort((a, b) {
+          final aStart = a.start;
+          final bStart = b.start;
+          if (aStart == null && bStart == null) return 0;
+          if (aStart == null) return 1;
+          if (bStart == null) return -1;
+          return aStart.compareTo(bStart);
+        });
+      setState(() {
+        _upcoming = sorted;
+        _loading = false;
+        _error = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Unable to load consultation details.';
+      });
+    }
+  }
+
+  Future<void> _openBooking() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const BookConsultationScreen()),
+    );
+    if (mounted) _load();
+  }
+
+  Future<void> _openAppointments() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ConsultationsScreen()),
+    );
+    if (mounted) _load();
+  }
+
+  void _openDetail(ConsultationAppointment a) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => AppointmentDetailScreen(appointment: a)),
+    );
+  }
+
+  void _join(ConsultationAppointment a) {
+    if (!a.canJoinNow) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => VideoCallScreen(
+          doctorName: a.doctorName,
+          specialization: a.specialization,
+          photoUrl: a.photoUrl,
+          meetingId: a.meetingId,
+          isAudioOnly: a.consultType.contains('Audio'),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,27 +144,27 @@ class HomeTab extends StatelessWidget {
           MaterialPageRoute(builder: (_) => const OfflineScreen()),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.containerMargin,
-          AppSpacing.unit,
-          AppSpacing.containerMargin,
-          AppSpacing.stackMd,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.containerMargin,
+            AppSpacing.unit,
+            AppSpacing.containerMargin,
+            AppSpacing.stackMd,
+          ),
           children: [
             Text(
               'Namaste, ${AppState.patientName} 👋',
-              style: AppTextStyles.displayHeroMobile
-                  .copyWith(color: scheme.onSurface),
+              style: AppTextStyles.displayHeroMobile.copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.stackMd),
             _voiceHero(context, scheme),
             const SizedBox(height: AppSpacing.stackMd),
             _quickActions(context, scheme),
             const SizedBox(height: AppSpacing.stackMd),
-            _upcomingConsultation(context, scheme),
+            _upcomingSection(scheme),
             const SizedBox(height: AppSpacing.stackMd),
             _healthReminder(context, scheme),
             const SizedBox(height: AppSpacing.stackMd),
@@ -122,9 +202,7 @@ class HomeTab extends StatelessWidget {
           InkWell(
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const SymptomCheckerScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const SymptomCheckerScreen()),
               );
             },
             borderRadius: BorderRadius.circular(999),
@@ -135,11 +213,7 @@ class HomeTab extends StatelessWidget {
                 color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.mic,
-                size: 48,
-                color: AppColors.onPrimary,
-              ),
+              child: const Icon(Icons.mic, size: 48, color: AppColors.onPrimary),
             ),
           ),
           const SizedBox(height: AppSpacing.stackSm),
@@ -162,6 +236,8 @@ class HomeTab extends StatelessWidget {
     );
   }
 
+  // -- Quick actions ---------------------------------------------------------
+
   Widget _quickActions(BuildContext context, ColorScheme scheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,9 +258,7 @@ class HomeTab extends StatelessWidget {
                 color: scheme.primary,
                 label: 'Check Symptoms',
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const SymptomCheckerScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const SymptomCheckerScreen()),
                 ),
               ),
             ),
@@ -193,15 +267,11 @@ class HomeTab extends StatelessWidget {
               child: _actionCard(
                 context,
                 scheme,
-                icon: Icons.calendar_month,
-                bg: scheme.tertiaryFixed,
-                color: scheme.onTertiaryFixed,
+                icon: Icons.video_call,
+                bg: scheme.primaryContainer.withValues(alpha: 0.35),
+                color: scheme.primary,
                 label: 'Book Consultation',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const BookConsultationScreen(),
-                  ),
-                ),
+                onTap: _openBooking,
               ),
             ),
           ],
@@ -213,11 +283,11 @@ class HomeTab extends StatelessWidget {
               child: _actionCard(
                 context,
                 scheme,
-                icon: Icons.content_paste,
-                bg: scheme.secondaryContainer,
-                color: scheme.onSecondaryContainer,
-                label: 'My Records',
-                onTap: onNavigateRecords,
+                icon: Icons.event_available,
+                bg: scheme.tertiaryFixed,
+                color: scheme.onTertiaryFixed,
+                label: 'My Appointments',
+                onTap: _openAppointments,
               ),
             ),
             const SizedBox(width: AppSpacing.gutter),
@@ -225,13 +295,11 @@ class HomeTab extends StatelessWidget {
               child: _actionCard(
                 context,
                 scheme,
-                icon: Icons.medication,
-                bg: scheme.surfaceContainerHighest,
-                color: scheme.onSurfaceVariant,
-                label: 'Medicines',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const RemindersScreen()),
-                ),
+                icon: Icons.content_paste,
+                bg: scheme.secondaryContainer,
+                color: scheme.onSecondaryContainer,
+                label: 'Health Records',
+                onTap: widget.onNavigateRecords,
               ),
             ),
           ],
@@ -261,16 +329,8 @@ class HomeTab extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
-              BoxShadow(
-                color: Color(0x0D000000),
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 20,
-                offset: Offset(0, 8),
-              ),
+              BoxShadow(color: Color(0x0D000000), blurRadius: 4, offset: Offset(0, 1)),
+              BoxShadow(color: Color(0x1A000000), blurRadius: 20, offset: Offset(0, 8)),
             ],
           ),
           child: Column(
@@ -297,99 +357,175 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _upcomingConsultation(BuildContext context, ColorScheme scheme) {
+  // -- Upcoming consultations -------------------------------------------------
+
+  Widget _upcomingSection(ColorScheme scheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Upcoming Consultation',
-          style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Upcoming Consultations',
+              style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            TextButton(
+              onPressed: _openAppointments,
+              style: TextButton.styleFrom(
+                foregroundColor: scheme.primary,
+                textStyle: AppTextStyles.labelLg,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              child: const Text('View all'),
+            ),
+          ],
         ),
         const SizedBox(height: AppSpacing.gutter),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.gutter),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
+        if (_loading)
+          const ConsultationLoading(count: 2)
+        else if (_error != null)
+          ConsultationError(title: _error!, onRetry: _load)
+        else if (_upcoming.isEmpty)
+          ConsultationEmpty(
+            icon: Icons.event_available,
+            title: 'No upcoming consultations',
+            message: 'Consult a qualified doctor remotely — choose a specialty, pick a time and get a secure video consultation.',
+            ctaLabel: 'Book a Consultation',
+            onCta: _openBooking,
+          )
+        else ...[
+          _nextConsultationCard(context, scheme, _upcoming.first),
+          if (_upcoming.length > 1) ...[
+            const SizedBox(height: AppSpacing.gutter),
+            for (final a in _upcoming.skip(1).take(3))
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.gutter),
+                child: AppointmentCard(
+                  appointment: a,
+                  onTap: () => _openDetail(a),
+                  onJoin: () => _join(a),
+                ),
               ),
-            ],
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _nextConsultationCard(
+    BuildContext context,
+    ColorScheme scheme,
+    ConsultationAppointment a,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.gutter),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
-          child: Column(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'YOUR NEXT CONSULTATION',
+            style: AppTextStyles.labelSm.copyWith(
+              color: scheme.primary,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.gutter),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipOval(
-                    child: SizedBox(
-                      width: 56,
-                      height: 56,
-                      child: Image.network(
-                        _doctorImageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => ColoredBox(
+              ClipOval(
+                child: SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: a.photoUrl.isEmpty
+                      ? ColoredBox(
                           color: scheme.surfaceContainerHigh,
                           child: const Icon(Icons.person),
+                        )
+                      : Image.network(
+                          a.photoUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => ColoredBox(
+                            color: scheme.surfaceContainerHigh,
+                            child: const Icon(Icons.person),
+                          ),
                         ),
-                      ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.gutter),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      a.doctorName,
+                      style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.gutter),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Text(
+                      a.specialization,
+                      style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
                       children: [
+                        Icon(Icons.schedule, size: 16, color: scheme.primaryContainer),
+                        const SizedBox(width: 4),
                         Text(
-                          'Dr. Priya Sharma',
-                          style: AppTextStyles.headlineMd
-                              .copyWith(color: scheme.onSurface),
-                        ),
-                        Text(
-                          'General Physician',
-                          style: AppTextStyles.bodyMd
-                              .copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(Icons.schedule,
-                                size: 16, color: scheme.primaryContainer),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Today · 5:30 PM',
-                              style: AppTextStyles.labelLg
-                                  .copyWith(color: scheme.primaryContainer),
-                            ),
-                          ],
+                          '${a.relativeDayLabel} • ${a.time}',
+                          style: AppTextStyles.labelLg.copyWith(color: scheme.primaryContainer),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.gutter),
-              PillButton(
-                label: 'Join Consultation',
-                icon: Icons.videocam,
-                backgroundColor: scheme.primary,
-                foregroundColor: scheme.onPrimary,
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const VideoCallScreen()),
-                  );
-                },
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.gutter),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _openDetail(a),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(AppSpacing.touchTargetMin),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                    side: BorderSide(color: scheme.primary.withValues(alpha: 0.4)),
+                  ),
+                  child: const Text('View Details'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.gutter),
+              Expanded(
+                child: PillButton(
+                  label: a.canJoinNow
+                      ? 'Join Consultation'
+                      : (a.joinHint.isEmpty ? 'Join Consultation' : a.joinHint),
+                  icon: Icons.videocam,
+                  height: AppSpacing.touchTargetMin,
+                  backgroundColor: a.canJoinNow ? scheme.primary : scheme.surfaceContainerHighest,
+                  foregroundColor: a.canJoinNow ? scheme.onPrimary : scheme.onSurfaceVariant,
+                  onPressed: a.canJoinNow ? () => _join(a) : null,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -416,10 +552,7 @@ class HomeTab extends StatelessWidget {
               color: scheme.secondaryContainer,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.medication,
-              color: scheme.onSecondaryContainer,
-            ),
+            child: Icon(Icons.medication, color: scheme.onSecondaryContainer),
           ),
           const SizedBox(width: AppSpacing.gutter),
           Expanded(
@@ -457,9 +590,7 @@ class HomeTab extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: done
-                          ? scheme.primaryContainer
-                          : Colors.transparent,
+                      color: done ? scheme.primaryContainer : Colors.transparent,
                       shape: BoxShape.circle,
                       border: Border.all(color: scheme.primary, width: 1.5),
                     ),
@@ -521,8 +652,7 @@ class _HealthTab extends StatelessWidget {
           children: [
             Text(
               'Health',
-              style: AppTextStyles.displayHeroMobile
-                  .copyWith(color: scheme.onSurface),
+              style: AppTextStyles.displayHeroMobile.copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.stackMd),
             SoftCard(
@@ -539,14 +669,12 @@ class _HealthTab extends StatelessWidget {
                       children: [
                         Text(
                           'Reminders',
-                          style: AppTextStyles.headlineMd
-                              .copyWith(color: scheme.onSurface),
+                          style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Medicines, hydration and follow-ups',
-                          style: AppTextStyles.bodyMd
-                              .copyWith(color: scheme.onSurfaceVariant),
+                          style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -570,14 +698,12 @@ class _HealthTab extends StatelessWidget {
                       children: [
                         Text(
                           'Self-Care Advice',
-                          style: AppTextStyles.headlineMd
-                              .copyWith(color: scheme.onSurface),
+                          style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Recovery tips for home',
-                          style: AppTextStyles.bodyMd
-                              .copyWith(color: scheme.onSurfaceVariant),
+                          style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -601,14 +727,12 @@ class _HealthTab extends StatelessWidget {
                       children: [
                         Text(
                           'Check Symptoms',
-                          style: AppTextStyles.headlineMd
-                              .copyWith(color: scheme.onSurface),
+                          style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Voice-first triage assistant',
-                          style: AppTextStyles.bodyMd
-                              .copyWith(color: scheme.onSurfaceVariant),
+                          style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -657,11 +781,7 @@ class _ConsultTab extends StatelessWidget {
                   color: scheme.surfaceContainer,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.chat,
-                  size: 48,
-                  color: scheme.primary,
-                ),
+                child: Icon(Icons.chat, size: 48, color: scheme.primary),
               ),
               const SizedBox(height: AppSpacing.stackMd),
               Text(

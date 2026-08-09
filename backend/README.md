@@ -36,9 +36,19 @@ Interactive API docs: http://localhost:8000/docs
 | POST | `/api/auth/logout?token=...` | Invalidates a token |
 | POST | `/api/triage` | Rule-based triage from symptom ids |
 | GET | `/api/self-care` | Self-care advice list |
-| GET | `/api/appointments/slots` | Available dates + time slots |
-| POST | `/api/appointments` | Book an appointment |
-| GET | `/api/appointments/mine?patient_id=...` | Patient's appointments |
+| GET | `/api/appointments/slots` | Available dates + time slots (legacy) |
+| POST | `/api/appointments` | Book an appointment (legacy) |
+| GET | `/api/appointments/mine?patient_id=...` | Patient's appointments (legacy) |
+| GET | `/api/consultations/specialties` | Teleconsultation specialties |
+| GET | `/api/consultations/doctors?specialty=&q=` | Doctors (filter by specialty / search) |
+| GET | `/api/consultations/doctors/{id}/dates` | Bookable dates for a doctor (14 days) |
+| GET | `/api/consultations/doctors/{id}/slots?date=YYYY-MM-DD` | Slots for a doctor/date (available/booked/unavailable) |
+| POST | `/api/consultations/book` | Book a consultation (concurrency-safe; 409 on double booking) |
+| GET | `/api/consultations/upcoming?patient_id=...` | Patient's upcoming consultations |
+| GET | `/api/consultations/history?patient_id=...` | Patient's past consultations |
+| GET | `/api/consultations/{id}?patient_id=...` | Single appointment detail |
+| PATCH | `/api/consultations/{id}/cancel` | Cancel an appointment (releases slot) |
+| PATCH | `/api/consultations/{id}/reschedule` | Reschedule an appointment |
 | GET | `/api/doctor/patients` | Patient queue |
 | GET | `/api/doctor/patients/{id}` | Full patient case (vitals + history) |
 | GET | `/api/doctor/appointments` | Doctor's schedule |

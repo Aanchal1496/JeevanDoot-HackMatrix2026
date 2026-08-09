@@ -148,11 +148,109 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
     user_id TEXT NOT NULL,
     created_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS doctor_availability (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doctor_id TEXT NOT NULL,
+    date TEXT NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    slot_duration INTEGER DEFAULT 30,
+    status TEXT DEFAULT 'available',
+    UNIQUE (doctor_id, date, start_time)
+);
+
+CREATE TABLE IF NOT EXISTS asha_requests (
+    id TEXT PRIMARY KEY,
+    patient_id TEXT NOT NULL,
+    asha_id TEXT,
+    asha_name TEXT,
+    patient_name TEXT,
+    specialty TEXT,
+    preferred_date TEXT,
+    preferred_time TEXT,
+    preferred_language TEXT,
+    reason TEXT,
+    notes TEXT,
+    status TEXT DEFAULT 'requested',
+    appointment_id TEXT,
+    created_at TEXT,
+    updated_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id TEXT PRIMARY KEY,
+    patient_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    type TEXT DEFAULT 'system',
+    read INTEGER DEFAULT 0,
+    created_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS appointment_audit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    appointment_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    from_value TEXT,
+    to_value TEXT,
+    created_at TEXT
+);
 """
+
+# Columns added to pre-existing tables so the teleconsultation feature works
+# with databases created before this feature shipped. `ALTER TABLE ... ADD
+# COLUMN` is idempotent because we only add columns that are missing.
+_APPOINTMENT_EXTRA_COLUMNS = [
+    ("doctor_id", "TEXT"),
+    ("date", "TEXT"),
+    ("start_time", "TEXT"),
+    ("end_time", "TEXT"),
+    ("reason", "TEXT"),
+    ("booking_source", "TEXT DEFAULT 'SELF'"),
+    ("meeting_id", "TEXT"),
+    ("attachments", "TEXT"),
+    ("created_at", "TEXT"),
+    ("updated_at", "TEXT"),
+]
+
+_DOCTOR_EXTRA_COLUMNS = [
+    ("qualification", "TEXT"),
+    ("languages", "TEXT"),
+    ("consultation_fee", "REAL DEFAULT 0"),
+]
+
+_PRESCRIPTION_EXTRA_COLUMNS = [
+    ("date_iso", "TEXT"),
+    ("follow_up_date", "TEXT"),
+    ("follow_up_time", "TEXT"),
+]
+
+
+def _ensure_columns(conn, table: str, columns: list) -> None:
+    existing = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+    for col, ddl in columns:
+        if col not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {ddl}")
 
 
 def init_db() -> None:
     conn = get_connection()
     conn.executescript(SCHEMA)
+    _ensure_columns(conn, "appointments", _APPOINTMENT_EXTRA_COLUMNS)
+    _ensure_columns(conn, "doctors", _DOCTOR_EXTRA_COLUMNS)
+    _ensure_columns(conn, "prescriptions", _PRESCRIPTION_EXTRA_COLUMNS)
+    # Database-level double-booking protection: at most one *active*
+    # appointment may claim a given (doctor, date, start_time). Cancelled,
+    # no-show and completed appointments release the slot. SQLite allows
+    # multiple NULLs in unique indexes, so legacy rows (no doctor/date) are
+    # unaffected. Dropped + recreated so databases created with an older
+    # exclusion list get the updated one.
+    conn.execute("DROP INDEX IF EXISTS idx_appointments_slot")
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_slot "
+        "ON appointments(doctor_id, date, start_time) "
+        "WHERE status NOT IN ('Cancelled', 'No Show', 'Completed')"
+    )
     conn.commit()
     conn.close()

@@ -7,19 +7,32 @@ import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
-class TriageResultScreen extends StatelessWidget {
+class TriageResultScreen extends StatefulWidget {
   const TriageResultScreen({super.key, this.result, this.level});
 
   final TriageResult? result;
   final TriageLevel? level;
 
   @override
+  State<TriageResultScreen> createState() => _TriageResultScreenState();
+}
+
+class _TriageResultScreenState extends State<TriageResultScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Remember the latest triage summary so the booking flow can attach it as
+    // an AI-generated pre-consultation summary for clinician review.
+    AppState.lastTriageSummary = widget.result?.summary ?? '';
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final lvl = result?.triageLevel ?? level;
+    final lvl = widget.result?.triageLevel ?? widget.level;
     return switch (lvl) {
-      TriageLevel.low => _LowRiskScreen(result: result),
-      TriageLevel.consult => _ConsultRecommendedScreen(result: result),
-      TriageLevel.urgent => _UrgentCareScreen(result: result),
+      TriageLevel.low => _LowRiskScreen(result: widget.result),
+      TriageLevel.consult => _ConsultRecommendedScreen(result: widget.result),
+      TriageLevel.urgent => _UrgentCareScreen(result: widget.result),
       null => const SizedBox.shrink(),
     };
   }
