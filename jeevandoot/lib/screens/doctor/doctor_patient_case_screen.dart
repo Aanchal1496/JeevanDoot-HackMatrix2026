@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
+import 'package:jeevandoot/screens/doctor/doctor_consultation_notes_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_pre_check_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_referral_screen.dart';
 import 'package:jeevandoot/services/backend.dart';
@@ -171,6 +172,17 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.unit),
+          _outlineAction(
+            scheme,
+            label: 'Write Consultation Notes',
+            icon: Icons.edit_note,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => DoctorConsultationNotesScreen(patient: patient),
+              ),
+            ),
           ),
         ],
       ),

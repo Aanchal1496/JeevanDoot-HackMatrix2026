@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/models/consultation_models.dart';
+import 'package:jeevandoot/screens/consultation/patient_consultation_summary_screen.dart';
 import 'package:jeevandoot/screens/video_call_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -193,6 +194,18 @@ class AppointmentDetailScreen extends StatelessWidget {
                     ),
                 ],
               ),
+            const SizedBox(height: AppSpacing.stackMd),
+            PillButton(
+              label: 'View Notes & Follow-ups',
+              icon: Icons.fact_check_outlined,
+              backgroundColor: scheme.surfaceContainerLow,
+              foregroundColor: scheme.onSurface,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const PatientConsultationSummaryScreen(),
+                ),
+              ),
+            ),
           ],
         ),
       ),

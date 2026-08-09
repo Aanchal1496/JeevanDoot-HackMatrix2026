@@ -144,3 +144,96 @@ def generate_explanation(
     ):
         # Fail safe: the deterministic engine already produced an answer.
         return None
+
+
+_SUMMARY_SYSTEM_PROMPT = (
+    "You are a medical documentation assistant writing consultation notes "
+    "for a doctor. You are given patient-reported symptoms, vitals, the "
+    "doctor's working diagnosis and free-text notes.\n"
+    "Rules:\n"
+    "- Write a concise clinical summary (3-4 sentences) a doctor can trust.\n"
+    "- Never add facts that are not in the input. Do not invent diagnoses.\n"
+    "- If no diagnosis is given, describe the presentation instead.\n"
+    "- End with a recommended follow-up: how soon and why (e.g. review in 7 "
+    "days if symptoms persist).\n"
+    "- Respond ONLY with a JSON object of the form "
+    '{"summary": "...", "follow_up": "..."}.'
+)
+
+
+def generate_consultation_summary(
+    *,
+    symptoms: List[str],
+    vitals: Dict[str, str],
+    diagnosis: str,
+    notes: str,
+) -> Optional[Dict[str, str]]:
+    """Ask the AI to draft a consultation summary + follow-up suggestion.
+
+    Returns None on any failure so the caller can use a deterministic
+    template summary instead. The AI never replaces the doctor's decision -
+    it only drafts text the doctor can edit.
+    """
+    if not ai_enabled():
+        return None
+
+    context = {
+        "symptoms": symptoms,
+        "vitals": vitals,
+        "diagnosis": diagnosis or "not provided",
+        "doctor_notes": notes or "none",
+    }
+    user_prompt = (
+        "Draft consultation notes for this patient. Use ONLY the context "
+        "provided. "
+        f"Context: {json.dumps(context, ensure_ascii=False)}\n"
+        'Return only JSON: {"summary": "...", "follow_up": "..."}.'
+    )
+
+    payload = {
+        "model": AI_MODEL,
+        "messages": [
+            {"role": "system", "content": _SUMMARY_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0.3,
+        "max_tokens": 300,
+        "response_format": {"type": "json_object"},
+    }
+
+    _USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+    )
+    request = urllib.request.Request(
+        f"{AI_BASE_URL}/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {AI_API_KEY}",
+            "User-Agent": _USER_AGENT,
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=AI_TIMEOUT_SECONDS) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        content = body["choices"][0]["message"]["content"]
+        parsed = json.loads(content)
+        summary = str(parsed.get("summary", "")).strip()[:800]
+        follow_up = str(parsed.get("follow_up", "")).strip()[:400]
+        if not summary:
+            return None
+        return {"summary": summary, "follow_up": follow_up}
+    except (
+        urllib.error.URLError,
+        KeyError,
+        IndexError,
+        TypeError,
+        ValueError,
+        json.JSONDecodeError,
+        TimeoutError,
+    ):
+        # Fail safe: the caller falls back to the deterministic summary.
+        return None

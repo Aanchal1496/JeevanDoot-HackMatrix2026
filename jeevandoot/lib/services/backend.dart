@@ -269,6 +269,42 @@ class RecordEvent {
       );
 }
 
+/// One entry in the patient's personal health record / visit timeline.
+/// Merges consultation visits, prescriptions and generic records into a
+/// single chronologically ordered feed (see `GET /api/timeline`).
+class TimelineEvent {
+  const TimelineEvent({
+    required this.date,
+    required this.dateIso,
+    required this.type,
+    required this.title,
+    required this.subtitle,
+    required this.detail,
+    this.data = const {},
+  });
+
+  final String date;
+  final String dateIso;
+  final String type;
+  final String title;
+  final String subtitle;
+  final String detail;
+  final Map<String, dynamic> data;
+
+  bool get isConsultation => type == 'consultation';
+  bool get isPrescription => type == 'prescription';
+
+  factory TimelineEvent.fromJson(Map<String, dynamic> json) => TimelineEvent(
+        date: json['date'] as String? ?? '',
+        dateIso: json['date_iso'] as String? ?? '',
+        type: json['type'] as String? ?? 'record',
+        title: json['title'] as String? ?? '',
+        subtitle: json['subtitle'] as String? ?? '',
+        detail: json['detail'] as String? ?? '',
+        data: (json['data'] as Map?)?.cast<String, dynamic>() ?? const {},
+      );
+}
+
 class ReminderItem {
   const ReminderItem({
     required this.id,
@@ -860,6 +896,15 @@ Future<List<RecordEvent>> fetchRecords() async {
       .get('/api/records', query: {'patient_id': AppState.patientId}) as Map;
   return (res['records'] as List? ?? const [])
       .map((e) => RecordEvent.fromJson((e as Map).cast<String, dynamic>()))
+      .toList();
+}
+
+/// Personal health records / visit timeline (newest first).
+Future<List<TimelineEvent>> fetchTimeline() async {
+  final res = await ApiClient.instance
+      .get('/api/timeline', query: {'patient_id': AppState.patientId}) as Map;
+  return (res['timeline'] as List? ?? const [])
+      .map((e) => TimelineEvent.fromJson((e as Map).cast<String, dynamic>()))
       .toList();
 }
 
