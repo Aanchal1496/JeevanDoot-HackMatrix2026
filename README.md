@@ -19,13 +19,13 @@ The platform follows a **2·2·24 service commitment**:
 This cuts diagnosis delays by an estimated 70%, prevents disease progression, lowers costs in low-resource settings, and contributes toward SDG-3 (Good Health & Well-being).
 
 ## Live Demonstration Link
-https://jeevan-doot-web-hack-matrix2026.vercel.app/
+[https://jeevan-doot-web-hack-matrix2026.vercel.app/](https://jeevan-doot-web-hack-matrix2026.vercel.app/)
 
 ## Technology Stack
 - **Frontend (Patient & Doctor Web Apps):** React
 - **Backend / Database / Auth:** Firebase (or Supabase)
 - **AI Triage Engine:** Rule-based risk scoring using a symptom-to-disease dataset (Kaggle)
-- **Hosting/Deployment:** [e.g. Vercel / Netlify / Firebase Hosting]
+- **Hosting/Deployment:** [Vercel]
 - **Design:** UI designed in Google Stitch
 - **Version Control:** Git & GitHub
 
