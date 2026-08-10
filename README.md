@@ -24,6 +24,9 @@ This cuts diagnosis delays by an estimated 70%, prevents disease progression, lo
 ## PPT View Link
 [https://canva.link/htdd08m6nuo54cu](https://canva.link/htdd08m6nuo54cu)
 
+## Gdrive Link
+[https://drive.google.com/drive/folders/166uIxlPLm6EJae5JjSQJ_HmSMUDP1GB6?usp=drive_link](https://drive.google.com/drive/folders/166uIxlPLm6EJae5JjSQJ_HmSMUDP1GB6?usp=drive_link)
+
 ## Technology Stack
 - **Frontend (Patient & Doctor Web Apps):** React
 - **Backend / Database / Auth:** Firebase (or Supabase)
