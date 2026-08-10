@@ -101,7 +101,7 @@ def signup(payload: SignUpRequest, db: Session = Depends(get_db)):
             detail="An account with this email already exists.",
         )
     user = User(
-        email=payload.email.lower(),
+        email=payload.email.strip().lower(),
         name=payload.name.strip(),
         role=payload.role,
         password_hash=hash_password(payload.password),

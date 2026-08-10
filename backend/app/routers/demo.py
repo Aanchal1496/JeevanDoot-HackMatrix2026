@@ -12,10 +12,13 @@ from app.database import get_db
 from app.models import (
     Consultation,
     Doctor,
+    HealthRecord,
     Prescription,
+    PrescriptionMedicine,
     User,
     UserProfile,
     UserRole,
+    Vital,
 )
 from app.auth import get_user_by_email, hash_password
 from app.schemas import DemoConsultationCreate, DemoStatusOut, DemoPatientOut
@@ -105,6 +108,97 @@ def _create_consultation(
     return c
 
 
+_VITALS = {
+    "HIGH": (158, 96, 104, 93, 38.4, 62.0, "158/96"),
+    "MEDIUM": (138, 86, 88, 96, 37.8, 68.0, "138/86"),
+    "LOW": (128, 80, 76, 98, 37.0, 55.0, "128/80"),
+}
+_REPORTS = {
+    "HIGH": ("Full Blood Count Report", "Hb 11.2, WBC 13.4, shows mild infection markers."),
+    "MEDIUM": ("Chest X-Ray", "Clear lung fields; no acute findings."),
+    "LOW": ("Lipid Profile", "Cholesterol 198 mg/dL — borderline."),
+}
+_DIAGNOSIS = {
+    "HIGH": "Hypertension with symptom cluster — follow-up required",
+    "MEDIUM": "Upper respiratory infection — supportive care",
+    "LOW": "General wellness — continue routine care",
+}
+
+
+def _seed_history(db: Session, user: User, data: dict, doctor: Doctor) -> None:
+    """Seed patient-facing history (vital, report, prior prescription) so the
+    patient's Records tab is populated. Idempotent per demo patient."""
+    risk = data["risk_level"]
+    # A recorded vital.
+    has_vital = db.query(Vital).filter(Vital.patient_user_id == user.id).first()
+    if not has_vital:
+        sys, dia, pulse, spo2, temp, wt, bp = _VITALS.get(risk, _VITALS["LOW"])
+        db.add(
+            Vital(
+                patient_user_id=user.id,
+                recorded_by=doctor.user_id or user.id,
+                blood_pressure=bp,
+                temperature=temp,
+                weight=wt,
+                pulse=pulse,
+                oxygen_saturation=spo2,
+            )
+        )
+        db.flush()
+    # A lab/report record.
+    has_rec = (
+        db.query(HealthRecord).filter(HealthRecord.patient_user_id == user.id).first()
+    )
+    if not has_rec:
+        title, desc = _REPORTS.get(risk, _REPORTS["LOW"])
+        db.add(
+            HealthRecord(
+                patient_user_id=user.id,
+                record_type="Report",
+                title=title,
+                description=desc,
+            )
+        )
+        db.flush()
+    # A prior prescription attached to the demo consultation (if none yet).
+    consultation = (
+        db.query(Consultation)
+        .filter(
+            Consultation.user_id == user.id,
+            Consultation.doctor_id == doctor.id,
+        )
+        .order_by(Consultation.id.asc())
+        .first()
+    )
+    if consultation and not consultation.prescription:
+        rx = Prescription(
+            consultation_id=consultation.id,
+            doctor_id=doctor.id,
+            patient_user_id=user.id,
+            patient_name=user.name,
+            diagnosis=_DIAGNOSIS.get(risk, _DIAGNOSIS["LOW"]),
+            instructions="Take medications as advised. Stay hydrated and rest well.",
+        )
+        db.add(rx)
+        db.flush()
+        for m in [
+            ("Paracetamol", "500 mg", "M:1 A:1 N:1", "5 days", "After food"),
+            ("Oral Rehydration Salts", "1 dose", "M:1 A:1 N:1", "3 days", "Mix in water"),
+        ]:
+            db.add(
+                PrescriptionMedicine(
+                    prescription_id=rx.id,
+                    medicine_name=m[0],
+                    dosage=m[1],
+                    frequency=m[2],
+                    duration=m[3],
+                    timing="Morning/Afternoon/Night",
+                    before_after_food=m[4],
+                )
+            )
+        db.flush()
+
+
 def ensure_demo(queue_limit: int = 50) -> bool:
     """Seed the base demo queue if missing. Returns True if anything was added."""
     from app.database import SessionLocal
@@ -129,6 +223,7 @@ def ensure_demo(queue_limit: int = 50) -> bool:
             if not has_case:
                 _create_consultation(db, user, data, doc)
                 added = True
+            _seed_history(db, user, data, doc)
         db.commit()
         return added
     finally:
