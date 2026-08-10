@@ -21,6 +21,9 @@ This cuts diagnosis delays by an estimated 70%, prevents disease progression, lo
 ## Live Demonstration Link
 [https://jeevan-doot-web-hack-matrix2026.vercel.app/](https://jeevan-doot-web-hack-matrix2026.vercel.app/)
 
+## PPT View Link
+[https://canva.link/htdd08m6nuo54cu](https://canva.link/htdd08m6nuo54cu)
+
 ## Technology Stack
 - **Frontend (Patient & Doctor Web Apps):** React
 - **Backend / Database / Auth:** Firebase (or Supabase)
