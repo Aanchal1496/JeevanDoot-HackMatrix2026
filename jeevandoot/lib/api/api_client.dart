@@ -62,11 +62,13 @@ class ApiClient {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    final res = await http.post(
-      Uri.parse('$baseUrl$path'),
-      headers: headers,
-      body: jsonEncode(data),
-    );
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(data),
+        )
+        .timeout(const Duration(seconds: 20));
     return _decode(res);
   }
 
@@ -75,10 +77,9 @@ class ApiClient {
     final headers = {
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    final res = await http.get(
-      Uri.parse('$baseUrl$path'),
-      headers: headers,
-    );
+    final res = await http
+        .get(Uri.parse('$baseUrl$path'), headers: headers)
+        .timeout(const Duration(seconds: 20));
     return _decode(res);
   }
 
@@ -89,11 +90,13 @@ class ApiClient {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    final res = await http.put(
-      Uri.parse('$baseUrl$path'),
-      headers: headers,
-      body: jsonEncode(data),
-    );
+    final res = await http
+        .put(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(data),
+        )
+        .timeout(const Duration(seconds: 20));
     return _decode(res);
   }
 }

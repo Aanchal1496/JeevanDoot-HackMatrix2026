@@ -4,6 +4,7 @@ import 'package:jeevandoot/api/auth_service.dart';
 import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/home_screen.dart';
+import 'package:jeevandoot/screens/doctor/doctor_home_screen.dart';
 import 'package:jeevandoot/screens/language_selection_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 
@@ -39,20 +40,25 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _navigateAfterDelay() async {
     await Future.delayed(const Duration(milliseconds: 2200));
     if (!mounted) return;
-    final hasToken = await ApiClient.instance.token != null;
+    var hasToken = await ApiClient.instance.token != null;
+    bool isDoctor = false;
     if (hasToken) {
       try {
         final user = await AuthService(ApiClient.instance).fetchMe();
         AppState.patientName = user.name;
+        isDoctor = user.role == 'doctor';
       } catch (_) {
         await ApiClient.instance.clearToken();
+        hasToken = false;
       }
     }
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) =>
-            hasToken ? const HomeScreen() : const LanguageSelectionScreen(),
+        builder: (_) {
+          if (!hasToken) return const LanguageSelectionScreen();
+          return isDoctor ? const DoctorHomeScreen() : const HomeScreen();
+        },
       ),
     );
   }

@@ -44,10 +44,12 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           _loading = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
-          _error = AppStrings.tr('Could not load availability.');
+          _error = e is ApiException
+              ? '${AppStrings.tr('Could not load availability.')} (${e.statusCode})'
+              : AppStrings.tr('Could not load availability.');
           _loading = false;
         });
       }
