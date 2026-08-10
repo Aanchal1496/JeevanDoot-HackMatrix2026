@@ -19,7 +19,7 @@ The platform follows a **2·2·24 service commitment**:
 This cuts diagnosis delays by an estimated 70%, prevents disease progression, lowers costs in low-resource settings, and contributes toward SDG-3 (Good Health & Well-being).
 
 ## Live Demonstration Link
-[Add your deployed demo link here — e.g. Vercel/Netlify/Firebase Hosting URL]
+https://jeevan-doot-web-hack-matrix2026.vercel.app/
 
 ## Technology Stack
 - **Frontend (Patient & Doctor Web Apps):** React
@@ -47,22 +47,11 @@ This cuts diagnosis delays by an estimated 70%, prevents disease progression, lo
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/jeevandoot.git
+git clone https://github.com/Aanchal1496/JeevanDoot-HackMatrix2026.git
 cd jeevandoot
 
 # Install dependencies
 npm install
-```
-
-### Environment Variables
-Create a `.env` file in the root directory and add your backend credentials:
-```
-REACT_APP_FIREBASE_API_KEY=your_api_key
-REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
-REACT_APP_FIREBASE_PROJECT_ID=your_project_id
-REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-REACT_APP_FIREBASE_APP_ID=your_app_id
 ```
 
 ### Running Locally
