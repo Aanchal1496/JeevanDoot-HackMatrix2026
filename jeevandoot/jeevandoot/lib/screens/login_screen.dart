@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/auth_service.dart';
 import 'package:jeevandoot/l10n/app_strings.dart';
+import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/asha/asha_home_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_home_screen.dart';
@@ -131,10 +132,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _doctorSignIn() {
-    final id = _doctorIdController.text.trim();
+  Future<void> _doctorSignIn() async {
+    final email = _doctorIdController.text.trim();
     final password = _passwordController.text;
-    if (id.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppStrings.tr('Please enter your Medical ID and password.')),
@@ -142,10 +143,32 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     }
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const DoctorHomeScreen()),
-      (route) => false,
-    );
+    setState(() => _submitting = true);
+    try {
+      final user = await AuthService(ApiClient.instance).signIn(
+        email: email,
+        password: password,
+      );
+      DoctorState.doctorName = user.name;
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const DoctorHomeScreen()),
+        (route) => false,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.tr('Could not reach the server. Please try again.')),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   void _ashaSignIn() {

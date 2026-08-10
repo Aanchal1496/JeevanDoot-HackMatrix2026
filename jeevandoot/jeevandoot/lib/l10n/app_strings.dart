@@ -59,6 +59,9 @@ const Map<String, String> _hi = {
   'Already have an account?': 'पहले से खाता है?',
   "Don't have an account?": 'खाता नहीं है?',
   'Logout': 'लॉग आउट',
+  'Logout?': 'लॉग आउट करें?',
+  'You will be returned to the login screen.':
+      'आप लॉगिन स्क्रीन पर वापस ले जाए जाएंगे।',
   'Profile': 'प्रोफ़ाइल',
   'Back': 'वापस',
   'Save': 'सहेजें',

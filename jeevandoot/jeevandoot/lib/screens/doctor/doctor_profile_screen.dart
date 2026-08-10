@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/constants.dart';
 import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
+import 'package:jeevandoot/screens/login_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -37,9 +39,42 @@ class DoctorProfileTab extends StatelessWidget {
             _detailsCard(scheme),
             const SizedBox(height: AppSpacing.stackMd),
             _stats(scheme),
+            const SizedBox(height: AppSpacing.stackLg),
+            PillButton(
+              label: AppStrings.tr('Logout'),
+              icon: Icons.logout,
+              backgroundColor: scheme.errorContainer,
+              foregroundColor: scheme.onErrorContainer,
+              onPressed: () => _logout(context),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppStrings.tr('Logout?')),
+        content: Text(AppStrings.tr('You will be returned to the login screen.')),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(AppStrings.tr('Cancel'))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(AppStrings.tr('Logout'))),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ApiClient.instance.clearToken();
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
     );
   }
 
