@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/asha_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/asha/asha_assignment_detail_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -45,7 +46,7 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Could not load your area. Pull to retry.';
+          _error = AppStrings.tr('Could not load your area. Pull to retry.');
           _loading = false;
         });
       }
@@ -58,7 +59,7 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
     final pendingCount = _tasks.where((t) => t.status == 'pending').length;
     return Scaffold(
       appBar: AppTopBar(
-        subtitle: 'Village Health Worker',
+        subtitle: AppStrings.tr('Village Health Worker'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: RefreshIndicator(
@@ -68,7 +69,7 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
           padding: const EdgeInsets.all(AppSpacing.containerMargin),
           children: [
             Text(
-              'ASHA Dashboard',
+              AppStrings.tr('ASHA Dashboard'),
               style: AppTextStyles.displayHeroMobile
                   .copyWith(color: scheme.onPrimaryFixedVariant),
             ),
@@ -76,15 +77,15 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
             Row(
               children: [
                 _statCard(scheme, Icons.group_outlined, _assignments.length,
-                    'Assigned\nfamilies', scheme.primaryContainer),
+                    AppStrings.tr('Assigned\nfamilies'), scheme.primaryContainer),
                 const SizedBox(width: AppSpacing.gutter),
                 _statCard(scheme, Icons.pending_actions, pendingCount,
-                    'Pending\ntasks', scheme.tertiaryContainer),
+                    AppStrings.tr('Pending\ntasks'), scheme.tertiaryContainer),
               ],
             ),
             const SizedBox(height: AppSpacing.stackMd),
             Text(
-              'MY AREA',
+              AppStrings.tr('MY AREA'),
               style: AppTextStyles.labelSm.copyWith(
                 color: scheme.onSurfaceVariant,
                 letterSpacing: 0.8,
@@ -106,7 +107,7 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
             else if (_assignments.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.stackLg),
-                child: Text('No families assigned to you.',
+                child: Text(AppStrings.tr('No families assigned to you.'),
                     style: AppTextStyles.bodyMd
                         .copyWith(color: scheme.onSurfaceVariant)),
               )
@@ -156,7 +157,7 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(a.patientName ?? 'Patient',
+                Text(a.patientName ?? AppStrings.tr('Patient'),
                     style: AppTextStyles.headlineMd
                         .copyWith(color: scheme.onSurface)),
                 const SizedBox(height: 2),

@@ -79,6 +79,8 @@ SYMPTOM_DEFS: dict[str, dict] = {
         "synonyms": [
             "stomach", "tummy", "belly", "abdominal", "nausea",
             "vomit", "diarrh","cramps",
+            # Latin single-word forms for romanized speech
+            "pet", "pait", "pota", "udar", "potte",
             # Hindi / Marathi / Gujarati
             "pet dard", "pait dard", "pet kharaab", "pait kharaab",
             "pet me dard", "pet dukhe", "pot dukh", "pota dukh", "ooki",
@@ -236,6 +238,25 @@ def _clean_text(value: str) -> str:
     return re.sub(r"\s+", " ", (value or "").lower())
 
 
+# Romanized-Indian spelling tolerances. Hindi/Marathi/Gujarati words get written
+# many ways in Latin script (e.g. "chhati"/"chati", "mai"/"me", "taap"/"tap").
+# We normalise BOTH the incoming text and every synonym through this phonetic
+# form so those variants all match, without affecting native-script (Devanagari).
+_COLLAPSE = re.compile(r"(.)\1+")
+
+
+def _match_form(value: str) -> str:
+    """Lowercase + collapse doubled letters so 'chhati' and 'chati' become equal.
+
+    Applied identically to input text and to synonyms so matching stays
+    consistent. Devanagari/Gujarati script has no adjacent doubled Latin
+    letters and its geminates are split by a virama, so they are unaffected.
+    """
+    v = (value or "").lower()
+    v = _COLLAPSE.sub(r"\1", v)
+    return v
+
+
 def extract_severity(text: str) -> str | None:
     for pattern, label in SEVERITY_PATTERNS:
         if pattern.search(text):
@@ -260,11 +281,11 @@ def extract_duration(text: str) -> str | None:
 
 def extract_symptoms(text: str) -> set[str]:
     """Return canonical symptom ids matched in free text."""
-    cleaned = _clean_text(text)
+    cleaned = _match_form(_clean_text(text))
     found: set[str] = set()
     for sid, meta in SYMPTOM_DEFS.items():
         for syn in meta["synonyms"]:
-            if syn.lower() in cleaned:
+            if _match_form(syn) in cleaned:
                 found.add(sid)
                 break
     return found

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 
 class NavItem {
@@ -13,16 +14,28 @@ class NavItem {
   final String label;
 }
 
-const List<NavItem> kNavItems = [
-  NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
+final List<NavItem> kNavItems = [
+  NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: AppStrings.tr('Home')),
   NavItem(
     icon: Icons.medical_services_outlined,
     activeIcon: Icons.medical_services,
-    label: 'Health',
+    label: AppStrings.tr('Health'),
   ),
-  NavItem(icon: Icons.chat_bubble_outline, activeIcon: Icons.chat_bubble, label: 'Consult'),
-  NavItem(icon: Icons.description_outlined, activeIcon: Icons.description, label: 'Records'),
-  NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Profile'),
+  NavItem(
+    icon: Icons.chat_bubble_outline,
+    activeIcon: Icons.chat_bubble,
+    label: AppStrings.tr('Consult'),
+  ),
+  NavItem(
+    icon: Icons.description_outlined,
+    activeIcon: Icons.description,
+    label: AppStrings.tr('Records'),
+  ),
+  NavItem(
+    icon: Icons.person_outline,
+    activeIcon: Icons.person,
+    label: AppStrings.tr('Profile'),
+  ),
 ];
 
 /// The fixed bottom navigation bar from the patient design system.

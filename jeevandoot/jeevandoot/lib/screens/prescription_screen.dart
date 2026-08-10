@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/reminders_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -13,7 +14,7 @@ class PrescriptionScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
-        title: 'JeevanDoot',
+        title: AppStrings.tr('JeevanDoot'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: SingleChildScrollView(
@@ -27,7 +28,7 @@ class PrescriptionScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Your Prescription',
+              AppStrings.tr('Your Prescription'),
               style: AppTextStyles.displayHeroMobile.copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.unit),
@@ -59,10 +60,10 @@ class PrescriptionScreen extends StatelessWidget {
                         ),
                         children: [
                           TextSpan(
-                            text: 'Dr. Priya Sharma',
+                            text: AppStrings.tr('Dr. Priya Sharma'),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          const TextSpan(text: ' • August 10, 2026'),
+                          TextSpan(text: AppStrings.tr(' • August 10, 2026')),
                         ],
                       ),
                       maxLines: 1,
@@ -91,7 +92,7 @@ class PrescriptionScreen extends StatelessWidget {
                   const SizedBox(width: AppSpacing.stackSm),
                   Expanded(
                     child: Text(
-                      'Take after food. Drink plenty of water.',
+                      AppStrings.tr('Take after food. Drink plenty of water.'),
                       style: AppTextStyles.bodyMd.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -142,12 +143,12 @@ class PrescriptionScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Paracetamol',
+                          AppStrings.tr('Paracetamol'),
                           style: AppTextStyles.headlineMd
                               .copyWith(color: scheme.onSurface),
                         ),
                         Text(
-                          '500 mg Tablet',
+                          AppStrings.tr('500 mg Tablet'),
                           style: AppTextStyles.bodyMd
                               .copyWith(color: scheme.onSurfaceVariant),
                         ),
@@ -167,7 +168,7 @@ class PrescriptionScreen extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      '3 Days',
+                      AppStrings.tr('3 Days'),
                       style: AppTextStyles.labelLg
                           .copyWith(color: scheme.onSecondaryContainer),
                     ),
@@ -185,15 +186,15 @@ class PrescriptionScreen extends StatelessWidget {
                   _doseCell(
                     scheme,
                     emoji: '☀️',
-                    label: 'Morning',
-                    value: '1',
+                    label: AppStrings.tr('Morning'),
+                    value: AppStrings.tr('1'),
                     muted: false,
                   ),
                   const SizedBox(width: 8),
                   _doseCell(
                     scheme,
                     emoji: '🍽️',
-                    label: 'Afternoon',
+                    label: AppStrings.tr('Afternoon'),
                     value: '-',
                     muted: true,
                   ),
@@ -201,8 +202,8 @@ class PrescriptionScreen extends StatelessWidget {
                   _doseCell(
                     scheme,
                     emoji: '🌙',
-                    label: 'Night',
-                    value: '1',
+                    label: AppStrings.tr('Night'),
+                    value: AppStrings.tr('1'),
                     muted: false,
                   ),
                 ],
@@ -238,7 +239,7 @@ class PrescriptionScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Set Reminder',
+                          AppStrings.tr('Set Reminder'),
                           style: AppTextStyles.labelLg
                               .copyWith(color: scheme.onPrimaryContainer),
                         ),

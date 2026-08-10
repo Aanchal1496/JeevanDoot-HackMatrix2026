@@ -9,6 +9,7 @@ from app.models import (
     Appointment,
     AppointmentStatus,
     Doctor,
+    DoctorAvailability,
     NotificationType,
     User,
     UserRole,
@@ -29,6 +30,11 @@ def _parse_dt(value):
         except (ValueError, TypeError):
             continue
     return None
+
+
+def _minutes_hm(t):
+    parts = t.split(":")
+    return int(parts[0]) * 60 + (int(parts[1]) if len(parts) > 1 else 0)
 
 
 def _notify_patient_and_doctor(db, appointment: Appointment, doctor: Doctor | None):
@@ -97,7 +103,26 @@ def create_appointment(
     # a patient books for themself.
     target_user_id = current_user.id
     asha_id = None
-    if current_user.role == UserRole.asha:
+    if current_user.role == UserRole.doctor:
+        # A doctor can schedule their own follow-up appointment for a patient.
+        doctor_profile = (
+            db.query(Doctor).filter(Doctor.user_id == current_user.id).first()
+        )
+        if not doctor_profile or doctor_profile.id != doctor.id:
+            raise HTTPException(
+                status_code=403,
+                detail="You can only schedule appointments for yourself.",
+            )
+        if not payload.patient_user_id:
+            raise HTTPException(
+                status_code=422,
+                detail="patient_user_id is required for doctor-initiated booking.",
+            )
+        patient_user = db.query(User).get(payload.patient_user_id)
+        if not patient_user or patient_user.role != UserRole.patient:
+            raise HTTPException(status_code=404, detail="Patient not found.")
+        target_user_id = patient_user.id
+    elif current_user.role == UserRole.asha:
         if not payload.family_member_id:
             # for the supported scope, ASHA books for the primary patient account
             pass
@@ -122,6 +147,37 @@ def create_appointment(
             status_code=status.HTTP_409_CONFLICT,
             detail="That time slot is already booked. Please choose another time.",
         )
+
+    # Patient-initiated bookings must fall inside a window the doctor declared.
+    # Enforced only when the doctor has set windows for that date, so legacy
+    # booking flows (and tests) without availability still work.
+    if current_user.role == UserRole.patient:
+        date_key = scheduled.strftime("%Y-%m-%d")
+        slot_start = scheduled.hour * 60 + scheduled.minute
+        slot_end = slot_start + 60  # 1-hour consultation
+        windows = (
+            db.query(DoctorAvailability)
+            .filter(
+                DoctorAvailability.doctor_id == doctor.id,
+                DoctorAvailability.date == date_key,
+            )
+            .all()
+        )
+        if windows:
+            allowed = False
+            for w in windows:
+                if (
+                    _minutes_hm(w.start_time) <= slot_start
+                    and slot_end <= _minutes_hm(w.end_time)
+                    and scheduled.minute == 0
+                ):
+                    allowed = True
+                    break
+            if not allowed:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Please pick a free 1-hour slot within the doctor's availability.",
+                )
 
     appointment = Appointment(
         patient_user_id=target_user_id,

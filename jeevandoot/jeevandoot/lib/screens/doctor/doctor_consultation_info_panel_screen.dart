@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -20,7 +21,7 @@ class DoctorConsultationInfoPanelScreen extends StatelessWidget {
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'Patient Information',
+        title: AppStrings.tr('Patient Information'),
         hideTrailing: true,
       ),
       body: ListView(
@@ -34,24 +35,33 @@ class DoctorConsultationInfoPanelScreen extends StatelessWidget {
             scheme,
             icon: Icons.medical_information,
             color: scheme.primary,
-            title: 'Previous Conditions',
-            items: const ['Hypertension (2018)', 'Type 2 Diabetes (2020)'],
+            title: AppStrings.tr('Previous Conditions'),
+            items: [
+              AppStrings.tr('Hypertension (2018)'),
+              AppStrings.tr('Type 2 Diabetes (2020)'),
+            ],
           ),
           const SizedBox(height: AppSpacing.stackMd),
           _infoSection(
             scheme,
             icon: Icons.healing,
             color: scheme.tertiary,
-            title: 'Allergies',
-            items: const ['Penicillin (Mild rash)', 'Dust mites'],
+            title: AppStrings.tr('Allergies'),
+            items: [
+              AppStrings.tr('Penicillin (Mild rash)'),
+              AppStrings.tr('Dust mites'),
+            ],
           ),
           const SizedBox(height: AppSpacing.stackMd),
           _infoSection(
             scheme,
             icon: Icons.medication,
             color: scheme.primary,
-            title: 'Current Medications',
-            items: const ['Metformin 500mg (Daily)', 'Lisinopril 10mg (Daily)'],
+            title: AppStrings.tr('Current Medications'),
+            items: [
+              AppStrings.tr('Metformin 500mg (Daily)'),
+              AppStrings.tr('Lisinopril 10mg (Daily)'),
+            ],
           ),
         ],
       ),
@@ -123,9 +133,9 @@ class DoctorConsultationInfoPanelScreen extends StatelessWidget {
 
   Widget _vitalsRow(ColorScheme scheme) {
     final vitals = [
-      (label: 'Temp', value: '101.2°F'),
-      (label: 'Pulse', value: '88 bpm'),
-      (label: 'BP', value: '122/81'),
+      (label: AppStrings.tr('Temp'), value: '101.2°F'),
+      (label: AppStrings.tr('Pulse'), value: '88 bpm'),
+      (label: AppStrings.tr('BP'), value: '122/81'),
     ];
     return Row(
       children: [

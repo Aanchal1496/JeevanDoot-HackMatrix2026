@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/patient_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 
@@ -25,7 +26,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppTopBar(title: 'Notifications', showBack: true),
+      appBar: AppTopBar(title: AppStrings.tr('Notifications'), showBack: true),
       body: FutureBuilder<List<NotificationItem>>(
         future: _future,
         builder: (context, snap) {
@@ -33,13 +34,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(child: Text('Could not load notifications.'));
+            return Center(child: Text(AppStrings.tr('Could not load notifications.')));
           }
           final items = snap.data ?? [];
           if (items.isEmpty) {
             return Center(
-              child: Text(
-                'No notifications yet.',
+child: Text(
+                AppStrings.tr('No notifications yet.'),
                 style: AppTextStyles.bodyLg
                     .copyWith(color: scheme.onSurfaceVariant),
               ),

@@ -1,4 +1,5 @@
 import 'package:jeevandoot/api/api_client.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 
 class Doctor {
   const Doctor({
@@ -94,6 +95,74 @@ class QueuePatient {
       );
 }
 
+/// Minimal patient record used by the doctor to pick who to schedule for.
+class PatientBrief {
+  const PatientBrief({
+    required this.id,
+    required this.name,
+    this.phone,
+  });
+  final int id;
+  final String name;
+  final String? phone;
+
+  factory PatientBrief.fromJson(Map<String, dynamic> json) => PatientBrief(
+        id: json['id'] as int,
+        name: json['name'] as String? ?? AppStrings.tr('Patient'),
+        phone: json['phone'] as String?,
+      );
+}
+
+/// A booked appointment visible on the doctor's Schedule tab.
+class DoctorAppointment {
+  const DoctorAppointment({
+    required this.id,
+    required this.patientUserId,
+    required this.patientName,
+    required this.type,
+    required this.status,
+    this.scheduledAt,
+  });
+  final int id;
+  final int patientUserId;
+  final String patientName;
+  final String type;
+  final String status;
+  final String? scheduledAt;
+
+  factory DoctorAppointment.fromJson(Map<String, dynamic> json) =>
+      DoctorAppointment(
+        id: json['id'] as int,
+        patientUserId: json['patient_user_id'] as int,
+        patientName: json['patient_name'] as String? ?? AppStrings.tr('Patient'),
+        type: json['type'] as String? ?? AppStrings.tr('Consultation'),
+        status: (json['status'] as String? ?? 'confirmed').toUpperCase(),
+        scheduledAt: json['scheduled_at']?.toString(),
+      );
+}
+
+/// A window (e.g. 16:00-20:00) the doctor is free on a given date.
+class AvailabilityWindow {
+  const AvailabilityWindow({
+    required this.id,
+    required this.date,
+    required this.startTime,
+    required this.endTime,
+  });
+  final int id;
+  final String date;
+  final String startTime;
+  final String endTime;
+
+  factory AvailabilityWindow.fromJson(Map<String, dynamic> json) =>
+      AvailabilityWindow(
+        id: json['id'] as int,
+        date: json['date'] as String? ?? '',
+        startTime: json['start_time'] as String? ?? '09:00',
+        endTime: json['end_time'] as String? ?? '17:00',
+      );
+}
+
 /// Client for doctor portal / dashboard endpoints.
 class DoctorService {
   const DoctorService(this._client);
@@ -179,5 +248,62 @@ class DoctorService {
       authenticated: true,
     ) as Map<String, dynamic>;
     return json;
+  }
+
+  /// Patients available for the doctor to schedule a follow-up.
+  Future<List<PatientBrief>> patients() async {
+    final json = await _client.get('/doctors/patients') as List<dynamic>;
+    return json
+        .map((e) => PatientBrief.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Booked appointments for this doctor (with patient names).
+  Future<List<DoctorAppointment>> appointments() async {
+    final json = await _client.get('/doctors/appointments') as List<dynamic>;
+    return json
+        .map((e) => DoctorAppointment.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Declare a free window for this doctor.
+  Future<Map<String, dynamic>> setAvailability({
+    required String date,
+    required String startTime,
+    required String endTime,
+  }) async {
+    return await _client.post(
+      '/doctors/availability',
+      {'date': date, 'start_time': startTime, 'end_time': endTime},
+      authenticated: true,
+    ) as Map<String, dynamic>;
+  }
+
+  /// The doctor's own availability windows (optionally filtered by date).
+  Future<List<AvailabilityWindow>> myAvailability({String? date}) async {
+    final q = date == null ? '' : '?date=$date';
+    final json = await _client.get('/doctors/availability$q') as List<dynamic>;
+    return json
+        .map((e) => AvailabilityWindow.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Books a follow-up appointment for a patient with this doctor.
+  Future<Map<String, dynamic>> scheduleAppointment({
+    required int doctorId,
+    required int patientUserId,
+    required String scheduledAt,
+    String type = 'Video Consultation',
+  }) async {
+    return await _client.post(
+      '/appointments',
+      {
+        'doctor_id': doctorId,
+        'patient_user_id': patientUserId,
+        'scheduled_at': scheduledAt,
+        'type': type,
+      },
+      authenticated: true,
+    ) as Map<String, dynamic>;
   }
 }

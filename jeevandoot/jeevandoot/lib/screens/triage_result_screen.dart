@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/book_consultation_screen.dart';
 import 'package:jeevandoot/screens/offline_screen.dart';
@@ -45,20 +46,20 @@ class _ResultView extends StatelessWidget {
                 Icon(Icons.cloud_upload_outlined, size: 64, color: scheme.primary),
                 const SizedBox(height: AppSpacing.stackMd),
                 Text(
-                  'Symptom check saved',
+                  AppStrings.tr('Symptom check saved'),
                   style: AppTextStyles.displayHeroMobile
                       .copyWith(color: scheme.onSurface),
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 Text(
-                  'You appear to be offline. Your check was saved on this device and will be sent to a doctor when you reconnect.',
+                  AppStrings.tr('You appear to be offline. Your check was saved on this device and will be sent to a doctor when you reconnect.'),
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyLg
                       .copyWith(color: scheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: AppSpacing.stackLg),
                 PillButton(
-                  label: 'View Sync Status',
+                  label: AppStrings.tr('View Sync Status'),
                   icon: Icons.sync,
                   height: 48,
                   onPressed: () {
@@ -80,16 +81,16 @@ class _ResultView extends StatelessWidget {
     final isMedium = result.isMedium;
 
     final (Color bg, Color dot, IconData icon, String label) = isHigh
-        ? (scheme.errorContainer, scheme.error, Icons.emergency, 'High Risk')
+        ? (scheme.errorContainer, scheme.error, Icons.emergency, AppStrings.tr('High Risk'))
         : isMedium
-            ? (scheme.tertiaryContainer.withValues(alpha: 0.25), scheme.tertiaryContainer, Icons.warning, 'Medium Risk')
-            : (scheme.primaryContainer.withValues(alpha: 0.25), scheme.primary, Icons.check_circle, 'Low Risk');
+            ? (scheme.tertiaryContainer.withValues(alpha: 0.25), scheme.tertiaryContainer, Icons.warning, AppStrings.tr('Medium Risk'))
+            : (scheme.primaryContainer.withValues(alpha: 0.25), scheme.primary, Icons.check_circle, AppStrings.tr('Low Risk'));
 
     final headline = isHigh
-        ? 'Urgent medical attention needed'
+        ? AppStrings.tr('Urgent medical attention needed')
         : isMedium
-            ? 'Medical attention recommended'
-            : 'Your symptoms look low risk';
+            ? AppStrings.tr('Medical attention recommended')
+            : AppStrings.tr('Your symptoms look low risk');
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -125,8 +126,8 @@ class _ResultView extends StatelessWidget {
                   const SizedBox(height: AppSpacing.stackMd),
                   Center(
                     child: Text(
-                      "This assessment is for guidance only and does not replace a "
-                      "medical professional's diagnosis or advice.",
+                      AppStrings.tr("This assessment is for guidance only and does not replace a "
+                      "medical professional's diagnosis or advice."),
                       textAlign: TextAlign.center,
                       style: AppTextStyles.labelSm.copyWith(
                         color: scheme.outline,
@@ -231,7 +232,7 @@ class _ResultView extends StatelessWidget {
               Icon(Icons.warning_amber_rounded, color: scheme.onErrorContainer),
               const SizedBox(width: AppSpacing.unit),
               Text(
-                'Important',
+                AppStrings.tr('Important'),
                 style: AppTextStyles.headlineMd.copyWith(color: scheme.onErrorContainer),
               ),
             ],
@@ -256,7 +257,7 @@ class _ResultView extends StatelessWidget {
             ),
           const SizedBox(height: AppSpacing.stackSm),
           Text(
-            'Seek urgent medical attention now. Do not rely on home self-care.',
+            AppStrings.tr('Seek urgent medical attention now. Do not rely on home self-care.'),
             style: AppTextStyles.bodyMd.copyWith(color: scheme.onErrorContainer),
           ),
         ],
@@ -288,13 +289,13 @@ class _ResultView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Symptoms detected',
+          AppStrings.tr('Symptoms detected'),
           style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.stackSm),
         if (result.symptoms.isEmpty)
           Text(
-            'No specific symptoms could be identified.',
+            AppStrings.tr('No specific symptoms could be identified.'),
             style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
           )
         else
@@ -344,7 +345,7 @@ class _ResultView extends StatelessWidget {
             Icon(Icons.info_outline, size: 20, color: scheme.secondary),
             const SizedBox(width: AppSpacing.unit),
             Text(
-              'Why this result',
+              AppStrings.tr('Why this result'),
               style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
             ),
           ],
@@ -368,7 +369,7 @@ class _ResultView extends StatelessWidget {
                 size: 20, color: scheme.primary),
             const SizedBox(width: AppSpacing.unit),
             Text(
-              result.isHigh ? 'Recommended next step' : 'Next steps',
+              result.isHigh ? AppStrings.tr('Recommended next step') : AppStrings.tr('Next steps'),
               style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
             ),
           ],
@@ -400,14 +401,14 @@ class _ResultView extends StatelessWidget {
       return Column(
         children: [
           PillButton(
-            label: 'Find Hospital',
+            label: AppStrings.tr('Find Hospital'),
             icon: Icons.local_hospital,
             backgroundColor: scheme.error,
             foregroundColor: scheme.onError,
-            onPressed: () => _toast(context, 'Opening map to nearest hospital...'),
+            onPressed: () => _toast(context, AppStrings.tr('Opening map to nearest hospital...')),
           ),
           const SizedBox(height: AppSpacing.unit),
-          _secondaryButton(scheme, Icons.restart_alt, 'Check Again',
+          _secondaryButton(scheme, Icons.restart_alt, AppStrings.tr('Check Again'),
               () => _restart(context)),
         ],
       );
@@ -416,14 +417,14 @@ class _ResultView extends StatelessWidget {
       return Column(
         children: [
           PillButton(
-            label: 'Book a Consultation',
+            label: AppStrings.tr('Book a Consultation'),
             icon: Icons.calendar_month,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const BookConsultationScreen()),
             ),
           ),
           const SizedBox(height: AppSpacing.unit),
-          _secondaryButton(scheme, Icons.restart_alt, 'Check Again',
+          _secondaryButton(scheme, Icons.restart_alt, AppStrings.tr('Check Again'),
               () => _restart(context)),
         ],
       );
@@ -431,14 +432,14 @@ class _ResultView extends StatelessWidget {
     return Column(
       children: [
         PillButton(
-          label: 'Get Self-Care Tips',
+          label: AppStrings.tr('Get Self-Care Tips'),
           icon: Icons.self_improvement,
           onPressed: () =>
-              _toast(context, 'Self-care guidance can be found above.'),
+              _toast(context, AppStrings.tr('Self-care guidance can be found above.')),
         ),
         const SizedBox(height: AppSpacing.unit),
         _secondaryButton(
-            scheme, Icons.restart_alt, 'Check Again', () => _restart(context)),
+            scheme, Icons.restart_alt, AppStrings.tr('Check Again'), () => _restart(context)),
       ],
     );
   }

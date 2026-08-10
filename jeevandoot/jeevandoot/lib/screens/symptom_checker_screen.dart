@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/listening_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
@@ -36,13 +37,13 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
             _progressStepper(scheme),
             const SizedBox(height: AppSpacing.stackMd),
             Text(
-              "Tell us what you're feeling",
+              AppStrings.tr("Tell us what you're feeling"),
               textAlign: TextAlign.center,
               style: AppTextStyles.displayHeroMobile.copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.unit),
             Text(
-              'Describe your symptoms in your own words.',
+              AppStrings.tr('Describe your symptoms in your own words.'),
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
             ),
@@ -55,7 +56,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
                   child: Text(
-                    'Or choose symptoms',
+                    AppStrings.tr('Or choose symptoms'),
                     style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ),
@@ -88,7 +89,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
         child: SafeArea(
           top: false,
           child: PillButton(
-            label: 'Continue',
+            label: AppStrings.tr('Continue'),
             onPressed: _continue,
           ),
         ),
@@ -99,8 +100,8 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
   void _continue() {
     if (_selected.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one symptom or use voice.'),
+        SnackBar(
+          content: Text(AppStrings.tr('Please select at least one symptom or use voice.')),
         ),
       );
       return;
@@ -120,7 +121,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
     return Row(
       children: [
         Text(
-          'Step 1 of 3',
+          AppStrings.tr('Step 1 of 3'),
           style: AppTextStyles.labelLg.copyWith(color: scheme.primary),
         ),
         const SizedBox(width: AppSpacing.gutter),
@@ -188,7 +189,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
         ),
         const SizedBox(height: AppSpacing.stackSm),
         Text(
-          'Tap to speak',
+          AppStrings.tr('Tap to speak'),
           style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.stackMd),

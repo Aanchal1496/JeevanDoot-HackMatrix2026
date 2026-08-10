@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/auth_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/home_screen.dart';
 import 'package:jeevandoot/screens/language_selection_screen.dart';
@@ -97,7 +98,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: AppSpacing.stackMd),
                 Text(
-                  'JeevanDoot',
+                  AppStrings.tr('JeevanDoot'),
                   style: AppTextStyles.displayHero.copyWith(
                     color: scheme.primary,
                     fontWeight: FontWeight.bold,
@@ -105,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 Text(
-                  'Your health, closer to home.',
+                  AppStrings.tr('Your health, closer to home.'),
                   style: AppTextStyles.bodyMd.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

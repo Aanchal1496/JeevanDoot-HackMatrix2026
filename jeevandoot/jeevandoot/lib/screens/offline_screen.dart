@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/services/sync_queue.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -49,41 +50,41 @@ class _OfflineScreenState extends State<OfflineScreen> {
       SyncStatus.online => (
           Icons.cloud_done,
           scheme.primary,
-          'You\'re online',
+          AppStrings.tr('You\'re online'),
           count == 0
-              ? 'Everything is up to date.'
+              ? AppStrings.tr('Everything is up to date.')
               : '$count item(s) waiting to sync.',
         ),
       SyncStatus.syncing => (
           Icons.sync,
           scheme.primary,
-          'Syncing…',
-          'Uploading queued changes.',
+          AppStrings.tr('Syncing…'),
+          AppStrings.tr('Uploading queued changes.'),
         ),
       SyncStatus.synced => (
           Icons.check_circle,
           const Color(0xFF10B981),
-          'All synced',
-          'Queued changes are uploaded.',
+          AppStrings.tr('All synced'),
+          AppStrings.tr('Queued changes are uploaded.'),
         ),
       SyncStatus.failed => (
           Icons.error_outline,
           scheme.error,
-          'Some items failed',
-          'Check your connection and try again.',
+          AppStrings.tr('Some items failed'),
+          AppStrings.tr('Check your connection and try again.'),
         ),
       SyncStatus.offline => (
           Icons.cloud_off,
           scheme.secondary,
-          'You\'re offline',
+          AppStrings.tr('You\'re offline'),
           count == 0
-              ? 'Your changes will be saved on this device and synced later.'
+              ? AppStrings.tr('Your changes will be saved on this device and synced later.')
               : '$count item(s) saved and waiting to sync.',
         ),
     };
 
     return Scaffold(
-      appBar: AppTopBar(showBack: true, title: 'JeevanDoot', onTrailing: () {}),
+      appBar: AppTopBar(showBack: true, title: AppStrings.tr('JeevanDoot'), onTrailing: () {}),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.containerMargin,
@@ -128,7 +129,7 @@ class _OfflineScreenState extends State<OfflineScreen> {
               const LinearProgressIndicator()
             else
               PillButton(
-                label: count == 0 ? 'Check Connection' : 'Sync Now',
+                label: count == 0 ? AppStrings.tr('Check Connection') : AppStrings.tr('Sync Now'),
                 icon: Icons.sync,
                 expanded: false,
                 height: 48,
@@ -137,7 +138,7 @@ class _OfflineScreenState extends State<OfflineScreen> {
             const SizedBox(height: AppSpacing.stackLg),
             if (count > 0) ...[
               Text(
-                'QUEUED ITEMS',
+                AppStrings.tr('QUEUED ITEMS'),
                 style: AppTextStyles.labelSm.copyWith(
                   color: scheme.onSurfaceVariant,
                   letterSpacing: 0.8,
@@ -214,9 +215,9 @@ class _OfflineScreenState extends State<OfflineScreen> {
 
   static String _relative(String? iso) {
     final t = DateTime.tryParse(iso ?? '');
-    if (t == null) return 'just now';
+    if (t == null) return AppStrings.tr('just now');
     final diff = DateTime.now().difference(t.toLocal());
-    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 1) return AppStrings.tr('just now');
     if (diff.inHours < 1) return '${diff.inMinutes}m ago';
     return '${diff.inHours}h ago';
   }

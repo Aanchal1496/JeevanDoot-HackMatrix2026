@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -35,7 +36,7 @@ class _DoctorAISuggestedQuestionsScreenState
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'AI Suggested Questions',
+        title: AppStrings.tr('AI Suggested Questions'),
         hideTrailing: true,
       ),
       body: Column(
@@ -92,7 +93,7 @@ class _DoctorAISuggestedQuestionsScreenState
           const SizedBox(width: AppSpacing.gutter),
           Expanded(
             child: Text(
-              'AI has generated questions based on the patient\'s reported symptoms.',
+              AppStrings.tr("AI has generated questions based on the patient's reported symptoms."),
               style: AppTextStyles.bodyMd.copyWith(
                 color: scheme.onPrimaryContainer,
                 fontSize: 14,
@@ -147,7 +148,7 @@ class _DoctorAISuggestedQuestionsScreenState
               const SizedBox(width: AppSpacing.gutter),
               Expanded(
                 child: Text(
-                  question,
+                  AppStrings.tr(question),
                   style: AppTextStyles.bodyMd
                       .copyWith(color: scheme.onSurface, fontSize: 14),
                 ),

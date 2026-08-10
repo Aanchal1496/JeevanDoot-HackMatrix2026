@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/doctor_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -41,14 +42,14 @@ class _DoctorNewPrescriptionScreenState
     setState(() {
       _medicines.add(MedicineEntry(
         name: name,
-        category: 'Tablet',
+        category: AppStrings.tr('Tablet'),
         dosage: '1',
         unit: 'mg',
         morning: 1,
         afternoon: 0,
         night: 1,
         days: 5,
-        instructions: 'After food',
+        instructions: AppStrings.tr('After food'),
       ));
       _searchController.clear();
       _searchQuery = '';
@@ -80,8 +81,8 @@ class _DoctorNewPrescriptionScreenState
     final patientUserId = widget.patient.patientUserId;
     if (patientUserId == null || _medicines.isEmpty || _submitting) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Add at least one medicine to save the prescription.')),
+        SnackBar(
+            content: Text(AppStrings.tr('Add at least one medicine to save the prescription.'))),
       );
       return;
     }
@@ -112,7 +113,7 @@ class _DoctorNewPrescriptionScreenState
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Prescription saved.')),
+        SnackBar(content: Text(AppStrings.tr('Prescription saved.'))),
       );
     } catch (e) {
       if (!mounted) return;
@@ -131,7 +132,7 @@ class _DoctorNewPrescriptionScreenState
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'New Prescription',
+        title: AppStrings.tr('New Prescription'),
         hideTrailing: true,
       ),
       body: Column(
@@ -198,7 +199,7 @@ class _DoctorNewPrescriptionScreenState
                               size: 40, color: scheme.onSurfaceVariant),
                           const SizedBox(height: AppSpacing.unit),
                           Text(
-                            'Search and add medicines above',
+                            AppStrings.tr('Search and add medicines above'),
                             style: AppTextStyles.bodyMd
                                 .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
                           ),
@@ -227,7 +228,9 @@ class _DoctorNewPrescriptionScreenState
                 ),
               ),
               child: PillButton(
-                label: _submitting ? 'Saving…' : 'Save Prescription',
+                label: _submitting
+                  ? AppStrings.tr('Saving…')
+                  : AppStrings.tr('Save Prescription'),
                 icon: Icons.check_circle_outline,
                 height: 48,
                 onPressed: _submitting ? null : _save,
@@ -243,7 +246,7 @@ class _DoctorNewPrescriptionScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'SEARCH MEDICINES',
+          AppStrings.tr('SEARCH MEDICINES'),
           style: AppTextStyles.labelSm.copyWith(
             color: scheme.onSurfaceVariant,
             letterSpacing: 0.8,
@@ -257,7 +260,7 @@ class _DoctorNewPrescriptionScreenState
             _showResults = value.isNotEmpty;
           }),
           decoration: InputDecoration(
-            hintText: 'Search medicine name...',
+            hintText: AppStrings.tr('Search medicine name...'),
             hintStyle: AppTextStyles.bodyMd
                 .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
             prefixIcon: Icon(Icons.search, color: scheme.onSurfaceVariant),
@@ -328,13 +331,13 @@ class _DoctorNewPrescriptionScreenState
           const SizedBox(height: AppSpacing.stackSm),
           Row(
             children: [
-              _timeStepper(scheme, 'Morning', medicine.morning, (v) =>
+              _timeStepper(scheme, AppStrings.tr('Morning'), medicine.morning, (v) =>
                   _updateDosage(medicine, index, morning: v)),
               const SizedBox(width: AppSpacing.unit),
-              _timeStepper(scheme, 'Afternoon', medicine.afternoon, (v) =>
+              _timeStepper(scheme, AppStrings.tr('Afternoon'), medicine.afternoon, (v) =>
                   _updateDosage(medicine, index, afternoon: v)),
               const SizedBox(width: AppSpacing.unit),
-              _timeStepper(scheme, 'Night', medicine.night, (v) =>
+              _timeStepper(scheme, AppStrings.tr('Night'), medicine.night, (v) =>
                   _updateDosage(medicine, index, night: v)),
             ],
           ),
@@ -344,7 +347,7 @@ class _DoctorNewPrescriptionScreenState
               Icon(Icons.calendar_today, size: 16, color: scheme.onSurfaceVariant),
               const SizedBox(width: 8),
               Text(
-                'Duration',
+                AppStrings.tr('Duration'),
                 style: AppTextStyles.bodyMd.copyWith(
                   color: scheme.onSurface,
                   fontSize: 14,

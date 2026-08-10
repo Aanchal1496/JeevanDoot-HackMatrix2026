@@ -29,6 +29,8 @@ def run_symptom_check(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    print("SYMPTOM-CHECK DEBUG input_type=%r text=%r symptoms=%r severity=%r duration=%r user=%s" % (
+        payload.input_type, payload.text, payload.symptoms, payload.severity, payload.duration, user.email), flush=True)
     logger.info(
         "symptom check input_type=%s raw_symptoms=%s raw_text_len=%d severity=%s duration=%s",
         payload.input_type,

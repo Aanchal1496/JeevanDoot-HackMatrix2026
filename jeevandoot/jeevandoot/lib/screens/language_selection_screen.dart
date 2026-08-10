@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/login_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -96,7 +97,9 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
         child: PillButton(
           label: 'Continue',
           icon: Icons.arrow_forward,
-          onPressed: () {
+          onPressed: () async {
+            await AppStrings.setLanguage(_selected);
+            if (!context.mounted) return;
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const LoginScreen()),
             );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/auth_service.dart';
 import 'package:jeevandoot/constants.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/language_selection_screen.dart';
 import 'package:jeevandoot/screens/profile_settings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
@@ -38,7 +39,7 @@ class _ProfileTabState extends State<ProfileTab> {
     return Scaffold(
       appBar: AppTopBar(
         avatarUrl: AppAssets.patientAvatar,
-        title: 'JeevanDoot',
+        title: AppStrings.tr('JeevanDoot'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: ListView(
@@ -53,7 +54,7 @@ class _ProfileTabState extends State<ProfileTab> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'My Profile',
+                AppStrings.tr('My Profile'),
                 style: AppTextStyles.displayHeroMobile
                     .copyWith(color: scheme.onSurface),
               ),
@@ -81,7 +82,7 @@ class _ProfileTabState extends State<ProfileTab> {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.gutter),
             ),
             icon: const Icon(Icons.logout),
-            label: const Text('Log Out'),
+            label: Text(AppStrings.tr('Log Out')),
           ),
           const SizedBox(height: AppSpacing.stackLg),
           _settingsGrid(scheme),
@@ -172,32 +173,32 @@ class _ProfileTabState extends State<ProfileTab> {
     final items = [
       (
         icon: Icons.person,
-        title: 'Personal Info',
-        subtitle: 'Address, DOB, ID details',
+        title: AppStrings.tr('Personal Info'),
+        subtitle: AppStrings.tr('Address, DOB, ID details'),
         page: const PersonalInfoScreen(),
       ),
       (
         icon: Icons.medical_information,
-        title: 'Health Info',
-        subtitle: 'Allergies, chronic conditions',
+        title: AppStrings.tr('Health Info'),
+        subtitle: AppStrings.tr('Allergies, chronic conditions'),
         page: const HealthInfoScreen(),
       ),
       (
         icon: Icons.translate,
-        title: 'Language',
-        subtitle: 'Hindi (हिन्दी)',
+        title: AppStrings.tr('Language'),
+        subtitle: AppStrings.tr('Hindi (हिन्दी)'),
         page: const LanguageSelectionScreen(),
       ),
       (
         icon: Icons.notifications,
-        title: 'Notifications',
-        subtitle: 'SMS, App alerts',
+        title: AppStrings.tr('Notifications'),
+        subtitle: AppStrings.tr('SMS, App alerts'),
         page: const NotificationsSettingsScreen(),
       ),
       (
         icon: Icons.security,
-        title: 'Privacy & Security',
-        subtitle: 'Data sharing, app lock',
+        title: AppStrings.tr('Privacy & Security'),
+        subtitle: AppStrings.tr('Data sharing, app lock'),
         page: const PrivacySecurityScreen(),
       ),
     ];
@@ -290,18 +291,18 @@ class _ProfileTabState extends State<ProfileTab> {
   Widget _familySection(BuildContext context, ColorScheme scheme) {
     final members = [
       (
-        name: 'Sunita Devi',
-        relation: 'Mother',
+        name: AppStrings.tr('Sunita Devi'),
+        relation: AppStrings.tr('Mother'),
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC9Jn4VGYsKSJRBB-jB1jRE0jexDaoaxCuhqcaVcnrj1gZAiV10sefw1Og2fcLA4IQOywHrmuPYHUwmW-_7j87OvQkx7q0V1iTRBciYwhAKSXnlOwa5eVt8kyyn0aACco8x2Q3eMnPYyViFyzX2m-jZ9c03zrN8D7Q3tYd0aZMFUA7JmYwVSc_SrNrSNK6K9vwwPT6cGTVdHUudLYObSCBuK1Qa7jnthdTDg0M6fUywC5lwz9C4hmpZ'
       ),
       (
-        name: 'Mohan Kumar',
-        relation: 'Father',
+        name: AppStrings.tr('Mohan Kumar'),
+        relation: AppStrings.tr('Father'),
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDcmTYMjf_OyOeL-lIs0Fz6PrMixIlvqwQqRb-NlGUis7nvkssN_TeyurAJp2afk_WbaIcjEuEfBnrNYb99zmenmmaHQicXSGs2nSLlR6dmkg2oXhAgDH_cuFmEnn1MVKo0Io4a5Q1h0ZnBZ1VFEY3lwpeeqfHup5tlotH0_s3YURrHyT5qsf6ZfigvumqOxuyzoQVHX6GwuBiYNRtUt0r9ms0DxYqqVMZKe0BgMIxhm7U11WlY52ta'
       ),
       (
-        name: 'Rahul',
-        relation: 'Child',
+        name: AppStrings.tr('Rahul'),
+        relation: AppStrings.tr('Child'),
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD0W6LFRNtM1ZpjcPbRI_HHQhAGfNxnHp8ZncDpJC45DBXwGVnn9mTT3Suy9RY9FYRQwzx9plGlSSsVjHMqTiCnJI60LoEfphP59t5Jw0wQZ_fzsh7KRSJQSzwz4TozU9yJ69fv0e8tjpHjusVlOKtMtUpYDBtxm6x0lmsG_CALPoa6MeyulXQeAgdWp21ngc1BsF1knyVPCE7ImPakwpReanViC14xYkCG92kfc7BfKftYBFeEvJs2'
       ),
     ];
@@ -313,14 +314,14 @@ class _ProfileTabState extends State<ProfileTab> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Family Members',
+              AppStrings.tr('Family Members'),
               style: AppTextStyles.headlineLgMobile
                   .copyWith(color: scheme.onSurface),
             ),
             TextButton(
               onPressed: () {},
               child: Text(
-                'See all',
+                AppStrings.tr('See all'),
                 style: AppTextStyles.labelLg.copyWith(color: scheme.primary),
               ),
             ),
@@ -403,7 +404,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         ),
                         textStyle: AppTextStyles.labelLg,
                       ),
-                      child: const Text('Switch Profile'),
+                      child: Text(AppStrings.tr('Switch Profile')),
                     ),
                   ],
                 ),
@@ -413,7 +414,7 @@ class _ProfileTabState extends State<ProfileTab> {
         ),
         const SizedBox(height: AppSpacing.stackMd),
         PillButton(
-          label: 'Add Family Member',
+          label: AppStrings.tr('Add Family Member'),
           icon: Icons.add,
           backgroundColor: scheme.primaryContainer,
           foregroundColor: scheme.onPrimaryContainer,
@@ -429,25 +430,25 @@ class _ProfileTabState extends State<ProfileTab> {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Add Family Member'),
+        title: Text(AppStrings.tr('Add Family Member')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Full name'),
+              decoration: InputDecoration(labelText: AppStrings.tr('Full name')),
             ),
             const SizedBox(height: AppSpacing.stackSm),
             TextField(
               controller: relationController,
-              decoration: const InputDecoration(labelText: 'Relation'),
+              decoration: InputDecoration(labelText: AppStrings.tr('Relation')),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
+            child: Text(AppStrings.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -460,7 +461,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 ),
               );
             },
-            child: const Text('Add'),
+            child: Text(AppStrings.tr('Add')),
           ),
         ],
       ),

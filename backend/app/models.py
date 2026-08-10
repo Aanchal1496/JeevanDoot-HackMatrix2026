@@ -223,6 +223,20 @@ class Appointment(Base, TimestampMixin):
     status = Column(Enum(AppointmentStatus), default=AppointmentStatus.confirmed, nullable=False)
 
 
+class DoctorAvailability(Base, TimestampMixin):
+    """A time window (e.g. 16:00-20:00) during which a doctor is free for
+    scheduled 1-hour slots. Patients book an hour-aligned slot inside a window.
+    """
+
+    __tablename__ = "doctor_availability"
+
+    id = Column(Integer, primary_key=True, index=True)
+    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False, index=True)
+    date = Column(String, nullable=False)  # YYYY-MM-DD
+    start_time = Column(String, nullable=False)  # "16:00"
+    end_time = Column(String, nullable=False)  # "20:00"
+
+
 class Prescription(Base, TimestampMixin):
     __tablename__ = "prescriptions"
 

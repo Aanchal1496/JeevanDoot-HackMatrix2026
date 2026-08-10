@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_ai_suggested_questions_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_consultation_info_panel_screen.dart';
@@ -170,7 +171,7 @@ class _DoctorVideoConsultScreenState extends State<DoctorVideoConsultScreen> {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        'Good Connection',
+                        AppStrings.tr('Good Connection'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyles.labelSm
@@ -232,8 +233,8 @@ class _DoctorVideoConsultScreenState extends State<DoctorVideoConsultScreen> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          'Weak Connection',
+Text(
+                          AppStrings.tr('Weak Connection'),
                           style: AppTextStyles.labelLg
                               .copyWith(color: scheme.onSurface),
                         ),
@@ -241,7 +242,7 @@ class _DoctorVideoConsultScreenState extends State<DoctorVideoConsultScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Poor network detected. Switching to audio to preserve call quality...',
+                      AppStrings.tr('Poor network detected. Switching to audio to preserve call quality...'),
                       style: AppTextStyles.bodyMd
                           .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
                     ),
@@ -375,7 +376,7 @@ class _DoctorVideoConsultScreenState extends State<DoctorVideoConsultScreen> {
                   onTap: () {
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Call ended.')),
+                      SnackBar(content: Text(AppStrings.tr('Call ended.'))),
                     );
                   },
                   child: Container(
@@ -452,18 +453,18 @@ class _CallMenuSheet extends StatelessWidget {
     final options = [
       (
         icon: Icons.info_outline,
-        label: 'Patient Information',
+        label: AppStrings.tr('Patient Information'),
         screen: DoctorConsultationInfoPanelScreen(
             patient: patient, fromVideo: true),
       ),
       (
         icon: Icons.history,
-        label: 'Symptom Timeline',
+        label: AppStrings.tr('Symptom Timeline'),
         screen: DoctorSymptomTimelineScreen(patient: patient),
       ),
       (
         icon: Icons.question_answer,
-        label: 'Suggested Questions',
+        label: AppStrings.tr('Suggested Questions'),
         screen: DoctorAISuggestedQuestionsScreen(patient: patient),
       ),
     ];
@@ -475,7 +476,7 @@ class _CallMenuSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Call Options',
+              AppStrings.tr('Call Options'),
               style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.gutter),

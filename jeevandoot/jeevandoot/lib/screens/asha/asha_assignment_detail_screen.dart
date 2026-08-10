@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/asha_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -44,7 +45,7 @@ class _AshaAssignmentDetailScreenState extends State<AshaAssignmentDetailScreen>
     final a = widget.assignment;
     return Scaffold(
       backgroundColor: scheme.surface,
-      appBar: AppTopBar(showBack: true, title: 'Patient', hideTrailing: true),
+      appBar: AppTopBar(showBack: true, title: AppStrings.tr('Patient'), hideTrailing: true),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.containerMargin),
         children: [
@@ -52,7 +53,7 @@ class _AshaAssignmentDetailScreenState extends State<AshaAssignmentDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(a.patientName ?? 'Patient',
+                Text(a.patientName ?? AppStrings.tr('Patient'),
                     style: AppTextStyles.headlineLg
                         .copyWith(color: scheme.onSurface)),
                 const SizedBox(height: 4),
@@ -67,27 +68,27 @@ class _AshaAssignmentDetailScreenState extends State<AshaAssignmentDetailScreen>
             scheme,
             icon: Icons.monitor_heart_outlined,
             color: scheme.primary,
-            title: 'Record Vitals',
-            subtitle: 'Enter BP, temperature, pulse, SpO₂',
-            onTap: () => _run(_recordVitals, 'Vitals recorded.'),
+            title: AppStrings.tr('Record Vitals'),
+            subtitle: AppStrings.tr('Enter BP, temperature, pulse, SpO₂'),
+            onTap: () => _run(_recordVitals, AppStrings.tr('Vitals recorded.')),
           ),
           const SizedBox(height: AppSpacing.gutter),
           _actionTile(
             scheme,
             icon: Icons.healing_outlined,
             color: scheme.tertiary,
-            title: 'Assisted Symptom Entry',
-            subtitle: 'Run a guided symptom check',
-            onTap: () => _run(_assist, 'Assessment submitted.'),
+            title: AppStrings.tr('Assisted Symptom Entry'),
+            subtitle: AppStrings.tr('Run a guided symptom check'),
+            onTap: () => _run(_assist, AppStrings.tr('Assessment submitted.')),
           ),
           const SizedBox(height: AppSpacing.gutter),
           _actionTile(
             scheme,
             icon: Icons.local_hospital_outlined,
             color: scheme.error,
-            title: 'Escalate to Doctor',
-            subtitle: 'Submit an urgent referral',
-            onTap: () => _run(_escalate, 'Case escalated.'),
+            title: AppStrings.tr('Escalate to Doctor'),
+            subtitle: AppStrings.tr('Submit an urgent referral'),
+            onTap: () => _run(_escalate, AppStrings.tr('Case escalated.')),
           ),
         ],
       ),
@@ -141,13 +142,13 @@ Text(subtitle,
   }
 
   Future<void> _recordVitals() async {
-    final bp = await _promptText('Blood pressure', hint: 'e.g. 120/80');
+    final bp = await _promptText(AppStrings.tr('Blood pressure'), hint: AppStrings.tr('e.g. 120/80'));
     if (!mounted || bp == null) return;
-    final temp = await _promptText('Temperature (°C)', hint: 'e.g. 98.6');
+    final temp = await _promptText(AppStrings.tr('Temperature (°C)'), hint: AppStrings.tr('e.g. 98.6'));
     if (!mounted || temp == null) return;
-    final pulse = await _promptText('Pulse (bpm)', hint: 'e.g. 72');
+    final pulse = await _promptText(AppStrings.tr('Pulse (bpm)'), hint: AppStrings.tr('e.g. 72'));
     if (!mounted || pulse == null) return;
-    final spo2 = await _promptText('SpO₂ (%)', hint: 'e.g. 98');
+    final spo2 = await _promptText(AppStrings.tr('SpO₂ (%)'), hint: AppStrings.tr('e.g. 98'));
     if (!mounted || spo2 == null) return;
     final bpText = bp;
     final tempText = temp;
@@ -165,8 +166,8 @@ Text(subtitle,
   }
 
   Future<void> _assist() async {
-    final text = await _promptText('Describe the patient\'s symptoms',
-        hint: 'e.g. fever and cough since two days');
+    final text = await _promptText(AppStrings.tr('Describe the patient\'s symptoms'),
+        hint: AppStrings.tr('e.g. fever and cough since two days'));
     if (!mounted || text == null || text.trim().isEmpty) return;
     final trimmed = text.trim();
     await _service.assist(
@@ -176,8 +177,8 @@ Text(subtitle,
   }
 
   Future<void> _escalate() async {
-    final reason = await _promptText('Reason for escalation',
-        hint: 'Why does this need urgent review?', multiline: true);
+    final reason = await _promptText(AppStrings.tr('Reason for escalation'),
+        hint: AppStrings.tr('Why does this need urgent review?'), multiline: true);
     if (!mounted || reason == null || reason.trim().isEmpty) return;
     final trimmed = reason.trim();
     await _service.escalate(
@@ -202,10 +203,10 @@ Text(subtitle,
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+              child: Text(AppStrings.tr('Cancel'))),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, controller.text),
-              child: const Text('OK')),
+              child: Text(AppStrings.tr('OK'))),
         ],
       ),
     );

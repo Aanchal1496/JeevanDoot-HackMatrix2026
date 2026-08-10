@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -17,13 +18,13 @@ class _RemindersScreenState extends State<RemindersScreen> {
   void _markDone(String id) {
     setState(() => _done.add(id));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reminder marked as done.')),
+      SnackBar(content: Text(AppStrings.tr('Reminder marked as done.'))),
     );
   }
 
   void _remindLater() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('We will remind you again shortly.')),
+      SnackBar(content: Text(AppStrings.tr('We will remind you again shortly.'))),
     );
   }
 
@@ -34,7 +35,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
       appBar: AppTopBar(
         showBack: true,
         avatarUrl: AppAssets.patientAvatar,
-        title: 'JeevanDoot',
+        title: AppStrings.tr('JeevanDoot'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: ListView(
@@ -46,12 +47,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
         ),
         children: [
           Text(
-            'Your Reminders',
+            AppStrings.tr('Your Reminders'),
             style: AppTextStyles.displayHeroMobile.copyWith(color: scheme.onSurface),
           ),
           const SizedBox(height: AppSpacing.unit),
           Text(
-            'Stay on track with your health plan.',
+            AppStrings.tr('Stay on track with your health plan.'),
             style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.stackLg),
@@ -61,9 +62,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
             active: false,
             done: _done.contains('8am'),
             icon: Icons.medication,
-            title: 'Paracetamol',
-            subtitle: '1 tablet • After Breakfast',
-            badge: _done.contains('8am') ? 'Taken' : null,
+            title: AppStrings.tr('Paracetamol'),
+            subtitle: AppStrings.tr('1 tablet • After Breakfast'),
+            badge: _done.contains('8am') ? AppStrings.tr('Taken') : null,
           ),
           const SizedBox(height: AppSpacing.stackMd),
           _timelineItem(
@@ -72,8 +73,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
             active: true,
             done: _done.contains('10am'),
             icon: Icons.event,
-            title: 'Doctor Follow-up',
-            subtitle: 'August 13 • Dr. Sharma Clinic',
+            title: AppStrings.tr('Doctor Follow-up'),
+            subtitle: AppStrings.tr('August 13 • Dr. Sharma Clinic'),
             actions: true,
             onDone: () => _markDone('10am'),
             onLater: _remindLater,
@@ -85,8 +86,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
             active: false,
             done: false,
             icon: Icons.water_drop,
-            title: 'Hydration Goal',
-            subtitle: 'Drink 2 glasses of water',
+            title: AppStrings.tr('Hydration Goal'),
+            subtitle: AppStrings.tr('Drink 2 glasses of water'),
           ),
         ],
       ),
@@ -238,7 +239,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       children: [
                         Expanded(
                           child: PillButton(
-                            label: 'Mark as Done',
+                            label: AppStrings.tr('Mark as Done'),
                             icon: Icons.check,
                             height: 48,
                             onPressed: done ? null : onDone,
@@ -247,7 +248,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         const SizedBox(width: AppSpacing.unit),
                         Expanded(
                           child: PillButton(
-                            label: 'Remind Me Later',
+                            label: AppStrings.tr('Remind Me Later'),
                             height: 48,
                             backgroundColor: scheme.surfaceContainerHigh,
                             foregroundColor: scheme.onSurface,
