@@ -11,6 +11,7 @@ from app.routers import (
     asha,
     auth,
     consultations,
+    demo,
     doctors,
     family,
     followups,
@@ -23,7 +24,7 @@ from app.routers import (
 
 # Import models so tables are registered on Base.metadata.
 from app import models  # noqa: F401
-from app.seed import seed
+from app.seed import seed, seed_demo
 
 
 @asynccontextmanager
@@ -32,6 +33,7 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed(db)
+        seed_demo(db)
     finally:
         db.close()
     yield
@@ -55,6 +57,7 @@ app.include_router(consultations.router, prefix=settings.api_prefix)
 app.include_router(family.router, prefix=settings.api_prefix)
 app.include_router(patients.router, prefix=settings.api_prefix)
 app.include_router(appointments.router, prefix=settings.api_prefix)
+app.include_router(demo.router, prefix=settings.api_prefix)
 app.include_router(prescriptions.router, prefix=settings.api_prefix)
 app.include_router(referrals.router, prefix=settings.api_prefix)
 app.include_router(followups.router, prefix=settings.api_prefix)

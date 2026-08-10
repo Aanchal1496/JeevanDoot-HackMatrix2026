@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/api/api_client.dart';
+import 'package:jeevandoot/api/doctor_service.dart';
 import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_pre_check_screen.dart';
@@ -18,6 +20,34 @@ class DoctorPatientCaseScreen extends StatefulWidget {
 
 class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
   final Set<int> _expanded = {};
+  final DoctorService _service = DoctorService(ApiClient.instance);
+
+  Future<void> _start() async {
+    final consultationId = widget.patient.consultationId;
+    if (consultationId != null) {
+      try {
+        await _service.startConsultation(consultationId);
+      } catch (_) {
+        // Non-fatal: the consultation may already be in progress.
+      }
+    }
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DoctorPreCheckScreen(patient: widget.patient),
+      ),
+    );
+  }
+
+  String get _aiSummary {
+    final risk = widget.patient.risk.label;
+    final names = widget.patient.symptoms;
+    final symptomText =
+        names.isEmpty ? 'no specific symptoms' : names.join(', ');
+    return 'Triage summary for ${widget.patient.name}: presenting with '
+        '$symptomText. Flagged as ${risk.toLowerCase()} severity — recommend '
+        'clinical evaluation alongside the consultation.';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,11 +163,7 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
                   scheme,
                   label: AppStrings.tr('Start Consultation'),
                   icon: Icons.medical_services,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => DoctorPreCheckScreen(patient: patient),
-                    ),
-                  ),
+                  onTap: _start,
                 ),
               ),
               const SizedBox(width: AppSpacing.gutter),
@@ -262,13 +288,38 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.stackSm),
             decoration: BoxDecoration(
-              color: scheme.errorContainer.withValues(alpha: 0.2),
+              color: scheme.primaryContainer.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(12),
-              border: Border(left: BorderSide(color: scheme.error, width: 4)),
+              border: Border(
+                left: BorderSide(color: scheme.primary, width: 4),
+              ),
             ),
-            child: Text(
-              AppStrings.tr('Summary: Patient-reported symptoms indicate that urgent clinical evaluation may be appropriate.'),
-              style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurface, fontSize: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome,
+                        size: 16, color: scheme.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'AI SUMMARY',
+                      style: AppTextStyles.labelSm.copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _aiSummary,
+                  style: AppTextStyles.bodyMd
+                      .copyWith(color: scheme.onSurface, fontSize: 14),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: AppSpacing.stackSm),

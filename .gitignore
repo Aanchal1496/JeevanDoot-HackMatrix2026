@@ -2,6 +2,8 @@
 backend/.env
 backend/node_modules/
 backend/.venv/
+backend/server.err
+backend/server.out
 
 # Flutter local config (contains machine-specific SDK paths)
 jeevandoot/android/local.properties

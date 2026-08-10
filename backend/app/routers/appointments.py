@@ -24,9 +24,16 @@ router = APIRouter(prefix="/appointments", tags=["appointments"])
 def _parse_dt(value):
     if not value:
         return None
+    v = str(value).strip()
+    if v.endswith("Z"):
+        v = v[:-1]
+    # Strip the trailing fractional-seconds suffix emitted by Dart
+    # (DateTime.toIso8601String -> "2026-08-10T15:00:00.000").
+    if "." in v:
+        v = v.split(".")[0]
     for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M"):
         try:
-            return datetime.strptime(value, fmt)
+            return datetime.strptime(v, fmt)
         except (ValueError, TypeError):
             continue
     return None

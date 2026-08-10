@@ -242,6 +242,28 @@ class PatientService {
     return AppointmentItem.fromJson(json);
   }
 
+  /// Create a teleconsultation (appears in the doctor's demo queue when the
+  /// patient tribes the booking with symptoms + risk).
+  Future<Map<String, dynamic>> bookConsultation({
+    required int doctorId,
+    String? scheduledAt,
+    String? riskLevel,
+    List<String>? symptoms,
+  }) async {
+    return await _client.post(
+      '/consultations',
+      {
+        'doctor_id': doctorId,
+        'consultation_type': 'Video Consultation',
+        'scheduled_at': scheduledAt,
+        'status': 'WAITING',
+        'risk_level': riskLevel,
+        'symptoms': symptoms,
+      },
+      authenticated: true,
+    ) as Map<String, dynamic>;
+  }
+
   Future<List<Prescription>> listPrescriptions() async {
     final json = await _client.get('/prescriptions') as List<dynamic>;
     return json

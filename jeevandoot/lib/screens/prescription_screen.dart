@@ -1,16 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/api/api_client.dart';
+import 'package:jeevandoot/api/patient_service.dart';
 import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/reminders_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
-class PrescriptionScreen extends StatelessWidget {
+class PrescriptionScreen extends StatefulWidget {
   const PrescriptionScreen({super.key});
+
+  @override
+  State<PrescriptionScreen> createState() => _PrescriptionScreenState();
+}
+
+class _PrescriptionScreenState extends State<PrescriptionScreen> {
+  final PatientService _service = PatientService(ApiClient.instance);
+  List<Prescription> _prescriptions = const [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final list = await _service.listPrescriptions();
+      if (mounted) {
+        setState(() {
+          _prescriptions = list;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final latest = _prescriptions.isEmpty ? null : _prescriptions.first;
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
@@ -27,87 +59,161 @@ class PrescriptionScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              AppStrings.tr('Your Prescription'),
-              style: AppTextStyles.displayHeroMobile.copyWith(color: scheme.onSurface),
-            ),
-            const SizedBox(height: AppSpacing.unit),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.3),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: scheme.primary.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
+            if (latest != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.assignment, color: scheme.primary),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text.rich(
-                      TextSpan(
-                        style: AppTextStyles.bodyMd.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: AppStrings.tr('Dr. Priya Sharma'),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                  Text(
+                    AppStrings.tr('Your Prescription'),
+                    style: AppTextStyles.displayHeroMobile
+                        .copyWith(color: scheme.onSurface),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: scheme.tertiaryContainer,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.auto_awesome,
+                            size: 14, color: scheme.onTertiaryContainer),
+                        const SizedBox(width: 4),
+                        Text(
+                          'NEW',
+                          style: AppTextStyles.labelSm.copyWith(
+                            color: scheme.onTertiaryContainer,
+                            fontWeight: FontWeight.bold,
                           ),
-                          TextSpan(text: AppStrings.tr(' • August 10, 2026')),
-                        ],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ],
+              )
+            else
+              Text(
+                AppStrings.tr('Your Prescription'),
+                style: AppTextStyles.displayHeroMobile
+                    .copyWith(color: scheme.onSurface),
               ),
-            ),
-            const SizedBox(height: AppSpacing.gutter),
-            _medicineCard(context, scheme),
-            const SizedBox(height: AppSpacing.gutter),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.gutter),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerLowest,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.3),
+            const SizedBox(height: AppSpacing.unit),
+            if (_loading)
+              const LinearProgressIndicator()
+            else if (latest == null)
+              _emptyState(scheme)
+            else ...[
+              _metaCard(scheme, latest),
+              const SizedBox(height: AppSpacing.gutter),
+              for (final medicine in latest.medicines) ...[
+                _medicineCard(scheme, medicine),
+                const SizedBox(height: AppSpacing.gutter),
+              ],
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.gutter),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info, color: scheme.outline, size: 20),
+                    const SizedBox(width: AppSpacing.stackSm),
+                    Expanded(
+                      child: Text(
+                        latest.instructions?.isNotEmpty == true
+                            ? latest.instructions!
+                            : AppStrings.tr(
+                                'Take after food. Drink plenty of water.'),
+                        style: AppTextStyles.bodyMd
+                            .copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info, color: scheme.outline, size: 20),
-                  const SizedBox(width: AppSpacing.stackSm),
-                  Expanded(
-                    child: Text(
-                      AppStrings.tr('Take after food. Drink plenty of water.'),
-                      style: AppTextStyles.bodyMd.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _medicineCard(BuildContext context, ColorScheme scheme) {
+  Widget _emptyState(ColorScheme scheme) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.stackLg),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.medication_outlined,
+              size: 40, color: scheme.onSurfaceVariant),
+          const SizedBox(height: AppSpacing.unit),
+          Text(
+            AppStrings.tr('No prescriptions yet.'),
+            style: AppTextStyles.bodyMd.copyWith(
+                color: scheme.onSurfaceVariant, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metaCard(ColorScheme scheme, Prescription p) {
+    final date = (p.createdAt ?? '').isEmpty ? '' : ' • ${p.createdAt}';
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.assignment, color: scheme.primary),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text.rich(
+              TextSpan(
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+                children: [
+                  TextSpan(
+                    text: p.doctorName ?? AppStrings.tr('Doctor'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  TextSpan(text: date),
+                ],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _medicineCard(ColorScheme scheme, Medicine m) {
     return SoftCard(
       child: Stack(
         children: [
@@ -143,72 +249,41 @@ class PrescriptionScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppStrings.tr('Paracetamol'),
+                          m.name,
                           style: AppTextStyles.headlineMd
                               .copyWith(color: scheme.onSurface),
                         ),
                         Text(
-                          AppStrings.tr('500 mg Tablet'),
+                          m.dosage ?? '',
                           style: AppTextStyles.bodyMd
                               .copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: scheme.secondaryContainer.withValues(alpha: 0.5),
+                  if (m.duration != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color:
+                              scheme.secondaryContainer.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        m.duration!,
+                        style: AppTextStyles.labelLg
+                            .copyWith(color: scheme.onSecondaryContainer),
                       ),
                     ),
-                    child: Text(
-                      AppStrings.tr('3 Days'),
-                      style: AppTextStyles.labelLg
-                          .copyWith(color: scheme.onSecondaryContainer),
-                    ),
-                  ),
                 ],
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Divider(
-                  color: scheme.outlineVariant.withValues(alpha: 0.3),
-                ),
-              ),
-              Row(
-                children: [
-                  _doseCell(
-                    scheme,
-                    emoji: '☀️',
-                    label: AppStrings.tr('Morning'),
-                    value: AppStrings.tr('1'),
-                    muted: false,
-                  ),
-                  const SizedBox(width: 8),
-                  _doseCell(
-                    scheme,
-                    emoji: '🍽️',
-                    label: AppStrings.tr('Afternoon'),
-                    value: '-',
-                    muted: true,
-                  ),
-                  const SizedBox(width: 8),
-                  _doseCell(
-                    scheme,
-                    emoji: '🌙',
-                    label: AppStrings.tr('Night'),
-                    value: AppStrings.tr('1'),
-                    muted: false,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.unit),
+              const SizedBox(height: AppSpacing.stackSm),
               Material(
                 color: scheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
@@ -251,62 +326,6 @@ class PrescriptionScreen extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _doseCell(
-    ColorScheme scheme, {
-    required String emoji,
-    required String label,
-    required String value,
-    required bool muted,
-  }) {
-    final bg = muted ? scheme.surfaceContainerLowest : scheme.surface;
-    final fg = muted ? scheme.onSurfaceVariant : scheme.onSurface;
-    final valueBg = muted ? scheme.surfaceContainerHighest : scheme.primary;
-    final valueFg = muted ? scheme.onSurfaceVariant : scheme.onPrimary;
-
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: muted ? 0.1 : 0.2),
-          ),
-        ),
-        child: Column(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 24)),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: AppTextStyles.labelLg.copyWith(
-                color: fg,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              width: 32,
-              height: 32,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: valueBg,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                value,
-                style: AppTextStyles.bodyMd.copyWith(
-                  color: valueFg,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

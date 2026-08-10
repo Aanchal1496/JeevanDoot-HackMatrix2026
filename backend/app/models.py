@@ -205,6 +205,8 @@ class Consultation(Base, TimestampMixin):
     started_at = Column(DateTime, nullable=True)
     ended_at = Column(DateTime, nullable=True)
     connection_quality = Column(String, nullable=True)
+    risk_level = Column(String, nullable=True)  # LOW | MEDIUM | HIGH
+    symptoms = Column(Text, nullable=True)  # comma-joined symptom names
 
     prescription = relationship("Prescription", back_populates="consultation", uselist=False)
     notes = relationship("PatientNote", back_populates="consultation")

@@ -139,10 +139,21 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
     if (doctor == null || _submitting || _time.isEmpty) return;
     setState(() => _submitting = true);
     try {
+      final scheduled = _scheduledSlot().toIso8601String();
+      final type =
+          _consultType == 'audio' ? 'Audio Consultation' : 'Video Consultation';
+      // Appearance in the patient's schedule/records.
       await _patientService.bookAppointment(
         doctorId: doctor.id,
-        scheduledAt: _scheduledSlot().toIso8601String(),
-        type: _consultType == 'audio' ? 'Audio Consultation' : 'Video Consultation',
+        scheduledAt: scheduled,
+        type: type,
+      );
+      // Creates the teleconsultation so it lands in the doctor's queue.
+      await _patientService.bookConsultation(
+        doctorId: doctor.id,
+        scheduledAt: scheduled,
+        riskLevel: 'HIGH',
+        symptoms: const ['Fever', 'Chest pain', 'Fatigue'],
       );
       if (!mounted) return;
       final t = _scheduledSlot();

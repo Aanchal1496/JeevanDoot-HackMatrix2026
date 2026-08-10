@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/doctor_service.dart';
@@ -19,33 +21,62 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
   final DoctorService _service = DoctorService(ApiClient.instance);
   final TextEditingController _searchController = TextEditingController();
   String _filter = 'All';
+  Timer? _pollTimer;
 
   List<DoctorPatient> _patients = const [];
   bool _loading = true;
+  bool _firstLoadDone = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      _load(silent: true);
+    });
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
-      final queue = await _service.queue();
-      final patients = queue.map(DoctorPatient.fromQueue).toList();
-      if (mounted) {
-        setState(() {
-          _patients = patients;
-          _loading = false;
-        });
+      final queue = await _service.consultationQueue();
+      final patients = queue.map(DoctorPatient.fromConsultation).toList();
+      if (!mounted) return;
+      if (_firstLoadDone) {
+        final known = _patients.map((p) => p.consultationId).toSet();
+        final fresh =
+            patients.where((p) => p.consultationId != null && !known.contains(p.consultationId));
+        if (fresh.isNotEmpty) {
+          final name = fresh.first.name;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('New patient in queue: $name'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
+      setState(() {
+        _patients = patients;
+        _firstLoadDone = true;
+        _loading = false;
+      });
     } catch (_) {
-      if (mounted) {
+      if (!mounted) return;
+      if (!silent) {
         setState(() {
           _error = AppStrings.tr('Could not load the queue. Pull to retry.');
           _loading = false;
@@ -68,12 +99,6 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
       };
       return matchesQuery && matchesFilter;
     }).toList();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   @override
