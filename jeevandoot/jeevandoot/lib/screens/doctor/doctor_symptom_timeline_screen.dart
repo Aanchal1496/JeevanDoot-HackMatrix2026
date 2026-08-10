@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -48,7 +49,7 @@ class DoctorSymptomTimelineScreen extends StatelessWidget {
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'Symptom Timeline',
+        title: AppStrings.tr('Symptom Timeline'),
         hideTrailing: true,
       ),
       body: ListView(
@@ -100,7 +101,7 @@ class DoctorSymptomTimelineScreen extends StatelessWidget {
                       .copyWith(color: scheme.onPrimaryContainer),
                 ),
                 Text(
-                  'Timeline of reported symptoms and events',
+                  AppStrings.tr('Timeline of reported symptoms and events'),
                   style: AppTextStyles.bodyMd.copyWith(
                     color: scheme.onPrimaryContainer,
                     fontSize: 14,
@@ -168,13 +169,13 @@ class DoctorSymptomTimelineScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        entry.title,
+                        AppStrings.tr(entry.title),
                         style: AppTextStyles.labelLg
                             .copyWith(color: scheme.onSurface),
                       ),
                     ),
                     Text(
-                      entry.date,
+                      AppStrings.tr(entry.date),
                       style: AppTextStyles.labelSm.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontSize: 11,
@@ -184,7 +185,7 @@ class DoctorSymptomTimelineScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  entry.detail,
+                  AppStrings.tr(entry.detail),
                   style: AppTextStyles.bodyMd.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontSize: 14,

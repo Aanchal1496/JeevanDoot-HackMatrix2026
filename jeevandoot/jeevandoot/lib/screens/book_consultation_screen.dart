@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/doctor_service.dart';
 import 'package:jeevandoot/api/patient_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/appointment_confirmation_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -19,17 +20,21 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
   final DoctorService _doctorService = DoctorService(ApiClient.instance);
 
   String _consultType = 'video';
-  String _date = 'today';
-  String _time = '17:30';
+  String _date = '';
+  String _time = '';
 
   Doctor? _doctor;
+  List<Map<String, dynamic>> _slots = const [];
   bool _loading = true;
+  bool _slotsLoading = false;
   bool _submitting = false;
   String? _error;
+  String? _slotError;
 
   @override
   void initState() {
     super.initState();
+    _date = DateTime.now().toString().split(' ').first;
     _loadDoctors();
   }
 
@@ -43,51 +48,95 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
           _doctor = pick;
           _loading = false;
         });
+        _loadSlots();
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Could not load doctors. Check your connection.';
+          _error = AppStrings.tr('Could not load doctors. Check your connection.');
           _loading = false;
         });
       }
     }
   }
 
-  static const String _doctorImageUrl =
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuArT-hqVoCBioIJOGfbSVFY6f1_XJroH4snPQUuLqWGbReBDAAwOz2oQqtNlzOWCOP74xhvB7XrZbJP_JykgaXK45P49efo5L3SuNBXUUBuoD1QrBD76DWAeFcvna_p_EkXHiTpt3wdokKm8xUo4ket5WdE3fmYhUifKYQ65w2Mp7aCcwTDr3e6JV7-hAugaTIwiwerQiL8-vGw-UPygrAAT7HI1iNYcUTcK4sKrgrxDZsB1G_RheSm';
+  Future<void> _loadSlots() async {
+    final doctor = _doctor;
+    if (doctor == null || _date.isEmpty) return;
+    setState(() {
+      _slotsLoading = true;
+      _slotError = null;
+    });
+    try {
+      final slots = await _patientService.doctorSlots(doctor.id, _date);
+      if (!mounted) return;
+      setState(() {
+        _slots = slots;
+        _time = slots.isNotEmpty ? ((slots.first['start'] ?? '') as String) : '';
+        _slotsLoading = false;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _slotError = AppStrings.tr('Could not load slots.');
+          _slotsLoading = false;
+        });
+      }
+    }
+  }
 
-  static const List<({String id, String label, int day, String month})> _dates = [
-    (id: 'today', label: 'Today', day: 10, month: 'Aug'),
-    (id: 'tomorrow', label: 'Tom', day: 11, month: 'Aug'),
-    (id: 'mon', label: 'Mon', day: 12, month: 'Aug'),
-    (id: 'tue', label: 'Tue', day: 13, month: 'Aug'),
-  ];
+  static String _monthName(int m) => const [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ][m - 1];
 
-  static const List<({String id, String label})> _slots = [
-    (id: '17:00', label: '5:00 PM'),
-    (id: '17:30', label: '5:30 PM'),
-    (id: '18:00', label: '6:00 PM'),
-    (id: '18:30', label: '6:30 PM'),
-  ];
+  List<({String id, String label, int day, String month})> get _dates {
+    final result = <({String id, String label, int day, String month})>[];
+    final now = DateTime.now();
+    for (var i = 0; i < 7; i++) {
+      final d = now.add(Duration(days: i));
+      final id = d.toString().split(' ').first;
+      final today = d.year == now.year && d.month == now.month && d.day == now.day;
+      final tomorrow =
+          d.year == now.add(const Duration(days: 1)).year &&
+          d.month == now.add(const Duration(days: 1)).month &&
+          d.day == now.add(const Duration(days: 1)).day;
+      final label = today
+          ? AppStrings.tr('Today')
+          : tomorrow
+              ? AppStrings.tr('Tom')
+              : _shortWeekday(d.weekday);
+      result.add((id: id, label: label, day: d.day, month: _monthName(d.month)));
+    }
+    return result;
+  }
+
+  static String _shortWeekday(int w) => const [
+        '', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
+      ][w];
+
+  static String _formatHour(String hh, String mm) {
+    var hour = int.tryParse(hh) ?? 12;
+    final ampm = hour >= 12 ? 'PM' : 'AM';
+    if (hour > 12) hour -= 12;
+    if (hour == 0) hour = 12;
+    return '$hour:${mm.padLeft(2, '0')} $ampm';
+  }
 
   DateTime _scheduledSlot() {
-    const offsets = {'today': 0, 'tomorrow': 1, 'mon': 2, 'tue': 3};
-    final dayOffset = offsets[_date] ?? 0;
     final parts = _time.split(':');
     final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 12 : 12;
     final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
-    var dt = DateTime.now().add(Duration(days: dayOffset));
-    dt = DateTime(dt.year, dt.month, dt.day, hour, minute);
-    if (!dt.isAfter(DateTime.now())) {
-      dt = dt.add(const Duration(days: 1));
-    }
-    return dt;
+    final dayPart = _date.split('-');
+    final y = int.tryParse(dayPart[0]) ?? DateTime.now().year;
+    final mo = int.tryParse(dayPart[1]) ?? DateTime.now().month;
+    final d = int.tryParse(dayPart[2]) ?? DateTime.now().day;
+    return DateTime(y, mo, d, hour, minute);
   }
 
   Future<void> _confirm() async {
     final doctor = _doctor;
-    if (doctor == null || _submitting) return;
+    if (doctor == null || _submitting || _time.isEmpty) return;
     setState(() => _submitting = true);
     try {
       await _patientService.bookAppointment(
@@ -101,8 +150,7 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
         MaterialPageRoute(
           builder: (_) => AppointmentConfirmationScreen(
             type: _consultType,
-            time:
-                '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}',
+            time: _time,
             date: '${t.day} ${_monthName(t.month)}, ${t.year}',
           ),
         ),
@@ -117,18 +165,13 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
     }
   }
 
-  static String _monthName(int m) => const [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-      ][m - 1];
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
-        title: 'Book a Consultation',
+        title: AppStrings.tr('Book a Consultation'),
         trailingIcon: Icons.more_vert,
         onTrailing: () {},
       ),
@@ -176,7 +219,7 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               PillButton(
-                label: _submitting ? 'Booking…' : 'Confirm Appointment',
+                label: _submitting ? AppStrings.tr('Booking…') : AppStrings.tr('Confirm Appointment'),
                 icon: Icons.check_circle,
                 onPressed:
                     _submitting || _doctor == null ? null : () => _confirm(),
@@ -189,7 +232,7 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      'Need help booking?',
+                      AppStrings.tr('Need help booking?'),
                       style: AppTextStyles.bodyMd.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontSize: 13,
@@ -198,14 +241,14 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
                     TextButton(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('An ASHA Worker will contact you.')),
+                          SnackBar(content: Text(AppStrings.tr('An ASHA Worker will contact you.'))),
                         );
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: scheme.primary,
                         textStyle: AppTextStyles.labelLg,
                       ),
-                      child: const Text('Ask an ASHA Worker'),
+                      child: Text(AppStrings.tr('Ask an ASHA Worker')),
                     ),
                   ],
                 ),
@@ -234,12 +277,19 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
             child: SizedBox(
               width: 80,
               height: 80,
-              child: Image.network(
-                doctor.imageUrl ?? _doctorImageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) =>
-                    ColoredBox(color: scheme.surfaceContainerHigh, child: const Icon(Icons.person)),
-              ),
+              child: doctor.imageUrl == null
+                  ? ColoredBox(
+                      color: scheme.surfaceContainerHigh,
+                      child: const Icon(Icons.person),
+                    )
+                  : Image.network(
+                      doctor.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => ColoredBox(
+                        color: scheme.surfaceContainerHigh,
+                        child: const Icon(Icons.person),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: AppSpacing.gutter),
@@ -308,7 +358,7 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Consultation Type',
+          AppStrings.tr('Consultation Type'),
           style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
         ),
         const SizedBox(height: AppSpacing.stackSm),
@@ -320,8 +370,8 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
           ),
           child: Row(
             children: [
-              Expanded(child: _typeOption(scheme, 'video', Icons.videocam, 'Video')),
-              Expanded(child: _typeOption(scheme, 'audio', Icons.headphones, 'Audio')),
+              Expanded(child: _typeOption(scheme, 'video', Icons.videocam, AppStrings.tr('Video'))),
+              Expanded(child: _typeOption(scheme, 'audio', Icons.headphones, AppStrings.tr('Audio'))),
             ],
           ),
         ),
@@ -380,7 +430,7 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Select Date',
+              AppStrings.tr('Select Date'),
               style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
             ),
             Icon(Icons.calendar_month, size: 18, color: scheme.primary),
@@ -406,7 +456,12 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
   Widget _dateChip(ColorScheme scheme, ({String id, String label, int day, String month}) date) {
     final selected = _date == date.id;
     return InkWell(
-      onTap: () => setState(() => _date = date.id),
+      onTap: () {
+        if (_date != date.id) {
+          setState(() => _date = date.id);
+          _loadSlots();
+        }
+      },
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -458,12 +513,49 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
   }
 
   Widget _slotSelector(ColorScheme scheme) {
+    if (_slotsLoading) {
+      return const Column(
+        children: [
+          SizedBox(height: AppSpacing.stackMd),
+          LinearProgressIndicator(),
+        ],
+      );
+    }
+    if (_slotError != null) {
+      return SoftCard(
+        child: Text(
+          _slotError!,
+          style: AppTextStyles.bodyMd.copyWith(color: scheme.error),
+        ),
+      );
+    }
+    if (_slots.isEmpty) {
+      return SoftCard(
+        child: Text(
+          AppStrings.tr('No free slots for this date. Try another day.'),
+          style: AppTextStyles.bodyMd
+              .copyWith(color: scheme.onSurfaceVariant),
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            const Icon(Icons.access_time_filled, size: 18, color: Colors.green),
+            const SizedBox(width: 6),
+            Text(
+              AppStrings.tr('Available Slots (1 hour each)'),
+              style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
         Text(
-          'Available Slots',
-          style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
+          AppStrings.tr('Doctor has set free time for this day.'),
+          style: AppTextStyles.labelSm
+              .copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.stackSm),
         GridView.builder(
@@ -476,19 +568,27 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
             crossAxisSpacing: AppSpacing.gutter,
             childAspectRatio: 2.6,
           ),
-          itemBuilder: (context, index) => _slotChip(scheme, _slots[index]),
+          itemBuilder: (context, index) => _slotChip(
+            scheme,
+            ((_slots[index]['start'] ?? '') as String),
+            ((_slots[index]['end'] ?? '') as String),
+          ),
         ),
       ],
     );
   }
 
-  Widget _slotChip(ColorScheme scheme, ({String id, String label}) slot) {
-    final selected = _time == slot.id;
+  Widget _slotChip(ColorScheme scheme, String start, String end) {
+    final selected = _time == start;
+    final parts = start.split(':');
+    final label = parts.length == 2
+        ? _formatHour(parts[0], parts[1])
+        : start;
     return Material(
       color: selected ? scheme.primary : scheme.surfaceContainerLowest,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: () => setState(() => _time = slot.id),
+        onTap: () => setState(() => _time = start),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           alignment: Alignment.center,
@@ -508,7 +608,7 @@ class _BookConsultationScreenState extends State<BookConsultationScreen> {
                 : null,
           ),
           child: Text(
-            slot.label,
+            label,
             style: AppTextStyles.bodyMd.copyWith(
               color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,

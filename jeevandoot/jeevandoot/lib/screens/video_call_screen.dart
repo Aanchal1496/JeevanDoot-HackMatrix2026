@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/prescription_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/common.dart';
 
 class VideoCallScreen extends StatefulWidget {
-  const VideoCallScreen({super.key});
+  const VideoCallScreen({super.key, this.type});
+
+  /// Consultation kind: contains 'audio' for (voice-only) calls.
+  final String? type;
 
   @override
   State<VideoCallScreen> createState() => _VideoCallScreenState();
@@ -75,13 +79,13 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Dr. Priya Sharma',
+                  AppStrings.tr('Dr. Priya Sharma'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                 ),
                 Text(
-                  'General Physician',
+                  AppStrings.tr('General Physician'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
@@ -104,7 +108,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                     size: 18, color: scheme.primary),
                 const SizedBox(width: 4),
                 Text(
-                  'Good',
+                  AppStrings.tr('Good'),
                   style: AppTextStyles.labelLg.copyWith(color: scheme.primary),
                 ),
               ],
@@ -158,7 +162,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      'Switching to audio to improve quality',
+                      AppStrings.tr('Switching to audio to improve quality'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.labelLg
@@ -314,7 +318,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Consultation Notes',
+                AppStrings.tr('Consultation Notes'),
                 style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
               ),
               Icon(Icons.info, color: scheme.onSurfaceVariant),
@@ -351,7 +355,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Triage: Priority',
+                            AppStrings.tr('Triage: Priority'),
                             style: AppTextStyles.labelLg
                                 .copyWith(color: scheme.onErrorContainer),
                           ),
@@ -377,7 +381,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                           Icon(Icons.medical_information, color: scheme.secondary),
                           const SizedBox(width: 8),
                           Text(
-                            'Reported Symptoms',
+                            AppStrings.tr('Reported Symptoms'),
                             style: AppTextStyles.labelLg.copyWith(color: scheme.onSurface),
                           ),
                         ],
@@ -387,9 +391,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          'Fever (102°F)',
-                          'Dry Cough',
-                          'Fatigue',
+                          AppStrings.tr('Fever (102°F)'),
+                          AppStrings.tr('Dry Cough'),
+                          AppStrings.tr('Fatigue'),
                         ]
                             .map(
                               (s) => Container(
@@ -449,12 +453,12 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Previous Records',
+                                AppStrings.tr('Previous Records'),
                                 style: AppTextStyles.labelLg
                                     .copyWith(color: scheme.onPrimaryContainer),
                               ),
                               Text(
-                                '2 prescriptions, 1 lab report',
+                                AppStrings.tr('2 prescriptions, 1 lab report'),
                                 style: AppTextStyles.bodyMd.copyWith(
                                   color: scheme.onPrimaryFixedVariant,
                                   fontSize: 14,

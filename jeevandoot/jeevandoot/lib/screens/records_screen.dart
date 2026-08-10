@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/patient_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -64,7 +65,7 @@ class _RecordsTabState extends State<RecordsTab> {
             date: _formatDate(p.createdAt),
             type: 'Prescriptions',
             title: 'Prescription · ${p.diagnosis}',
-            detail: '${p.doctorName ?? 'Doctor'} · ${p.medicines.length} medicine(s)\n${p.instructions ?? ''}',
+            detail: '${p.doctorName ?? AppStrings.tr('Doctor')} · ${p.medicines.length} medicine(s)\n${p.instructions ?? ''}',
             icon: Icons.medication,
             iconBg: scheme.tertiaryContainer,
             iconColor: scheme.onTertiaryContainer,
@@ -83,7 +84,7 @@ class _RecordsTabState extends State<RecordsTab> {
           _RecordEntry(
             date: _formatDate(v.recordedAt),
             type: 'Vitals',
-            title: 'Vitals recorded',
+            title: AppStrings.tr('Vitals recorded'),
             detail: [
               if (v.bloodPressure != null) 'BP ${v.bloodPressure}',
               if (v.pulse != null) 'Pulse ${v.pulse}',
@@ -106,7 +107,7 @@ class _RecordsTabState extends State<RecordsTab> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Could not load your records. Pull to retry.';
+          _error = AppStrings.tr('Could not load your records. Pull to retry.');
           _loading = false;
         });
       }
@@ -117,9 +118,19 @@ class _RecordsTabState extends State<RecordsTab> {
     if (iso == null || iso.isEmpty) return '';
     final t = DateTime.tryParse(iso)?.toLocal();
     if (t == null) return iso;
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    final months = [
+      AppStrings.tr('Jan'),
+      AppStrings.tr('Feb'),
+      AppStrings.tr('Mar'),
+      AppStrings.tr('Apr'),
+      AppStrings.tr('May'),
+      AppStrings.tr('Jun'),
+      AppStrings.tr('Jul'),
+      AppStrings.tr('Aug'),
+      AppStrings.tr('Sep'),
+      AppStrings.tr('Oct'),
+      AppStrings.tr('Nov'),
+      AppStrings.tr('Dec'),
     ];
     return '${t.day} ${months[t.month - 1]}, ${t.year}';
   }
@@ -132,7 +143,7 @@ class _RecordsTabState extends State<RecordsTab> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppTopBar(
-        subtitle: 'My Health',
+        subtitle: AppStrings.tr('My Health'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: RefreshIndicator(
@@ -142,7 +153,7 @@ class _RecordsTabState extends State<RecordsTab> {
           padding: const EdgeInsets.all(AppSpacing.containerMargin),
           children: [
             Text(
-              'My Health',
+              AppStrings.tr('My Health'),
               style: AppTextStyles.displayHeroMobile.copyWith(
                 color: scheme.onPrimaryFixedVariant,
               ),
@@ -177,7 +188,7 @@ class _RecordsTabState extends State<RecordsTab> {
                       ),
                       child: Center(
                         child: Text(
-                          filter,
+                          AppStrings.tr(filter),
                           style: AppTextStyles.labelLg.copyWith(
                             color: selected
                                 ? scheme.onPrimaryContainer
@@ -212,7 +223,7 @@ class _RecordsTabState extends State<RecordsTab> {
                 padding: const EdgeInsets.all(AppSpacing.stackLg),
                 child: Center(
                   child: Text(
-                    'No records here yet.',
+                    AppStrings.tr('No records here yet.'),
                     style: AppTextStyles.bodyMd
                         .copyWith(color: scheme.onSurfaceVariant),
                   ),

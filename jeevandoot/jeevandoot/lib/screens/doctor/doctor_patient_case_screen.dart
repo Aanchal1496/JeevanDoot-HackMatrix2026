@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_pre_check_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_referral_screen.dart';
@@ -26,7 +27,7 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'Patient Case',
+        title: AppStrings.tr('Patient Case'),
         trailingIcon: Icons.more_vert,
         onTrailing: () {},
       ),
@@ -130,7 +131,7 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
               Expanded(
                 child: _filledAction(
                   scheme,
-                  label: 'Start Consultation',
+                  label: AppStrings.tr('Start Consultation'),
                   icon: Icons.medical_services,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -143,7 +144,7 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
               Expanded(
                 child: _outlineAction(
                   scheme,
-                  label: 'Refer Patient',
+                  label: AppStrings.tr('Refer Patient'),
                   icon: Icons.share,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -222,14 +223,14 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'AI-Assisted Triage',
+                AppStrings.tr('AI-Assisted Triage'),
                 style: AppTextStyles.labelLg.copyWith(color: scheme.primary),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.gutter),
           Text(
-            'REPORTED SYMPTOMS',
+            AppStrings.tr('REPORTED SYMPTOMS'),
             style: AppTextStyles.labelSm.copyWith(
               color: scheme.onSurfaceVariant,
               letterSpacing: 0.8,
@@ -266,7 +267,7 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
               border: Border(left: BorderSide(color: scheme.error, width: 4)),
             ),
             child: Text(
-              'Summary: Patient-reported symptoms indicate that urgent clinical evaluation may be appropriate.',
+              AppStrings.tr('Summary: Patient-reported symptoms indicate that urgent clinical evaluation may be appropriate.'),
               style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurface, fontSize: 14),
             ),
           ),
@@ -277,7 +278,7 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  'AI suggestions do not replace professional medical judgment.',
+                  AppStrings.tr('AI suggestions do not replace professional medical judgment.'),
                   style: AppTextStyles.labelSm.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontStyle: FontStyle.italic,
@@ -293,16 +294,16 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
 
   Widget _vitalsCard(ColorScheme scheme) {
     final vitals = [
-      (icon: Icons.device_thermostat, label: 'Temp', value: '38.7', unit: '°C', color: scheme.tertiary, alert: false),
-      (icon: Icons.favorite, label: 'HR', value: '102', unit: 'bpm', color: scheme.tertiary, alert: false),
-      (icon: Icons.air, label: 'SpO2', value: '94', unit: '%', color: scheme.onErrorContainer, alert: true),
-      (icon: Icons.bloodtype, label: 'BP', value: '138/90', unit: 'mmHg', color: scheme.primary, alert: false),
+      (icon: Icons.device_thermostat, label: AppStrings.tr('Temp'), value: '38.7', unit: '°C', color: scheme.tertiary, alert: false),
+      (icon: Icons.favorite, label: AppStrings.tr('HR'), value: '102', unit: 'bpm', color: scheme.tertiary, alert: false),
+      (icon: Icons.air, label: AppStrings.tr('SpO2'), value: '94', unit: '%', color: scheme.onErrorContainer, alert: true),
+      (icon: Icons.bloodtype, label: AppStrings.tr('BP'), value: '138/90', unit: 'mmHg', color: scheme.primary, alert: false),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'CURRENT VITALS',
+          AppStrings.tr('CURRENT VITALS'),
           style: AppTextStyles.labelSm.copyWith(
             color: scheme.onSurfaceVariant,
             letterSpacing: 0.8,
@@ -394,33 +395,44 @@ class _DoctorPatientCaseScreenState extends State<DoctorPatientCaseScreen> {
       (
         icon: Icons.medical_information,
         color: scheme.primary,
-        title: 'Previous Conditions',
-        items: ['Hypertension (Diagnosed 2018)', 'Type 2 Diabetes (Diagnosed 2020)'],
+        title: AppStrings.tr('Previous Conditions'),
+        items: [
+          AppStrings.tr('Hypertension (Diagnosed 2018)'),
+          AppStrings.tr('Type 2 Diabetes (Diagnosed 2020)'),
+        ],
       ),
       (
         icon: Icons.healing,
         color: scheme.tertiary,
-        title: 'Allergies',
-        items: ['Penicillin (Mild rash)', 'Dust mites'],
+        title: AppStrings.tr('Allergies'),
+        items: [
+          AppStrings.tr('Penicillin (Mild rash)'),
+          AppStrings.tr('Dust mites'),
+        ],
       ),
       (
         icon: Icons.medication,
         color: scheme.primary,
-        title: 'Current Medications',
-        items: ['Metformin 500mg (Daily)', 'Lisinopril 10mg (Daily)'],
+        title: AppStrings.tr('Current Medications'),
+        items: [
+          AppStrings.tr('Metformin 500mg (Daily)'),
+          AppStrings.tr('Lisinopril 10mg (Daily)'),
+        ],
       ),
       (
         icon: Icons.history,
         color: scheme.primary,
-        title: 'Previous Consultations',
-        items: ['Routine Checkup — Dr. Sharma · 12 Oct 2023'],
+        title: AppStrings.tr('Previous Consultations'),
+        items: [
+          AppStrings.tr('Routine Checkup — Dr. Sharma · 12 Oct 2023'),
+        ],
       ),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'MEDICAL HISTORY',
+          AppStrings.tr('MEDICAL HISTORY'),
           style: AppTextStyles.labelSm.copyWith(
             color: scheme.onSurfaceVariant,
             letterSpacing: 0.8,

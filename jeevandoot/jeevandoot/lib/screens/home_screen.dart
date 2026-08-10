@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/book_consultation_screen.dart';
 import 'package:jeevandoot/screens/family_members_screen.dart';
@@ -62,7 +63,7 @@ class HomeTab extends StatelessWidget {
     return Scaffold(
       appBar: AppTopBar(
         avatarUrl: _avatarUrl,
-        subtitle: 'Ramnagar, Maharashtra',
+        subtitle: AppStrings.tr('Ramnagar, Maharashtra'),
         onTrailing: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const OfflineScreen()),
         ),
@@ -117,7 +118,7 @@ class HomeTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            'How are you feeling today?',
+            AppStrings.tr('How are you feeling today?'),
             textAlign: TextAlign.center,
             style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
           ),
@@ -147,7 +148,7 @@ class HomeTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.stackSm),
           Text(
-            "Tell us what you're feeling",
+            AppStrings.tr("Tell us what you're feeling"),
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyLg.copyWith(
               color: scheme.primary,
@@ -156,7 +157,7 @@ class HomeTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.unit),
           Text(
-            'You can speak in your preferred language.',
+            AppStrings.tr('You can speak in your preferred language.'),
             textAlign: TextAlign.center,
             style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -170,7 +171,7 @@ class HomeTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
+          AppStrings.tr('Quick Actions'),
           style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.gutter),
@@ -183,7 +184,7 @@ class HomeTab extends StatelessWidget {
                 icon: Icons.medical_services,
                 bg: scheme.surfaceContainer,
                 color: scheme.primary,
-                label: 'Check Symptoms',
+                label: AppStrings.tr('Check Symptoms'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const SymptomCheckerScreen(),
@@ -199,7 +200,7 @@ class HomeTab extends StatelessWidget {
                 icon: Icons.calendar_month,
                 bg: scheme.tertiaryFixed,
                 color: scheme.onTertiaryFixed,
-                label: 'Book Consultation',
+                label: AppStrings.tr('Book Consultation'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const BookConsultationScreen(),
@@ -219,7 +220,7 @@ class HomeTab extends StatelessWidget {
                 icon: Icons.content_paste,
                 bg: scheme.secondaryContainer,
                 color: scheme.onSecondaryContainer,
-                label: 'My Records',
+                label: AppStrings.tr('My Records'),
                 onTap: onNavigateRecords,
               ),
             ),
@@ -231,7 +232,7 @@ class HomeTab extends StatelessWidget {
                 icon: Icons.medication,
                 bg: scheme.surfaceContainerHighest,
                 color: scheme.onSurfaceVariant,
-                label: 'Medicines',
+                label: AppStrings.tr('Medicines'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const RemindersScreen()),
                 ),
@@ -249,7 +250,7 @@ class HomeTab extends StatelessWidget {
                 icon: Icons.family_restroom,
                 bg: scheme.primaryContainer,
                 color: scheme.onPrimaryContainer,
-                label: 'Family',
+                label: AppStrings.tr('Family'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const FamilyMembersScreen(),
@@ -265,7 +266,7 @@ class HomeTab extends StatelessWidget {
                 icon: Icons.calendar_view_month,
                 bg: scheme.secondaryContainer,
                 color: scheme.onSecondaryContainer,
-                label: 'Appointments',
+                label: AppStrings.tr('Appointments'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const MyAppointmentsScreen(),
@@ -285,7 +286,7 @@ class HomeTab extends StatelessWidget {
                 icon: Icons.notifications,
                 bg: scheme.surfaceContainer,
                 color: scheme.primary,
-                label: 'Notifications',
+                label: AppStrings.tr('Notifications'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const NotificationsScreen(),
@@ -359,7 +360,7 @@ class HomeTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Upcoming Consultation',
+          AppStrings.tr('Upcoming Consultation'),
           style: AppTextStyles.labelLg.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.gutter),
@@ -404,12 +405,12 @@ class HomeTab extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Dr. Priya Sharma',
+                          AppStrings.tr('Dr. Priya Sharma'),
                           style: AppTextStyles.headlineMd
                               .copyWith(color: scheme.onSurface),
                         ),
                         Text(
-                          'General Physician',
+                          AppStrings.tr('General Physician'),
                           style: AppTextStyles.bodyMd
                               .copyWith(color: scheme.onSurfaceVariant),
                         ),
@@ -420,7 +421,7 @@ class HomeTab extends StatelessWidget {
                                 size: 16, color: scheme.primaryContainer),
                             const SizedBox(width: 4),
                             Text(
-                              'Today · 5:30 PM',
+                              AppStrings.tr('Today · 5:30 PM'),
                               style: AppTextStyles.labelLg
                                   .copyWith(color: scheme.primaryContainer),
                             ),
@@ -433,7 +434,7 @@ class HomeTab extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.gutter),
               PillButton(
-                label: 'Join Consultation',
+                label: AppStrings.tr('Join Consultation'),
                 icon: Icons.videocam,
                 backgroundColor: scheme.primary,
                 foregroundColor: scheme.onPrimary,
@@ -484,14 +485,14 @@ class HomeTab extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Take medicine',
+                  AppStrings.tr('Take medicine'),
                   style: AppTextStyles.bodyMd.copyWith(
                     color: scheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
-                  'Today · 8:00 PM',
+                  AppStrings.tr('Today · 8:00 PM'),
                   style: AppTextStyles.bodyMd.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontSize: 14,
@@ -547,7 +548,7 @@ class HomeTab extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            'Your data is synced',
+            AppStrings.tr('Your data is synced'),
             style: AppTextStyles.labelSm.copyWith(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
               fontWeight: FontWeight.w500,
@@ -568,7 +569,7 @@ class _HealthTab extends StatelessWidget {
     return Scaffold(
       appBar: AppTopBar(
         avatarUrl: AppAssets.patientAvatar,
-        subtitle: 'Health',
+        subtitle: AppStrings.tr('Health'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: SingleChildScrollView(
@@ -577,7 +578,7 @@ class _HealthTab extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Health',
+              AppStrings.tr('Health'),
               style: AppTextStyles.displayHeroMobile
                   .copyWith(color: scheme.onSurface),
             ),
@@ -595,13 +596,13 @@ class _HealthTab extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Reminders',
+                          AppStrings.tr('Reminders'),
                           style: AppTextStyles.headlineMd
                               .copyWith(color: scheme.onSurface),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Medicines, hydration and follow-ups',
+                          AppStrings.tr('Medicines, hydration and follow-ups'),
                           style: AppTextStyles.bodyMd
                               .copyWith(color: scheme.onSurfaceVariant),
                         ),
@@ -626,13 +627,13 @@ class _HealthTab extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Self-Care Advice',
+                          AppStrings.tr('Self-Care Advice'),
                           style: AppTextStyles.headlineMd
                               .copyWith(color: scheme.onSurface),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Recovery tips for home',
+                          AppStrings.tr('Recovery tips for home'),
                           style: AppTextStyles.bodyMd
                               .copyWith(color: scheme.onSurfaceVariant),
                         ),
@@ -657,13 +658,13 @@ class _HealthTab extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Check Symptoms',
+                          AppStrings.tr('Check Symptoms'),
                           style: AppTextStyles.headlineMd
                               .copyWith(color: scheme.onSurface),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Voice-first triage assistant',
+                          AppStrings.tr('Voice-first triage assistant'),
                           style: AppTextStyles.bodyMd
                               .copyWith(color: scheme.onSurfaceVariant),
                         ),
@@ -698,7 +699,7 @@ class _ConsultTab extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppTopBar(
-        title: 'Consult',
+        title: AppStrings.tr('Consult'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: Center(
@@ -722,18 +723,18 @@ class _ConsultTab extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.stackMd),
               Text(
-                'No active consultations',
+                AppStrings.tr('No active consultations'),
                 style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
               ),
               const SizedBox(height: AppSpacing.unit),
               Text(
-                'Book a consultation with a doctor to start chatting.',
+                AppStrings.tr('Book a consultation with a doctor to start chatting.'),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: AppSpacing.stackLg),
               PillButton(
-                label: 'Book a Consultation',
+                label: AppStrings.tr('Book a Consultation'),
                 icon: Icons.calendar_month,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const BookConsultationScreen()),

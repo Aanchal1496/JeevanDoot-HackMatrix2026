@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_ai_suggested_questions_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_video_consult_screen.dart';
@@ -18,7 +19,7 @@ class DoctorPreCheckScreen extends StatelessWidget {
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'Pre-Check',
+        title: AppStrings.tr('Pre-Check'),
         hideTrailing: true,
       ),
       body: SingleChildScrollView(
@@ -124,7 +125,7 @@ class DoctorPreCheckScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'REPORTED SYMPTOMS',
+                  AppStrings.tr('REPORTED SYMPTOMS'),
                   style: AppTextStyles.labelSm.copyWith(
                     color: scheme.onSurfaceVariant,
                     letterSpacing: 0.8,
@@ -156,7 +157,7 @@ class DoctorPreCheckScreen extends StatelessWidget {
                 const Divider(),
                 const SizedBox(height: AppSpacing.stackMd),
                 Text(
-                  'SYSTEM CHECK',
+                  AppStrings.tr('SYSTEM CHECK'),
                   style: AppTextStyles.labelSm.copyWith(
                     color: scheme.onSurfaceVariant,
                     letterSpacing: 0.8,
@@ -166,26 +167,26 @@ class DoctorPreCheckScreen extends StatelessWidget {
                 _checkRow(
                   scheme,
                   icon: Icons.wifi,
-                  label: 'Connection',
-                  status: 'Good',
+                  label: AppStrings.tr('Connection'),
+                  status: AppStrings.tr('Good'),
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 _checkRow(
                   scheme,
                   icon: Icons.videocam,
-                  label: 'Camera',
-                  status: 'Ready',
+                  label: AppStrings.tr('Camera'),
+                  status: AppStrings.tr('Ready'),
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 _checkRow(
                   scheme,
                   icon: Icons.mic,
-                  label: 'Microphone',
-                  status: 'Ready',
+                  label: AppStrings.tr('Microphone'),
+                  status: AppStrings.tr('Ready'),
                 ),
                 const SizedBox(height: AppSpacing.stackMd),
                 PillButton(
-                  label: 'AI Suggested Questions',
+                  label: AppStrings.tr('AI Suggested Questions'),
                   icon: Icons.auto_awesome,
                   backgroundColor: scheme.surfaceContainerLow,
                   foregroundColor: scheme.primary,
@@ -220,7 +221,7 @@ class DoctorPreCheckScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'Video Preview Active',
+                            AppStrings.tr('Video Preview Active'),
                             style: AppTextStyles.bodyMd
                                 .copyWith(color: scheme.onInverseSurface, fontSize: 14),
                           ),
@@ -239,7 +240,7 @@ class DoctorPreCheckScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: PillButton(
-                    label: 'Cancel',
+                    label: AppStrings.tr('Cancel'),
                     backgroundColor: scheme.surfaceContainerLowest,
                     foregroundColor: scheme.onSurface,
                     border: Border.all(color: scheme.outline),
@@ -251,7 +252,7 @@ class DoctorPreCheckScreen extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: PillButton(
-                    label: 'Start Consultation',
+                    label: AppStrings.tr('Start Consultation'),
                     icon: Icons.video_call,
                     height: 48,
                     onPressed: () => Navigator.of(context).pushReplacement(

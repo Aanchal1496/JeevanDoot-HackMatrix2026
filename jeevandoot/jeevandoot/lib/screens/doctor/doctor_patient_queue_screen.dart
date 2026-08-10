@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/doctor_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_patient_case_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
@@ -46,7 +47,7 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Could not load the queue. Pull to retry.';
+          _error = AppStrings.tr('Could not load the queue. Pull to retry.');
           _loading = false;
         });
       }
@@ -81,11 +82,11 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
     return Scaffold(
       appBar: AppTopBar(
         avatarUrl: null,
-        title: 'Patient Queue',
+        title: AppStrings.tr('Patient Queue'),
         subtitle: null,
         onTrailing: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No new notifications.')),
+            SnackBar(content: Text(AppStrings.tr('No new notifications.'))),
           );
         },
       ),
@@ -102,7 +103,7 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Patient Queue',
+                  AppStrings.tr('Patient Queue'),
                   style: AppTextStyles.displayHeroMobile
                       .copyWith(color: scheme.onSurface),
                 ),
@@ -126,7 +127,7 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
                     : _filtered.isEmpty
                         ? Center(
                             child: Text(
-                              'No patients in the queue.',
+                              AppStrings.tr('No patients in the queue.'),
                               style: AppTextStyles.bodyMd
                                   .copyWith(color: scheme.onSurfaceVariant),
                             ),
@@ -175,7 +176,7 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                hintText: 'Search patients...',
+                hintText: AppStrings.tr('Search patients...'),
                 hintStyle: TextStyle(color: scheme.outlineVariant),
               ),
             ),
@@ -234,7 +235,7 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
                 ),
               if (label != 'All') const SizedBox(width: 6),
               Text(
-                label,
+                AppStrings.tr(label),
                 style: AppTextStyles.labelSm.copyWith(
                   color: selected ? scheme.onPrimary : scheme.onSurface,
                   fontWeight: FontWeight.w600,
@@ -351,7 +352,7 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
                 TextSpan(
                   children: [
                     TextSpan(
-                      text: 'Symptoms: ',
+                      text: AppStrings.tr('Symptoms: '),
                       style: AppTextStyles.bodyMd.copyWith(
                         color: scheme.onSurface,
                         fontWeight: FontWeight.w600,
@@ -379,7 +380,7 @@ class _DoctorPatientQueueTabState extends State<DoctorPatientQueueTab> {
     final outline = risk.level == DoctorRiskLevel.low ||
         risk.level == DoctorRiskLevel.medium;
     return PillButton(
-      label: 'View Case',
+      label: AppStrings.tr('View Case'),
       expanded: false,
       backgroundColor: outline ? Colors.transparent : scheme.primary,
       foregroundColor: outline ? scheme.secondary : scheme.onPrimary,

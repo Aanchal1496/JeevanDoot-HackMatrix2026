@@ -216,6 +216,14 @@ class PatientService {
         .toList();
   }
 
+  /// Free 1-hour slot objects for a doctor on a date: `[{'start','end'}, ...]`.
+  Future<List<Map<String, dynamic>>> doctorSlots(
+      int doctorId, String date) async {
+    final json = await _client
+        .get('/doctors/$doctorId/availability/slots?date=$date') as List<dynamic>;
+    return json.cast<Map<String, dynamic>>();
+  }
+
   Future<AppointmentItem> bookAppointment(
       {required int doctorId,
       required String scheduledAt,

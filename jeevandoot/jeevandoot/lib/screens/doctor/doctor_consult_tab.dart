@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/doctor_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_patient_case_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_pre_check_screen.dart';
@@ -47,7 +48,7 @@ class _DoctorConsultTabState extends State<DoctorConsultTab> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Could not load consultations.';
+          _error = AppStrings.tr('Could not load consultations.');
           _loading = false;
         });
       }
@@ -60,10 +61,10 @@ class _DoctorConsultTabState extends State<DoctorConsultTab> {
     final queueIds = _consultations.map((c) => c.patientUserId).toSet();
     return Scaffold(
       appBar: AppTopBar(
-        title: 'Consult',
+        title: AppStrings.tr('Consult'),
         onTrailing: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No new notifications.')),
+            SnackBar(content: Text(AppStrings.tr('No new notifications.'))),
           );
         },
       ),
@@ -84,7 +85,7 @@ class _DoctorConsultTabState extends State<DoctorConsultTab> {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'CONSULTATION',
+                  AppStrings.tr('CONSULTATION'),
                   style: AppTextStyles.labelSm.copyWith(
                     color: scheme.primary,
                     letterSpacing: 1,
@@ -94,13 +95,13 @@ class _DoctorConsultTabState extends State<DoctorConsultTab> {
               ),
               const SizedBox(height: AppSpacing.stackMd),
               Text(
-                'Active Consultations',
+                AppStrings.tr('Active Consultations'),
                 style: AppTextStyles.displayHeroMobile
                     .copyWith(color: scheme.onSurface),
               ),
               const SizedBox(height: AppSpacing.unit),
               Text(
-                'Start or resume a consultation for a waiting patient.',
+                AppStrings.tr('Start or resume a consultation for a waiting patient.'),
                 style: AppTextStyles.bodyMd
                     .copyWith(color: scheme.onSurfaceVariant),
               ),
@@ -116,7 +117,7 @@ class _DoctorConsultTabState extends State<DoctorConsultTab> {
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.stackLg),
                   child: Text(
-                    'No patients waiting in the queue.',
+                    AppStrings.tr('No patients waiting in the queue.'),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyMd
                         .copyWith(color: scheme.onSurfaceVariant),
@@ -215,7 +216,9 @@ class _DoctorConsultTabState extends State<DoctorConsultTab> {
           ),
           const SizedBox(height: AppSpacing.stackSm),
           PillButton(
-            label: isActive ? 'Resume Consultation' : 'Start Consultation',
+            label: isActive
+                ? AppStrings.tr('Resume Consultation')
+                : AppStrings.tr('Start Consultation'),
             backgroundColor:
                 isActive ? scheme.primary : scheme.surfaceContainer,
             foregroundColor: isActive ? scheme.onPrimary : scheme.onSurface,

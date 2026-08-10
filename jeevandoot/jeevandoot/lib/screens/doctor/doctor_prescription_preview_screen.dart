@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_new_prescription_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
@@ -17,11 +18,11 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'Prescription Preview',
+        title: AppStrings.tr('Prescription Preview'),
         trailingIcon: Icons.ios_share,
         onTrailing: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Prescription shared.')),
+            SnackBar(content: Text(AppStrings.tr('Prescription shared.'))),
           );
         },
       ),
@@ -110,7 +111,7 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                     Expanded(
                       child: _infoBlock(
                         scheme,
-                        label: 'PATIENT',
+                        label: AppStrings.tr('PATIENT'),
                         value: patient.name,
                       ),
                     ),
@@ -118,7 +119,7 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                     Expanded(
                       child: _infoBlock(
                         scheme,
-                        label: 'DATE',
+                        label: AppStrings.tr('DATE'),
                         value: '08 Aug 2026',
                       ),
                     ),
@@ -127,14 +128,14 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                 const SizedBox(height: AppSpacing.stackSm),
                 _infoBlock(
                   scheme,
-                  label: 'AGE / GENDER',
+                  label: AppStrings.tr('AGE / GENDER'),
                   value: '${patient.age} yrs · ${patient.gender}',
                 ),
                 const SizedBox(height: AppSpacing.stackMd),
                 const Divider(),
                 const SizedBox(height: AppSpacing.stackMd),
                 Text(
-                  'PRESCRIBED MEDICINES',
+                  AppStrings.tr('PRESCRIBED MEDICINES'),
                   style: AppTextStyles.labelSm.copyWith(
                     color: scheme.onSurfaceVariant,
                     letterSpacing: 0.8,
@@ -142,22 +143,22 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 _medicineRow(scheme,
-                    name: 'Paracetamol',
+                    name: AppStrings.tr('Paracetamol'),
                     dose: '650mg',
                     times: 'M / N'),
                 _medicineRow(scheme,
-                    name: 'Azithromycin',
+                    name: AppStrings.tr('Azithromycin'),
                     dose: '500mg',
                     times: 'A'),
                 _medicineRow(scheme,
-                    name: 'Cough Syrup',
+                    name: AppStrings.tr('Cough Syrup'),
                     dose: '10ml',
                     times: 'M / A / N'),
                 const SizedBox(height: AppSpacing.stackMd),
                 const Divider(),
                 const SizedBox(height: AppSpacing.stackMd),
                 Text(
-                  'INSTRUCTIONS',
+                  AppStrings.tr('INSTRUCTIONS'),
                   style: AppTextStyles.labelSm.copyWith(
                     color: scheme.onSurfaceVariant,
                     letterSpacing: 0.8,
@@ -165,8 +166,10 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.unit),
                 Text(
-                  '1. Take medicines with food. 2. Drink plenty of fluids. '
-                  '3. Follow up in 5 days if symptoms persist.',
+                  AppStrings.tr(
+                    '1. Take medicines with food. 2. Drink plenty of fluids. '
+                    '3. Follow up in 5 days if symptoms persist.',
+                  ),
                   style: AppTextStyles.bodyMd
                       .copyWith(color: scheme.onSurface, fontSize: 14, height: 1.5),
                 ),
@@ -189,7 +192,7 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            'Dr. Priya Sharma',
+                            AppStrings.tr('Dr. Priya Sharma'),
                             textAlign: TextAlign.center,
                             style: AppTextStyles.labelLg
                                 .copyWith(color: scheme.onSurface),
@@ -197,7 +200,7 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Digitally Signed',
+                          AppStrings.tr('Digitally Signed'),
                           style: AppTextStyles.labelSm.copyWith(
                             color: scheme.primary,
                             fontWeight: FontWeight.w600,
@@ -293,7 +296,7 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
       children: [
         Expanded(
           child: PillButton(
-            label: 'Edit',
+            label: AppStrings.tr('Edit'),
             backgroundColor: scheme.surfaceContainerLowest,
             foregroundColor: scheme.onSurface,
             border: Border.all(color: scheme.outline),
@@ -310,13 +313,13 @@ class DoctorPrescriptionPreviewScreen extends StatelessWidget {
         Expanded(
           flex: 2,
           child: PillButton(
-            label: 'Send Prescription',
+            label: AppStrings.tr('Send Prescription'),
             icon: Icons.send,
             height: 48,
             onPressed: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Prescription sent to patient.')),
+                SnackBar(content: Text(AppStrings.tr('Prescription sent to patient.'))),
               );
             },
           ),

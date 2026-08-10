@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/doctor_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -60,7 +61,7 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Referral submitted.')),
+        SnackBar(content: Text(AppStrings.tr('Referral submitted.'))),
       );
     } catch (e) {
       if (!mounted) return;
@@ -86,7 +87,7 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'Referral Patient',
+        title: AppStrings.tr('Referral Patient'),
         hideTrailing: true,
       ),
       body: SingleChildScrollView(
@@ -161,12 +162,12 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'REFERRAL URGENCY',
-          style: AppTextStyles.labelSm.copyWith(
-            color: scheme.onSurfaceVariant,
-            letterSpacing: 0.8,
+            AppStrings.tr('REFERRAL URGENCY'),
+            style: AppTextStyles.labelSm.copyWith(
+              color: scheme.onSurfaceVariant,
+              letterSpacing: 0.8,
+            ),
           ),
-        ),
         const SizedBox(height: AppSpacing.unit),
         Container(
           padding: const EdgeInsets.all(4),
@@ -191,7 +192,7 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        option,
+                        AppStrings.tr(option),
                         style: AppTextStyles.labelLg.copyWith(
                           color: _urgency == option
                               ? scheme.onPrimary
@@ -221,7 +222,7 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'REASON FOR REFERRAL',
+            AppStrings.tr('REASON FOR REFERRAL'),
             style: AppTextStyles.labelSm.copyWith(
               color: scheme.onSurfaceVariant,
               letterSpacing: 0.8,
@@ -232,7 +233,7 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
             controller: _reasonController,
             maxLines: 4,
             decoration: InputDecoration(
-              hintText: 'Describe the reason for referral...',
+              hintText: AppStrings.tr('Describe the reason for referral...'),
               hintStyle: AppTextStyles.bodyMd
                   .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
               filled: true,
@@ -261,7 +262,7 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'SELECT FACILITY',
+            AppStrings.tr('SELECT FACILITY'),
             style: AppTextStyles.labelSm.copyWith(
               color: scheme.onSurfaceVariant,
               letterSpacing: 0.8,
@@ -272,7 +273,7 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
             controller: _facilityController,
             onChanged: (value) => setState(() => _selectedFacility = value),
             decoration: InputDecoration(
-              hintText: 'Search hospital or department',
+              hintText: AppStrings.tr('Search hospital or department'),
               hintStyle: AppTextStyles.bodyMd
                   .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
               prefixIcon: Icon(Icons.search, color: scheme.onSurfaceVariant),
@@ -314,7 +315,7 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
                       const SizedBox(width: AppSpacing.gutter),
                       Expanded(
                         child: Text(
-                          facility,
+                          AppStrings.tr(facility),
                           style: AppTextStyles.bodyMd
                               .copyWith(color: scheme.onSurface, fontSize: 14),
                         ),
@@ -333,7 +334,9 @@ class _DoctorReferralScreenState extends State<DoctorReferralScreen> {
 
   Widget _submitBar(ColorScheme scheme) {
     return PillButton(
-      label: _submitting ? 'Submitting…' : 'Submit Referral',
+      label: _submitting
+          ? AppStrings.tr('Submitting…')
+          : AppStrings.tr('Submit Referral'),
       icon: Icons.send,
       height: 48,
       onPressed: _submitting ? null : _submit,

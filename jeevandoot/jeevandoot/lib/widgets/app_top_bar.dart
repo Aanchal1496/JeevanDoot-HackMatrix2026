@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/offline_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 
@@ -69,7 +70,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          AppStrings.tr(title),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.headlineLgMobile.copyWith(
@@ -84,7 +85,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
               Icon(Icons.location_on, size: 14, color: scheme.onSurfaceVariant),
               Flexible(
                 child: Text(
-                  subtitle!,
+                  AppStrings.tr(subtitle!),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.labelSm

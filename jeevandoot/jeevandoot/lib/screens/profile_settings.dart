@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -83,7 +84,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated.')),
+      SnackBar(content: Text(AppStrings.tr('Profile updated.'))),
     );
   }
 
@@ -93,7 +94,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
-        title: 'Edit Profile',
+        title: AppStrings.tr('Edit Profile'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: ListView(
@@ -106,27 +107,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           _formField(
             controller: _name,
-            label: 'Full name',
+            label: AppStrings.tr('Full name'),
             icon: Icons.person_outline,
           ),
           const SizedBox(height: AppSpacing.gutter),
           _formField(
             controller: _phone,
-            label: 'Phone number',
+            label: AppStrings.tr('Phone number'),
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: AppSpacing.gutter),
           _formField(
             controller: _age,
-            label: 'Age',
+            label: AppStrings.tr('Age'),
             icon: Icons.cake_outlined,
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: AppSpacing.stackMd),
           _chipField(
             scheme: scheme,
-            label: 'Gender',
+            label: AppStrings.tr('Gender'),
             options: _genders,
             selected: _gender,
             onChanged: (value) => setState(() => _gender = value),
@@ -134,7 +135,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           const SizedBox(height: AppSpacing.stackMd),
           _chipField(
             scheme: scheme,
-            label: 'Blood group',
+            label: AppStrings.tr('Blood group'),
             options: _bloodGroups,
             selected: _blood,
             onChanged: (value) => setState(() => _blood = value),
@@ -144,7 +145,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.all(AppSpacing.containerMargin),
         child: PillButton(
-          label: 'Save Changes',
+          label: AppStrings.tr('Save Changes'),
           icon: Icons.check,
           onPressed: _save,
         ),
@@ -218,7 +219,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       _editing = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Personal information updated.')),
+      SnackBar(content: Text(AppStrings.tr('Personal information updated.'))),
     );
   }
 
@@ -228,7 +229,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
-        title: 'Personal Info',
+        title: AppStrings.tr('Personal Info'),
         trailingIcon: _editing ? Icons.check : Icons.edit,
         onTrailing: _editing
             ? _save
@@ -249,31 +250,31 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       children: [
         _sectionCard(
           scheme,
-          title: 'Personal Details',
+          title: AppStrings.tr('Personal Details'),
           children: [
-            _infoTile(scheme, icon: Icons.person_outline, label: 'Full name', value: UserData.name),
-            _infoTile(scheme, icon: Icons.cake_outlined, label: 'Date of birth', value: UserData.dob),
-            _infoTile(scheme, icon: Icons.tag, label: 'Age', value: UserData.age),
-            _infoTile(scheme, icon: Icons.wc, label: 'Gender', value: UserData.gender),
-            _infoTile(scheme, icon: Icons.bloodtype, label: 'Blood group', value: UserData.bloodGroup),
+            _infoTile(scheme, icon: Icons.person_outline, label: AppStrings.tr('Full name'), value: UserData.name),
+            _infoTile(scheme, icon: Icons.cake_outlined, label: AppStrings.tr('Date of birth'), value: UserData.dob),
+            _infoTile(scheme, icon: Icons.tag, label: AppStrings.tr('Age'), value: UserData.age),
+            _infoTile(scheme, icon: Icons.wc, label: AppStrings.tr('Gender'), value: UserData.gender),
+            _infoTile(scheme, icon: Icons.bloodtype, label: AppStrings.tr('Blood group'), value: UserData.bloodGroup),
           ],
         ),
         const SizedBox(height: AppSpacing.stackMd),
         _sectionCard(
           scheme,
-          title: 'Contact',
+          title: AppStrings.tr('Contact'),
           children: [
-            _infoTile(scheme, icon: Icons.phone_outlined, label: 'Phone', value: UserData.phone),
-            _infoTile(scheme, icon: Icons.mail_outline, label: 'Email', value: UserData.email),
-            _infoTile(scheme, icon: Icons.home_outlined, label: 'Address', value: UserData.address),
+            _infoTile(scheme, icon: Icons.phone_outlined, label: AppStrings.tr('Phone'), value: UserData.phone),
+            _infoTile(scheme, icon: Icons.mail_outline, label: AppStrings.tr('Email'), value: UserData.email),
+            _infoTile(scheme, icon: Icons.home_outlined, label: AppStrings.tr('Address'), value: UserData.address),
           ],
         ),
         const SizedBox(height: AppSpacing.stackMd),
         _sectionCard(
           scheme,
-          title: 'ID Details',
+          title: AppStrings.tr('ID Details'),
           children: [
-            _infoTile(scheme, icon: Icons.credit_card, label: 'Govt. ID number', value: UserData.idNumber),
+            _infoTile(scheme, icon: Icons.credit_card, label: AppStrings.tr('Govt. ID number'), value: UserData.idNumber),
           ],
         ),
       ],
@@ -289,23 +290,23 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         AppSpacing.stackLg,
       ),
       children: [
-        _formField(controller: _name, label: 'Full name', icon: Icons.person_outline),
+        _formField(controller: _name, label: AppStrings.tr('Full name'), icon: Icons.person_outline),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _dob, label: 'Date of birth', icon: Icons.cake_outlined),
+        _formField(controller: _dob, label: AppStrings.tr('Date of birth'), icon: Icons.cake_outlined),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _age, label: 'Age', icon: Icons.tag, keyboardType: TextInputType.number),
+        _formField(controller: _age, label: AppStrings.tr('Age'), icon: Icons.tag, keyboardType: TextInputType.number),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _phone, label: 'Phone number', icon: Icons.phone_outlined, keyboardType: TextInputType.phone),
+        _formField(controller: _phone, label: AppStrings.tr('Phone number'), icon: Icons.phone_outlined, keyboardType: TextInputType.phone),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _email, label: 'Email', icon: Icons.mail_outline, keyboardType: TextInputType.emailAddress),
+        _formField(controller: _email, label: AppStrings.tr('Email'), icon: Icons.mail_outline, keyboardType: TextInputType.emailAddress),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _address, label: 'Address', icon: Icons.home_outlined, maxLines: 3),
+        _formField(controller: _address, label: AppStrings.tr('Address'), icon: Icons.home_outlined, maxLines: 3),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _id, label: 'Govt. ID number', icon: Icons.credit_card),
+        _formField(controller: _id, label: AppStrings.tr('Govt. ID number'), icon: Icons.credit_card),
         const SizedBox(height: AppSpacing.stackMd),
         _chipField(
           scheme: Theme.of(context).colorScheme,
-          label: 'Gender',
+          label: AppStrings.tr('Gender'),
           options: _genders,
           selected: _gender,
           onChanged: (value) => setState(() => _gender = value),
@@ -313,7 +314,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         const SizedBox(height: AppSpacing.stackMd),
         _chipField(
           scheme: Theme.of(context).colorScheme,
-          label: 'Blood group',
+          label: AppStrings.tr('Blood group'),
           options: _bloodGroups,
           selected: _blood,
           onChanged: (value) => setState(() => _blood = value),
@@ -373,7 +374,7 @@ class _HealthInfoScreenState extends State<HealthInfoScreen> {
       _editing = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Health information updated.')),
+      SnackBar(content: Text(AppStrings.tr('Health information updated.'))),
     );
   }
 
@@ -383,7 +384,7 @@ class _HealthInfoScreenState extends State<HealthInfoScreen> {
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
-        title: 'Health Info',
+        title: AppStrings.tr('Health Info'),
         trailingIcon: _editing ? Icons.check : Icons.edit,
         onTrailing: _editing
             ? _save
@@ -404,21 +405,21 @@ class _HealthInfoScreenState extends State<HealthInfoScreen> {
       children: [
         _sectionCard(
           scheme,
-          title: 'Vitals',
+          title: AppStrings.tr('Vitals'),
           children: [
-            _infoTile(scheme, icon: Icons.bloodtype, label: 'Blood group', value: UserData.bloodGroup),
-            _infoTile(scheme, icon: Icons.height, label: 'Height', value: UserData.height),
-            _infoTile(scheme, icon: Icons.monitor_weight_outlined, label: 'Weight', value: UserData.weight),
+            _infoTile(scheme, icon: Icons.bloodtype, label: AppStrings.tr('Blood group'), value: UserData.bloodGroup),
+            _infoTile(scheme, icon: Icons.height, label: AppStrings.tr('Height'), value: UserData.height),
+            _infoTile(scheme, icon: Icons.monitor_weight_outlined, label: AppStrings.tr('Weight'), value: UserData.weight),
           ],
         ),
         const SizedBox(height: AppSpacing.stackMd),
         _sectionCard(
           scheme,
-          title: 'Conditions',
+          title: AppStrings.tr('Conditions'),
           children: [
-            _infoTile(scheme, icon: Icons.medical_information_outlined, label: 'Allergies', value: UserData.allergies),
-            _infoTile(scheme, icon: Icons.favorite_outline, label: 'Chronic conditions', value: UserData.chronicConditions),
-            _infoTile(scheme, icon: Icons.medication_outlined, label: 'Current medications', value: UserData.medications),
+            _infoTile(scheme, icon: Icons.medical_information_outlined, label: AppStrings.tr('Allergies'), value: UserData.allergies),
+            _infoTile(scheme, icon: Icons.favorite_outline, label: AppStrings.tr('Chronic conditions'), value: UserData.chronicConditions),
+            _infoTile(scheme, icon: Icons.medication_outlined, label: AppStrings.tr('Current medications'), value: UserData.medications),
           ],
         ),
       ],
@@ -434,17 +435,17 @@ class _HealthInfoScreenState extends State<HealthInfoScreen> {
         AppSpacing.stackLg,
       ),
       children: [
-        _formField(controller: _blood, label: 'Blood group', icon: Icons.bloodtype),
+        _formField(controller: _blood, label: AppStrings.tr('Blood group'), icon: Icons.bloodtype),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _height, label: 'Height', icon: Icons.height),
+        _formField(controller: _height, label: AppStrings.tr('Height'), icon: Icons.height),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _weight, label: 'Weight', icon: Icons.monitor_weight_outlined),
+        _formField(controller: _weight, label: AppStrings.tr('Weight'), icon: Icons.monitor_weight_outlined),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _allergies, label: 'Allergies', icon: Icons.medical_information_outlined),
+        _formField(controller: _allergies, label: AppStrings.tr('Allergies'), icon: Icons.medical_information_outlined),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _conditions, label: 'Chronic conditions', icon: Icons.favorite_outline),
+        _formField(controller: _conditions, label: AppStrings.tr('Chronic conditions'), icon: Icons.favorite_outline),
         const SizedBox(height: AppSpacing.gutter),
-        _formField(controller: _medications, label: 'Current medications', icon: Icons.medication_outlined, maxLines: 3),
+        _formField(controller: _medications, label: AppStrings.tr('Current medications'), icon: Icons.medication_outlined, maxLines: 3),
       ],
     );
   }
@@ -465,7 +466,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
-        title: 'Notifications',
+        title: AppStrings.tr('Notifications'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: ListView(
@@ -479,8 +480,8 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           _switchTile(
             scheme,
             icon: Icons.sms_outlined,
-            title: 'SMS alerts',
-            subtitle: 'Text messages for reports and payments',
+            title: AppStrings.tr('SMS alerts'),
+            subtitle: AppStrings.tr('Text messages for reports and payments'),
             value: UserData.smsAlerts,
             onChanged: (v) => setState(() => UserData.smsAlerts = v),
           ),
@@ -488,8 +489,8 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           _switchTile(
             scheme,
             icon: Icons.notifications_outlined,
-            title: 'App alerts',
-            subtitle: 'In-app notifications for activity',
+            title: AppStrings.tr('App alerts'),
+            subtitle: AppStrings.tr('In-app notifications for activity'),
             value: UserData.appAlerts,
             onChanged: (v) => setState(() => UserData.appAlerts = v),
           ),
@@ -497,8 +498,8 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           _switchTile(
             scheme,
             icon: Icons.mail_outline,
-            title: 'Email updates',
-            subtitle: 'Weekly health summaries by email',
+            title: AppStrings.tr('Email updates'),
+            subtitle: AppStrings.tr('Weekly health summaries by email'),
             value: UserData.emailUpdates,
             onChanged: (v) => setState(() => UserData.emailUpdates = v),
           ),
@@ -506,8 +507,8 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           _switchTile(
             scheme,
             icon: Icons.alarm_outlined,
-            title: 'Reminder alerts',
-            subtitle: 'Medicines and follow-up reminders',
+            title: AppStrings.tr('Reminder alerts'),
+            subtitle: AppStrings.tr('Medicines and follow-up reminders'),
             value: UserData.reminderAlerts,
             onChanged: (v) => setState(() => UserData.reminderAlerts = v),
           ),
@@ -515,8 +516,8 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           _switchTile(
             scheme,
             icon: Icons.event_available_outlined,
-            title: 'Appointment alerts',
-            subtitle: 'Booking and confirmation updates',
+            title: AppStrings.tr('Appointment alerts'),
+            subtitle: AppStrings.tr('Booking and confirmation updates'),
             value: UserData.appointmentAlerts,
             onChanged: (v) => setState(() => UserData.appointmentAlerts = v),
           ),
@@ -541,7 +542,7 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
-        title: 'Privacy & Security',
+        title: AppStrings.tr('Privacy & Security'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: ListView(
@@ -555,8 +556,8 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
           _switchTile(
             scheme,
             icon: Icons.share_outlined,
-            title: 'Share data with doctors',
-            subtitle: 'Allow doctors to view your health records',
+            title: AppStrings.tr('Share data with doctors'),
+            subtitle: AppStrings.tr('Allow doctors to view your health records'),
             value: UserData.dataSharing,
             onChanged: (v) => setState(() => UserData.dataSharing = v),
           ),
@@ -564,8 +565,8 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
           _switchTile(
             scheme,
             icon: Icons.lock_outline,
-            title: 'App lock',
-            subtitle: 'Require a PIN to open JeevanDoot',
+            title: AppStrings.tr('App lock'),
+            subtitle: AppStrings.tr('Require a PIN to open JeevanDoot'),
             value: UserData.appLock,
             onChanged: (v) => setState(() => UserData.appLock = v),
           ),
@@ -573,8 +574,8 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
           _switchTile(
             scheme,
             icon: Icons.fingerprint,
-            title: 'Biometric unlock',
-            subtitle: 'Use fingerprint or face to unlock',
+            title: AppStrings.tr('Biometric unlock'),
+            subtitle: AppStrings.tr('Use fingerprint or face to unlock'),
             value: UserData.biometricLock,
             onChanged: (v) => setState(() => UserData.biometricLock = v),
           ),
@@ -582,8 +583,8 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
           _switchTile(
             scheme,
             icon: Icons.assignment_outlined,
-            title: 'Share health reports',
-            subtitle: 'Share reports with family members',
+            title: AppStrings.tr('Share health reports'),
+            subtitle: AppStrings.tr('Share reports with family members'),
             value: UserData.shareHealthReports,
             onChanged: (v) => setState(() => UserData.shareHealthReports = v),
           ),
@@ -591,8 +592,8 @@ class _PrivacySecurityScreenState extends State<PrivacySecurityScreen> {
           _switchTile(
             scheme,
             icon: Icons.campaign_outlined,
-            title: 'Marketing updates',
-            subtitle: 'Health tips and promotional messages',
+            title: AppStrings.tr('Marketing updates'),
+            subtitle: AppStrings.tr('Health tips and promotional messages'),
             value: UserData.marketingUpdates,
             onChanged: (v) => setState(() => UserData.marketingUpdates = v),
           ),

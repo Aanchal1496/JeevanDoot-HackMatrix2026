@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/book_consultation_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -26,12 +27,12 @@ class SelfCareAdviceScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Take care of yourself',
+              AppStrings.tr('Take care of yourself'),
               style: AppTextStyles.displayHeroMobile.copyWith(color: scheme.onSurface),
             ),
             const SizedBox(height: AppSpacing.unit),
             Text(
-              'Simple steps to help you feel better and recover comfortably at home.',
+              AppStrings.tr('Simple steps to help you feel better and recover comfortably at home.'),
               style: AppTextStyles.bodyLg.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.stackMd),
@@ -68,18 +69,18 @@ class SelfCareAdviceScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    'Need help?',
+                    AppStrings.tr('Need help?'),
                     style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'If your symptoms worsen or you feel uneasy, we are here.',
+                    AppStrings.tr('If your symptoms worsen or you feel uneasy, we are here.'),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: AppSpacing.stackMd),
                   PillButton(
-                    label: 'Talk to a Doctor',
+                    label: AppStrings.tr('Talk to a Doctor'),
                     icon: Icons.medical_services,
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const BookConsultationScreen()),
@@ -127,7 +128,7 @@ class _AdviceCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.gutter),
               Expanded(
                 child: Text(
-                  title,
+                  AppStrings.tr(title),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
@@ -137,7 +138,7 @@ class _AdviceCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.gutter),
           Text(
-            body,
+            AppStrings.tr(body),
             style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],

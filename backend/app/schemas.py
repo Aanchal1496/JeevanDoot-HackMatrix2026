@@ -217,6 +217,8 @@ class AppointmentCreate(BaseModel):
     scheduled_at: Optional[str] = None
     type: str = "Video Consultation"
     family_member_id: Optional[int] = None
+    # Doctor-initiated bookings: the patient this follow-up appointment is for.
+    patient_user_id: Optional[int] = None
 
 
 class AppointmentOut(BaseModel):
@@ -230,6 +232,27 @@ class AppointmentOut(BaseModel):
     scheduled_at: Optional[object] = None
     type: Optional[str] = None
     status: Optional[str] = None
+
+
+class DoctorAvailabilityCreate(BaseModel):
+    date: str  # YYYY-MM-DD
+    start_time: str  # "16:00"
+    end_time: str  # "20:00"
+
+
+class DoctorAvailabilityOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    doctor_id: int
+    date: str
+    start_time: str
+    end_time: str
+
+
+class SlotOut(BaseModel):
+    start: str  # "16:00"
+    end: str  # "17:00"
 
 
 # --------------------------------------------------------------------------- #

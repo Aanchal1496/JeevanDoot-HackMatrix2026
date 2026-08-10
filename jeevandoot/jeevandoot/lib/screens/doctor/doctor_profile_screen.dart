@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/constants.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
@@ -14,10 +15,10 @@ class DoctorProfileTab extends StatelessWidget {
     return Scaffold(
       appBar: AppTopBar(
         avatarUrl: AppAssets.doctorAvatar,
-        subtitle: 'Profile',
+        subtitle: AppStrings.tr('Profile'),
         onTrailing: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No new notifications.')),
+            SnackBar(content: Text(AppStrings.tr('No new notifications.'))),
           );
         },
       ),
@@ -102,12 +103,12 @@ class DoctorProfileTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.stackMd),
           PillButton(
-            label: 'Edit Profile',
+            label: AppStrings.tr('Edit Profile'),
             backgroundColor: scheme.primary,
             foregroundColor: scheme.onPrimary,
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile editing coming soon.')),
+                SnackBar(content: Text(AppStrings.tr('Profile editing coming soon.'))),
               );
             },
           ),
@@ -134,7 +135,7 @@ class DoctorProfileTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Professional Details',
+            AppStrings.tr('Professional Details'),
             style: AppTextStyles.labelLg.copyWith(
               color: scheme.onSurface,
               fontWeight: FontWeight.w600,
@@ -144,15 +145,15 @@ class DoctorProfileTab extends StatelessWidget {
           _detailRow(
             scheme,
             icon: Icons.badge_outlined,
-            label: 'MEDICAL REGISTRATION ID',
+            label: AppStrings.tr('MEDICAL REGISTRATION ID'),
             value: DoctorState.registrationId,
           ),
           const SizedBox(height: AppSpacing.gutter),
           _detailRow(
             scheme,
             icon: Icons.medical_services,
-            label: 'SPECIALIZATION',
-            value: 'Internal Medicine, General Practice',
+            label: AppStrings.tr('SPECIALIZATION'),
+            value: AppStrings.tr('Internal Medicine, General Practice'),
           ),
           const SizedBox(height: AppSpacing.gutter),
           Container(
@@ -228,9 +229,9 @@ class DoctorProfileTab extends StatelessWidget {
 
   Widget _stats(ColorScheme scheme) {
     final stats = [
-      (icon: Icons.group, color: scheme.secondary, value: '1.2k+', label: 'Total Patients'),
-      (icon: Icons.star, color: scheme.primary, value: '4.9', label: 'Rating'),
-      (icon: Icons.workspace_premium, color: scheme.tertiary, value: '8 Yrs', label: 'Experience'),
+      (icon: Icons.group, color: scheme.secondary, value: '1.2k+', label: AppStrings.tr('Total Patients')),
+      (icon: Icons.star, color: scheme.primary, value: '4.9', label: AppStrings.tr('Rating')),
+      (icon: Icons.workspace_premium, color: scheme.tertiary, value: '8 Yrs', label: AppStrings.tr('Experience')),
     ];
     return Row(
       children: [

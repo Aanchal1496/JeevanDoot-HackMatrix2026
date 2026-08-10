@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/screens/home_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -105,14 +106,14 @@ class _AppointmentConfirmationScreenState
                     _successIllustration(scheme),
                     const SizedBox(height: AppSpacing.stackLg),
                     Text(
-                      'Appointment Confirmed',
+                      AppStrings.tr('Appointment Confirmed'),
                       textAlign: TextAlign.center,
                       style: AppTextStyles.displayHeroMobile
                           .copyWith(color: scheme.onSurface),
                     ),
                     const SizedBox(height: AppSpacing.unit),
                     Text(
-                      'Your consultation has been successfully scheduled.',
+                      AppStrings.tr('Your consultation has been successfully scheduled.'),
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodyLg
                           .copyWith(color: scheme.onSurfaceVariant),
@@ -121,12 +122,12 @@ class _AppointmentConfirmationScreenState
                     _detailsCard(scheme, isAudio),
                     const SizedBox(height: AppSpacing.stackLg),
                     PillButton(
-                      label: 'View Appointment',
+                      label: AppStrings.tr('View Appointment'),
                       icon: Icons.receipt_long,
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Appointment added to your Records.'),
+                          SnackBar(
+                            content: Text(AppStrings.tr('Appointment added to your Records.')),
                           ),
                         );
                       },
@@ -138,7 +139,7 @@ class _AppointmentConfirmationScreenState
                         foregroundColor: scheme.primary,
                         textStyle: AppTextStyles.labelLg,
                       ),
-                      child: const Text('Back to Home'),
+                      child: Text(AppStrings.tr('Back to Home')),
                     ),
                   ],
                 ),
@@ -220,13 +221,13 @@ class _AppointmentConfirmationScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Dr. Priya Sharma',
+                      AppStrings.tr('Dr. Priya Sharma'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
                     ),
                     Text(
-                      'General Physician',
+                      AppStrings.tr('General Physician'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.bodyMd.copyWith(color: scheme.primary),
@@ -242,15 +243,15 @@ class _AppointmentConfirmationScreenState
           ),
           _detailRow(scheme, Icons.calendar_today, widget.date, widget.weekday),
           const SizedBox(height: AppSpacing.stackSm),
-          _detailRow(scheme, Icons.schedule, widget.time, '15 min duration'),
+          _detailRow(scheme, Icons.schedule, widget.time, AppStrings.tr('15 min duration')),
           const SizedBox(height: AppSpacing.stackSm),
           _detailRow(
             scheme,
             isAudio ? Icons.mic : Icons.videocam,
-            isAudio ? 'Audio Consultation' : 'Video Consultation',
+            isAudio ? AppStrings.tr('Audio Consultation') : AppStrings.tr('Video Consultation'),
             isAudio
-                ? 'We will call you on your registered number.'
-                : 'Join from the app at the scheduled time.',
+                ? AppStrings.tr('We will call you on your registered number.')
+                : AppStrings.tr('Join from the app at the scheduled time.'),
           ),
         ],
       ),

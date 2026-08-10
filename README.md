@@ -1,72 +1,94 @@
-# JeevanDoot
+# JeevanDoot — A Messenger of Life
 
-A rural healthcare platform with three portals — **Patient**, **Doctor**, and **ASHA**
-(village health worker) — plus offline-first support and a deterministic symptom
-checker / triage engine.
+## Team Name
+**Coderss**
 
-Built on a **FastAPI + SQLAlchemy + SQLite** backend and a **Flutter** mobile client.
+## Problem Statement
+Rural India cannot reach a doctor. 65% of the rural population lacks healthcare facilities within a 5 km radius, the doctor-to-patient ratio stands at roughly 1:10,926 against the WHO standard of 1:1,000, and 70% of chronic diseases are diagnosed only at advanced stages due to the absence of screening infrastructure. Poor connectivity, low literacy, doctor shortages, and low health awareness compound this structural gap between cities and the villages healthcare should serve.
 
-## Repository layout
+## Solution Overview
+JeevanDoot delivers doorstep care powered by a phone and a neighbour. It decentralizes healthcare using mobile technology, AI-driven triage, and community health workers (ASHA) instead of relying on hospitals and expensive devices.
 
-```
-backend/           FastAPI application
-  app/             routes, models, schemas, engine, auth, audit, notifications
-  tests/           pytest suite (analysis + role-flow E2E)
-jeevandoot/        Flutter app
-  lib/             ui screens, api services, models, theme, widgets, sync queue
-```
+The platform follows a **2·2·24 service commitment**:
+- **2 km** — a healthcare touchpoint within reach, eliminating the travel barrier
+- **2 hrs** — AI-driven diagnosis/triage within 2 hours for rapid action
+- **24 hrs** — physician consultation within 24 hours, closing the care loop
 
-## Backend
+**How it works:** A patient reports symptoms via voice or icon-based input → an AI triage engine assigns a risk score (Low / Medium / High) → low-risk cases receive self-care advice, high-risk cases are referred to the nearest hospital, and medium-risk cases are routed to a doctor for teleconsultation → the doctor reviews an AI-generated case summary, consults the patient, and issues a prescription or escalates the case → outcomes sync back to the patient's app, with ASHA workers assisting patients who are illiterate or lack smartphone access, and an admin dashboard providing population-level health insights.
 
-### Requirements
-- Python 3.10+
-- Dependencies in `backend/requirements.txt` (FastAPI, SQLAlchemy, SQLAlchemy-Utils,
-  PyJWT, bcrypt, pytest, httpx, uvicorn)
+This cuts diagnosis delays by an estimated 70%, prevents disease progression, lowers costs in low-resource settings, and contributes toward SDG-3 (Good Health & Well-being).
 
-### Run
+## Live Demonstration Link
+[Add your deployed demo link here — e.g. Vercel/Netlify/Firebase Hosting URL]
+
+## Technology Stack
+- **Frontend (Patient & Doctor Web Apps):** React
+- **Backend / Database / Auth:** Firebase (or Supabase)
+- **AI Triage Engine:** Rule-based risk scoring using a symptom-to-disease dataset (Kaggle)
+- **Hosting/Deployment:** [e.g. Vercel / Netlify / Firebase Hosting]
+- **Design:** UI designed in Google Stitch
+- **Version Control:** Git & GitHub
+
+*(Update this section with your team's final choices before submission.)*
+
+## Team Members
+1. Srushti Dedaniya
+2. Aanchal Jain
+3. Vrunda Shah
+4. Harsh Gahankar
+
+## Setup Instructions
+
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- A Firebase (or Supabase) project set up with your own API keys
+
+### Installation
 ```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate            # Windows (PowerShell)
-pip install -r requirements.txt
-set PYTHONPATH=.
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Clone the repository
+git clone https://github.com/<your-username>/jeevandoot.git
+cd jeevandoot
+
+# Install dependencies
+npm install
 ```
 
-The DB (`app/jeevandoot.db`, SQLite) is created and migrated idempotently on startup,
-and seeded with demo accounts (see below).
+### Environment Variables
+Create a `.env` file in the root directory and add your backend credentials:
+```
+REACT_APP_FIREBASE_API_KEY=your_api_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_auth_domain
+REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+REACT_APP_FIREBASE_APP_ID=your_app_id
+```
 
-### Environment
-External services (AI summaries, WebRTC signaling, push, SMS/IVR, maps) are read from
-`.env` (see `.env.example`). All are optional: when credentials are absent the related
-features degrade gracefully instead of failing — nothing is faked.
-
-### Demo accounts (seeded)
-| Role   | Email                 | Password     |
-|--------|-----------------------|--------------|
-| Doctor | `doctor@jeevandoot.in`| `doctor123`  |
-| ASHA   | `asha@jeevandoot.in`  | `asha@123`   |
-| Patient| `rajesh@jeevandoot.in`| `rajesh@123` |
-
-### Tests
+### Running Locally
 ```bash
-cd backend
-.venv\Scripts\python.exe -m pytest -q
+npm start
 ```
-The suite covers the triage/analysis engine and end-to-end role flows
-(authentication, family ownership, double-booking prevention, verified-doctor
-prescriptions, ASHA vitals + escalation).
+The app will run locally at `http://localhost:3000`
 
-## Flutter app
-
-### Run
+### Building for Production
 ```bash
-cd jeevandoot/jeevandoot
-flutter pub get
-# Point the app at your backend's LAN IP:
-flutter run --dart-define=API_BASE_URL=http://<host-ip>:8000/api
+npm run build
 ```
 
-Use the **Patient**, **Doctor**, or **ASHA** tab at login to open the matching portal.
-
-See `FEATURE_STATUS.md` for what is implemented, wired end-to-end, and tested.
+### Project Structure
+```
+jeevandoot/
+├── src/
+│   ├── patient/        # Patient app screens
+│   ├── doctor/         # Doctor portal screens
+│   ├── asha/           # ASHA worker app screens
+│   ├── admin/          # Admin dashboard screens
+│   ├── components/     # Shared UI components
+│   ├── services/       # Firebase/API integration, triage logic
+│   └── App.js
+├── public/
+├── .env
+├── package.json
+└── README.md
+```

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/symptom_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/triage_result_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
@@ -69,7 +70,7 @@ class _ListeningScreenState extends State<ListeningScreen>
       setState(() {
         _status = _VoiceStatus.unsupported;
         _userMessage =
-            'Voice input is not supported here. You can type your symptoms below.';
+            AppStrings.tr('Voice input is not supported here. You can type your symptoms below.');
       });
       return;
     }
@@ -79,8 +80,10 @@ class _ListeningScreenState extends State<ListeningScreen>
 
   Future<void> _startListening() async {
     try {
+      final locale = await _sttLocale();
       await _speech.listen(
         onResult: _onResult,
+        listenOptions: SpeechListenOptions(localeId: locale),
       );
       if (!mounted) return;
       setState(() {
@@ -92,8 +95,8 @@ class _ListeningScreenState extends State<ListeningScreen>
       if (!mounted) return;
       setState(() {
         _status = _VoiceStatus.error;
-        _userMessage = 'Microphone access is required for voice input. '
-            'You can also enter your symptoms manually.';
+        _userMessage = AppStrings.tr('Microphone access is required for voice input. '
+            'You can also enter your symptoms manually.');
       });
     }
   }
@@ -104,13 +107,33 @@ class _ListeningScreenState extends State<ListeningScreen>
     setState(() {});
   }
 
+  /// Maps the language the patient selected at onboarding onto a speech
+  /// recognition locale, so Hindi/Marathi/Gujarati speech is transcribed in
+  /// that script instead of garbled English. Falls back to the system default
+  /// ('' = use default) when the locale isn't installed on the device.
+  Future<String> _sttLocale() async {
+    const codeToLocale = <String, String>{
+      'en': 'en-US',
+      'hi': 'hi-IN',
+      'mr': 'mr-IN',
+      'gu': 'gu-IN',
+      'ta': 'ta-IN',
+    };
+    final code = AppStrings.language.value;
+    final want = codeToLocale[code];
+    if (want == null) return '';
+    final available = await _speech.locales();
+    if (available.any((l) => l.localeId == want)) return want;
+    return '';
+  }
+
   void _onSpeechError(SpeechRecognitionError error) {
     if (!mounted) return;
     setState(() {
       _status = _VoiceStatus.error;
       _userMessage = error.permanent
-          ? 'Voice input is not available. Please type your symptoms below.'
-          : 'We could not hear any speech. Please try again or type your symptoms.';
+          ? AppStrings.tr('Voice input is not available. Please type your symptoms below.')
+          : AppStrings.tr('We could not hear any speech. Please try again or type your symptoms.');
     });
   }
 
@@ -122,12 +145,12 @@ class _ListeningScreenState extends State<ListeningScreen>
     final text = _textController.text.trim();
     if (text.isEmpty && widget.selectedSymptoms.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter or select at least one symptom.'),
+        SnackBar(
+          content: Text(AppStrings.tr('Please enter or select at least one symptom.')),
         ),
       );
       setState(() => _userMessage =
-          'No symptoms entered. Please speak, type, or go back to select symptoms.');
+          AppStrings.tr('No symptoms entered. Please speak, type, or go back to select symptoms.'));
       return;
     }
     if (text.isEmpty) {
@@ -157,8 +180,8 @@ class _ListeningScreenState extends State<ListeningScreen>
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to analyze your symptoms right now. Please try again.'),
+        SnackBar(
+          content: Text(AppStrings.tr('Unable to analyze your symptoms right now. Please try again.')),
         ),
       );
     } finally {
@@ -234,7 +257,7 @@ class _ListeningScreenState extends State<ListeningScreen>
                     ],
                     const SizedBox(height: AppSpacing.stackSm),
                     Text(
-                      "Tap the microphone to listen, or type your symptoms.",
+                      AppStrings.tr("Tap the microphone to listen, or type your symptoms."),
                       style: AppTextStyles.labelLg
                           .copyWith(color: scheme.secondary),
                     ),
@@ -251,17 +274,17 @@ class _ListeningScreenState extends State<ListeningScreen>
 
   Map<String, String> _statusTitle(ColorScheme scheme) {
     if (_status == _VoiceStatus.unsupported || _status == _VoiceStatus.denied) {
-      return {"title": "Voice unavailable", "subtitle": "Type your symptoms below."};
+      return {"title": AppStrings.tr("Voice unavailable"), "subtitle": AppStrings.tr("Type your symptoms below.")};
     }
     if (_status == _VoiceStatus.error && !_listening) {
       return {
-        "title": "Couldn't capture your voice",
-        "subtitle": "Try again or type your symptoms.",
+        "title": AppStrings.tr("Couldn't capture your voice"),
+        "subtitle": AppStrings.tr("Try again or type your symptoms."),
       };
     }
     return {
-      "title": "Listening...",
-      "subtitle": _listening ? 'Speak now' : "Please speak or type",
+      "title": AppStrings.tr("Listening..."),
+      "subtitle": _listening ? AppStrings.tr('Speak now') : AppStrings.tr("Please speak or type"),
     };
   }
 
@@ -389,7 +412,7 @@ class _ListeningScreenState extends State<ListeningScreen>
         style: AppTextStyles.bodyLg.copyWith(color: scheme.onSurface),
         decoration: InputDecoration(
           border: InputBorder.none,
-          hintText: 'Describe your symptoms...',
+          hintText: AppStrings.tr('Describe your symptoms...'),
           hintStyle: AppTextStyles.bodyLg.copyWith(
             color: scheme.onSurfaceVariant,
             fontStyle: FontStyle.italic,
@@ -448,7 +471,7 @@ class _ListeningScreenState extends State<ListeningScreen>
           children: [
             Expanded(
               child: PillButton(
-                label: _submitting ? 'Analyzing...' : 'Done',
+                label: _submitting ? AppStrings.tr('Analyzing...') : AppStrings.tr('Done'),
                 icon: Icons.check,
                 onPressed: _submitting ? null : _stopAndSubmit,
               ),
@@ -456,7 +479,7 @@ class _ListeningScreenState extends State<ListeningScreen>
             const SizedBox(width: AppSpacing.stackSm),
             Expanded(
               child: PillButton(
-                label: 'Clear',
+                label: AppStrings.tr('Clear'),
                 icon: Icons.refresh,
                 backgroundColor: scheme.surfaceContainerHighest,
                 foregroundColor: scheme.onSurface,

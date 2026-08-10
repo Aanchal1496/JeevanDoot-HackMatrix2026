@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/patient_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -34,20 +35,20 @@ class _FamilyMembersScreenState extends State<FamilyMembersScreen> {
     final relCtrl = TextEditingController();
     final saved = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Family Member'),
+builder: (ctx) => AlertDialog(
+        title: Text(AppStrings.tr('Add Family Member')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Full name'),
+              decoration: InputDecoration(labelText: AppStrings.tr('Full name')),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: relCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Relationship (e.g. mother, son)',
+              decoration: InputDecoration(
+                labelText: AppStrings.tr('Relationship (e.g. mother, son)'),
               ),
             ),
           ],
@@ -55,11 +56,11 @@ class _FamilyMembersScreenState extends State<FamilyMembersScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppStrings.tr('Cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Add'),
+            child: Text(AppStrings.tr('Add')),
           ),
         ],
       ),
@@ -85,7 +86,7 @@ class _FamilyMembersScreenState extends State<FamilyMembersScreen> {
     return Scaffold(
       appBar: AppTopBar(
         showBack: true,
-        title: 'Family Members',
+        title: AppStrings.tr('Family Members'),
         onTrailing: () => openOfflineScreen(context),
       ),
       body: FutureBuilder<List<FamilyMember>>(
@@ -106,8 +107,8 @@ class _FamilyMembersScreenState extends State<FamilyMembersScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Your family',
+Text(
+                      AppStrings.tr('Your family'),
                       style: AppTextStyles.displayHeroMobile
                           .copyWith(color: scheme.onSurface),
                     ),
@@ -119,8 +120,8 @@ class _FamilyMembersScreenState extends State<FamilyMembersScreen> {
                 else
                   ...members.map((m) => _memberCard(scheme, m)),
                 const SizedBox(height: AppSpacing.stackLg),
-                PillButton(
-                  label: 'Add Family Member',
+PillButton(
+                  label: AppStrings.tr('Add Family Member'),
                   icon: Icons.person_add,
                   onPressed: _addMember,
                 ),
@@ -170,8 +171,8 @@ class _FamilyMembersScreenState extends State<FamilyMembersScreen> {
           children: [
             Icon(Icons.family_restroom, size: 56, color: scheme.outline),
             const SizedBox(height: AppSpacing.stackSm),
-            Text(
-              'No family members added yet.',
+Text(
+              AppStrings.tr('No family members added yet.'),
               style: AppTextStyles.bodyLg.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
@@ -186,9 +187,9 @@ class _FamilyMembersScreenState extends State<FamilyMembersScreen> {
             children: [
               Icon(Icons.cloud_off, size: 56, color: scheme.outline),
               const SizedBox(height: AppSpacing.stackSm),
-              const Text('Could not load family members.'),
+Text(AppStrings.tr('Could not load family members.')),
               const SizedBox(height: AppSpacing.stackMd),
-              PillButton(label: 'Retry', onPressed: _reload),
+              PillButton(label: AppStrings.tr('Retry'), onPressed: _reload),
             ],
           ),
         ),

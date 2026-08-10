@@ -73,7 +73,7 @@ Run: `.venv\Scripts\python.exe -m pytest -q` → **26 passed**
 ## Offline / Sync
 
 | Feature | Status | Notes |
-|---------|--------|-------|
+|---------|--------|-------|  
 | `SyncQueue` (persisted, states, replay) | 🔵 Wired | `shared_preferences`, `/api/health` probe |
 | Offline status screen (live) | 🔵 Wired | real queue contents + Sync Now |
 | Offline-aware symptom check | 🔵 Wired | enqueues when unreachable; queued triage state |

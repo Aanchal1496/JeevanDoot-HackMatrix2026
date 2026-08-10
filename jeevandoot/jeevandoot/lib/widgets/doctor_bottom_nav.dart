@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 
 class DoctorNavItem {
@@ -97,7 +98,7 @@ class DoctorBottomNavBar extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                item.label,
+                AppStrings.tr(item.label),
                 style: AppTextStyles.labelSm.copyWith(
                   color: selected ? scheme.onPrimaryContainer : scheme.onSurfaceVariant,
                   fontWeight: selected ? FontWeight.bold : FontWeight.w500,

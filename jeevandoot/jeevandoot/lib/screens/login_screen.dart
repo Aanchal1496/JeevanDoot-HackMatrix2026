@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/auth_service.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/models.dart';
 import 'package:jeevandoot/screens/asha/asha_home_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_home_screen.dart';
@@ -54,8 +55,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _patientPasswordController.text;
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your email and password.'),
+        SnackBar(
+          content: Text(AppStrings.tr('Please enter your email and password.')),
         ),
       );
       return;
@@ -76,8 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not reach the server. Please try again.'),
+        SnackBar(
+          content: Text(AppStrings.tr('Could not reach the server. Please try again.')),
         ),
       );
     } finally {
@@ -91,8 +92,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _patientPasswordController.text;
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all the required fields.'),
+        SnackBar(
+          content: Text(AppStrings.tr('Please fill in all the required fields.')),
         ),
       );
       return;
@@ -114,8 +115,8 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not reach the server. Please try again.'),
+        SnackBar(
+          content: Text(AppStrings.tr('Could not reach the server. Please try again.')),
         ),
       );
     } finally {
@@ -135,8 +136,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
     if (id.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your Medical ID and password.'),
+        SnackBar(
+          content: Text(AppStrings.tr('Please enter your Medical ID and password.')),
         ),
       );
       return;
@@ -152,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _ashaPasswordController.text;
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your credentials.')),
+        SnackBar(content: Text(AppStrings.tr('Please enter your credentials.'))),
       );
       return;
     }
@@ -239,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Expanded(
             child: _roleTab(
               scheme,
-              label: 'Patient',
+              label: AppStrings.tr('Patient'),
               icon: Icons.person_outline,
               selected: _role == LoginRole.patient,
               onTap: () => setState(() => _role = LoginRole.patient),
@@ -248,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Expanded(
             child: _roleTab(
               scheme,
-              label: 'Doctor',
+              label: AppStrings.tr('Doctor'),
               icon: Icons.medical_services_outlined,
               selected: _role == LoginRole.doctor,
               onTap: () => setState(() => _role = LoginRole.doctor),
@@ -257,7 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Expanded(
             child: _roleTab(
               scheme,
-              label: 'ASHA',
+              label: AppStrings.tr('ASHA'),
               icon: Icons.health_and_safety_outlined,
               selected: _role == LoginRole.asha,
               onTap: () => setState(() => _role = LoginRole.asha),
@@ -326,7 +327,7 @@ class _LoginScreenState extends State<LoginScreen> {
           TextSpan(
             children: [
               TextSpan(
-                text: 'Welcome, Doctor ',
+                text: AppStrings.tr('Welcome, Doctor '),
                 style: AppTextStyles.displayHeroMobile
                     .copyWith(color: scheme.onSurface),
               ),
@@ -337,21 +338,21 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: AppSpacing.unit),
         Text(
-          'Sign in to manage your consultations and patients.',
+          AppStrings.tr('Sign in to manage your consultations and patients.'),
           textAlign: TextAlign.center,
           style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.stackLg),
-        _fieldLabel(scheme, 'Medical ID / Email'),
+        _fieldLabel(scheme, AppStrings.tr('Medical ID / Email')),
         const SizedBox(height: AppSpacing.unit),
         _doctorField(
           scheme,
           controller: _doctorIdController,
           icon: Icons.badge_outlined,
-          hint: 'Enter ID or Email',
+          hint: AppStrings.tr('Enter ID or Email'),
         ),
         const SizedBox(height: AppSpacing.stackMd),
-        _fieldLabel(scheme, 'Password'),
+        _fieldLabel(scheme, AppStrings.tr('Password')),
         const SizedBox(height: AppSpacing.unit),
         _doctorField(
           scheme,
@@ -367,7 +368,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: TextButton(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Password reset link sent.')),
+                SnackBar(content: Text(AppStrings.tr('Password reset link sent.'))),
               );
             },
             style: TextButton.styleFrom(
@@ -375,12 +376,12 @@ class _LoginScreenState extends State<LoginScreen> {
               textStyle: AppTextStyles.bodyMd,
               padding: const EdgeInsets.symmetric(vertical: 8),
             ),
-            child: const Text('Forgot Password?'),
+            child: Text(AppStrings.tr('Forgot Password?')),
           ),
         ),
         const SizedBox(height: AppSpacing.stackMd),
         PillButton(
-          label: 'Sign In',
+          label: AppStrings.tr('Sign In'),
           icon: Icons.login,
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
@@ -393,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Icon(Icons.verified_user, size: 18, color: scheme.primary),
             const SizedBox(width: 6),
             Text(
-              'SECURE DOCTOR ACCESS',
+              AppStrings.tr('SECURE DOCTOR ACCESS'),
               style: AppTextStyles.labelSm.copyWith(
                 color: scheme.primary,
                 letterSpacing: 1,
@@ -403,7 +404,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: AppSpacing.unit),
         Text(
-          'Verified medical professionals only',
+          AppStrings.tr('Verified medical professionals only'),
           textAlign: TextAlign.center,
           style: AppTextStyles.labelSm.copyWith(color: scheme.outline),
         ),
@@ -419,7 +420,7 @@ class _LoginScreenState extends State<LoginScreen> {
           TextSpan(
             children: [
               TextSpan(
-                text: 'Welcome, ASHA ',
+                text: AppStrings.tr('Welcome, ASHA '),
                 style: AppTextStyles.displayHeroMobile
                     .copyWith(color: scheme.onSurface),
               ),
@@ -430,21 +431,21 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: AppSpacing.unit),
         Text(
-          'Sign in to manage your assigned families.',
+          AppStrings.tr('Sign in to manage your assigned families.'),
           textAlign: TextAlign.center,
           style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.stackLg),
-        _fieldLabel(scheme, 'Email'),
+        _fieldLabel(scheme, AppStrings.tr('Email')),
         const SizedBox(height: AppSpacing.unit),
         _doctorField(
           scheme,
           controller: _ashaEmailController,
           icon: Icons.badge_outlined,
-          hint: 'Enter Email',
+          hint: AppStrings.tr('Enter Email'),
         ),
         const SizedBox(height: AppSpacing.stackMd),
-        _fieldLabel(scheme, 'Password'),
+        _fieldLabel(scheme, AppStrings.tr('Password')),
         const SizedBox(height: AppSpacing.unit),
         _doctorField(
           scheme,
@@ -457,7 +458,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: AppSpacing.stackMd),
         PillButton(
-          label: 'Sign In',
+          label: AppStrings.tr('Sign In'),
           icon: Icons.login,
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
@@ -567,7 +568,7 @@ class _LoginScreenState extends State<LoginScreen> {
             TextSpan(
               children: [
                 TextSpan(
-                  text: 'Welcome to JeevanDoot ',
+                  text: AppStrings.tr('Welcome to JeevanDoot '),
                   style: AppTextStyles.displayHeroMobile
                       .copyWith(color: scheme.onSurface),
                 ),
@@ -583,8 +584,8 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
             child: Text(
               _patientMode == PatientAuthMode.signIn
-                  ? 'Sign in to your account to continue.'
-                  : 'Create your account to get started.',
+                  ? AppStrings.tr('Sign in to your account to continue.')
+                  : AppStrings.tr('Create your account to get started.'),
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
             ),
@@ -598,16 +599,16 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _fieldLabel(scheme, 'Email'),
+        _fieldLabel(scheme, AppStrings.tr('Email')),
         const SizedBox(height: AppSpacing.unit),
         _doctorField(
           scheme,
           controller: _patientEmailController,
           icon: Icons.mail_outline,
-          hint: 'Enter your email',
+          hint: AppStrings.tr('Enter your email'),
         ),
         const SizedBox(height: AppSpacing.stackMd),
-        _fieldLabel(scheme, 'Password'),
+        _fieldLabel(scheme, AppStrings.tr('Password')),
         const SizedBox(height: AppSpacing.unit),
         _patientPasswordField(scheme),
         Align(
@@ -615,8 +616,8 @@ class _LoginScreenState extends State<LoginScreen> {
           child: TextButton(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Password reset link sent to your email.'),
+                SnackBar(
+                  content: Text(AppStrings.tr('Password reset link sent to your email.')),
                 ),
               );
             },
@@ -625,12 +626,12 @@ class _LoginScreenState extends State<LoginScreen> {
               textStyle: AppTextStyles.bodyMd,
               padding: const EdgeInsets.symmetric(vertical: 8),
             ),
-            child: const Text('Forgot Password?'),
+            child: Text(AppStrings.tr('Forgot Password?')),
           ),
         ),
         const SizedBox(height: AppSpacing.stackMd),
         PillButton(
-          label: 'Sign In',
+          label: AppStrings.tr('Sign In'),
           icon: Icons.login,
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
@@ -646,30 +647,30 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _fieldLabel(scheme, 'Full Name'),
+        _fieldLabel(scheme, AppStrings.tr('Full Name')),
         const SizedBox(height: AppSpacing.unit),
         _doctorField(
           scheme,
           controller: _patientNameController,
           icon: Icons.person_outline,
-          hint: 'Enter your full name',
+          hint: AppStrings.tr('Enter your full name'),
         ),
         const SizedBox(height: AppSpacing.stackMd),
-        _fieldLabel(scheme, 'Email'),
+        _fieldLabel(scheme, AppStrings.tr('Email')),
         const SizedBox(height: AppSpacing.unit),
         _doctorField(
           scheme,
           controller: _patientEmailController,
           icon: Icons.mail_outline,
-          hint: 'Enter your email',
+          hint: AppStrings.tr('Enter your email'),
         ),
         const SizedBox(height: AppSpacing.stackMd),
-        _fieldLabel(scheme, 'Password'),
+        _fieldLabel(scheme, AppStrings.tr('Password')),
         const SizedBox(height: AppSpacing.unit),
         _patientPasswordField(scheme),
         const SizedBox(height: AppSpacing.stackMd),
         PillButton(
-          label: 'Create Account',
+          label: AppStrings.tr('Create Account'),
           icon: Icons.person_add_alt_1,
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
@@ -686,7 +687,7 @@ class _LoginScreenState extends State<LoginScreen> {
       scheme,
       controller: _patientPasswordController,
       icon: Icons.lock_outline,
-      hint: 'Enter your password',
+      hint: AppStrings.tr('Enter your password'),
       obscure: true,
       obscureToggle: () => setState(() => _obscurePassword = !_obscurePassword),
     );
@@ -697,7 +698,7 @@ class _LoginScreenState extends State<LoginScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          isSignUp ? 'Already have an account? ' : 'New to JeevanDoot? ',
+          isSignUp ? AppStrings.tr('Already have an account? ') : AppStrings.tr('New to JeevanDoot? '),
           style: AppTextStyles.bodyMd.copyWith(color: scheme.onSurfaceVariant),
         ),
         TextButton(
@@ -711,7 +712,7 @@ class _LoginScreenState extends State<LoginScreen> {
             textStyle: AppTextStyles.labelLg,
             padding: const EdgeInsets.symmetric(horizontal: 4),
           ),
-          child: Text(isSignUp ? 'Sign In' : 'Sign Up'),
+          child: Text(isSignUp ? AppStrings.tr('Sign In') : AppStrings.tr('Sign Up')),
         ),
       ],
     );

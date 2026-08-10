@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/doctor_service.dart';
-import 'package:jeevandoot/models/doctor_models.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
+import 'package:jeevandoot/models/doctor_models.dart'
+    hide DoctorAppointment;
+import 'package:jeevandoot/screens/doctor/doctor_availability_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_patient_case_screen.dart';
+import 'package:jeevandoot/screens/doctor/doctor_schedule_screen.dart';
+import 'package:jeevandoot/screens/doctor/doctor_video_consult_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
 import 'package:jeevandoot/widgets/app_top_bar.dart';
 import 'package:jeevandoot/widgets/common.dart';
@@ -18,7 +23,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
   final DoctorService _service = DoctorService(ApiClient.instance);
   String _tab = 'Upcoming';
 
-  List<Consultation> _consultations = const [];
+  List<DoctorAppointment> _appointments = const [];
   bool _loading = true;
   String? _error;
 
@@ -34,33 +39,34 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
       _error = null;
     });
     try {
-      final consultations = await _service.myConsultations();
+      final appointments = await _service.appointments();
       if (mounted) {
         setState(() {
-          _consultations = consultations;
+          _appointments = appointments;
           _loading = false;
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Could not load your schedule.';
+          _error = AppStrings.tr('Could not load your schedule.');
           _loading = false;
         });
       }
     }
   }
 
-  List<Consultation> get _visible {
-    final upcoming = _consultations.where((c) =>
-        (c.status?.toLowerCase() ?? '') != 'completed' &&
-        (c.status?.toLowerCase() ?? '') != 'cancelled').toList();
-    final completed = _consultations.where((c) =>
-        (c.status?.toLowerCase() ?? '') == 'completed').toList();
+  List<DoctorAppointment> get _visible {
+    final active = _appointments.where((a) {
+      final s = a.status.toLowerCase();
+      return s != 'completed' && s != 'cancelled';
+    }).toList();
+    final completed = _appointments
+        .where((a) => a.status.toLowerCase() == 'completed')
+        .toList();
     return switch (_tab) {
       'Completed' => completed,
-      'Today' => upcoming,
-      _ => upcoming,
+      _ => active,
     };
   }
 
@@ -69,12 +75,22 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppTopBar(
-        title: 'Schedule',
+        title: AppStrings.tr('Schedule'),
         onTrailing: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No new notifications.')),
+            SnackBar(content: Text(AppStrings.tr('No new notifications.'))),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final scheduled = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(builder: (_) => const DoctorScheduleScreen()),
+          );
+          if (scheduled == true) _load();
+        },
+        icon: const Icon(Icons.add),
+        label: Text(AppStrings.tr('Schedule Appointment')),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,10 +105,32 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Appointments',
-                  style: AppTextStyles.displayHeroMobile
-                      .copyWith(color: scheme.onSurface),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        AppStrings.tr('Appointments'),
+                        style: AppTextStyles.displayHeroMobile
+                            .copyWith(color: scheme.onSurface),
+                      ),
+                    ),
+                    PillButton(
+                      label: AppStrings.tr('Set Availability'),
+                      expanded: false,
+                      height: 44,
+                      icon: Icons.event_available,
+                      backgroundColor: scheme.secondaryContainer,
+                      foregroundColor: scheme.onSecondaryContainer,
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const DoctorAvailabilityScreen(),
+                          ),
+                        );
+                        _load();
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.stackMd),
                 _tabs(scheme),
@@ -112,7 +150,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                     : _visible.isEmpty
                         ? Center(
                             child: Text(
-                              'No appointments here.',
+                              AppStrings.tr('No appointments here.'),
                               style: AppTextStyles.bodyMd
                                   .copyWith(color: scheme.onSurfaceVariant),
                             ),
@@ -158,7 +196,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                   ),
                 ),
                 child: Text(
-                  tab,
+                  AppStrings.tr(tab),
                   textAlign: TextAlign.center,
                   style: AppTextStyles.labelLg.copyWith(
                     color:
@@ -172,20 +210,20 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
     );
   }
 
-  DoctorPatient _asPatient(Consultation c) => DoctorPatient(
-        name: c.patientName ?? 'Patient',
-        id: 'CON-${c.id}',
-        age: 'Not recorded',
-        gender: 'Unknown',
-        risk: const DoctorRisk(DoctorRiskLevel.low, 'LOW Risk'),
+  DoctorPatient _asPatient(DoctorAppointment a) => DoctorPatient(
+        name: a.patientName,
+        id: 'APT-${a.id}',
+        age: AppStrings.tr('Not recorded'),
+        gender: AppStrings.tr('Unknown'),
+        risk: DoctorRisk(DoctorRiskLevel.low, AppStrings.tr('LOW Risk')),
         symptoms: const [],
-        waitTime: 'WAITING',
-        patientUserId: c.patientUserId,
-        consultType: c.type ?? 'Consultation',
+        waitTime: AppStrings.tr('WAITING'),
+        patientUserId: a.patientUserId,
+        consultType: a.type,
       );
 
   Widget _appointmentCard(
-      BuildContext context, ColorScheme scheme, Consultation c) {
+      BuildContext context, ColorScheme scheme, DoctorAppointment a) {
     final completed = _tab == 'Completed';
     return SoftCard(
       border: Border(
@@ -205,7 +243,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      c.patientName ?? 'Patient',
+                      a.patientName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.headlineMd
@@ -213,7 +251,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'ID: CON-${c.id} • ${c.status ?? 'upcoming'}',
+                      'ID: APT-${a.id} • ${a.status.toLowerCase()}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.labelSm.copyWith(
@@ -229,8 +267,8 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    c.scheduledAt?.isNotEmpty == true
-                        ? _shortTime(c.scheduledAt!)
+                    a.scheduledAt?.isNotEmpty == true
+                        ? _shortTime(a.scheduledAt!)
                         : '—',
                     style: AppTextStyles.headlineMd
                         .copyWith(color: scheme.primary),
@@ -242,11 +280,17 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
           const SizedBox(height: AppSpacing.stackSm),
           Row(
             children: [
-              Icon(Icons.videocam, size: 18, color: scheme.onSurfaceVariant),
+              Icon(
+                (a.type.toLowerCase().contains('audio'))
+                    ? Icons.headset
+                    : Icons.videocam,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  c.type ?? 'Consultation',
+                  a.type,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.bodyMd.copyWith(
@@ -263,7 +307,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
               children: [
                 Expanded(
                   child: PillButton(
-                    label: 'View Case',
+                    label: AppStrings.tr('View Case'),
                     backgroundColor: scheme.surfaceContainerLowest,
                     foregroundColor: scheme.secondary,
                     border: Border.all(color: scheme.secondary),
@@ -271,7 +315,7 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) =>
-                            DoctorPatientCaseScreen(patient: _asPatient(c)),
+                            DoctorPatientCaseScreen(patient: _asPatient(a)),
                       ),
                     ),
                   ),
@@ -279,12 +323,14 @@ class _DoctorAppointmentsTabState extends State<DoctorAppointmentsTab> {
                 const SizedBox(width: AppSpacing.gutter),
                 Expanded(
                   child: PillButton(
-                    label: 'Start Consultation',
+                    label: AppStrings.tr('Start Consultation'),
                     height: 48,
+                    icon: Icons.videocam,
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) =>
-                            DoctorPatientCaseScreen(patient: _asPatient(c)),
+                        builder: (_) => DoctorVideoConsultScreen(
+                          patient: _asPatient(a),
+                        ),
                       ),
                     ),
                   ),

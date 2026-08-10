@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_prescription_preview_screen.dart';
 import 'package:jeevandoot/theme/app_theme.dart';
@@ -17,11 +18,11 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
       backgroundColor: scheme.surface,
       appBar: AppTopBar(
         showBack: true,
-        title: 'Consultation Notes',
+        title: AppStrings.tr('Consultation Notes'),
         trailingIcon: Icons.ios_share,
         onTrailing: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notes shared to patient.')),
+            SnackBar(content: Text(AppStrings.tr('Notes shared to patient.'))),
           );
         },
       ),
@@ -102,13 +103,13 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'AI Summary',
+                    AppStrings.tr('AI Summary'),
                     style: AppTextStyles.labelLg
                         .copyWith(color: scheme.onPrimaryContainer),
                   ),
                 ),
                 Text(
-                  'Auto-generated',
+                  AppStrings.tr('Auto-generated'),
                   style: AppTextStyles.labelSm
                       .copyWith(color: scheme.onPrimaryContainer),
                 ),
@@ -118,10 +119,12 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.gutter),
             child: Text(
-              'Patient presented with fever (101°F) and persistent cough for 3 days. '
-              'Oxygen saturation normal at 98%. Based on symptoms and vitals, patient '
-              'shows moderate risk of respiratory tract infection. Continue current '
-              'medication and monitor temperature every 6 hours.',
+              AppStrings.tr(
+                'Patient presented with fever (101°F) and persistent cough for 3 days. '
+                'Oxygen saturation normal at 98%. Based on symptoms and vitals, patient '
+                'shows moderate risk of respiratory tract infection. Continue current '
+                'medication and monitor temperature every 6 hours.',
+              ),
               style: AppTextStyles.bodyMd.copyWith(
                 color: scheme.onSurface,
                 fontSize: 14,
@@ -149,7 +152,7 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'DOCTOR NOTES',
+                AppStrings.tr('DOCTOR NOTES'),
                 style: AppTextStyles.labelSm.copyWith(
                   color: scheme.onSurfaceVariant,
                   letterSpacing: 0.8,
@@ -163,7 +166,7 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  'Draft',
+                  AppStrings.tr('Draft'),
                   style: AppTextStyles.labelSm
                       .copyWith(color: scheme.primary, fontWeight: FontWeight.w600),
                 ),
@@ -174,7 +177,7 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
           TextField(
             maxLines: 5,
             decoration: InputDecoration(
-              hintText: 'Type your consultation notes here...',
+              hintText: AppStrings.tr('Type your consultation notes here...'),
               hintStyle: AppTextStyles.bodyMd
                   .copyWith(color: scheme.onSurfaceVariant, fontSize: 14),
               filled: true,
@@ -188,7 +191,7 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.stackMd),
           Text(
-            'DOCTOR VITALS',
+            AppStrings.tr('DOCTOR VITALS'),
             style: AppTextStyles.labelSm.copyWith(
               color: scheme.onSurfaceVariant,
               letterSpacing: 0.8,
@@ -198,15 +201,15 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _vitalChip(scheme, 'Temp', '101.2°F'),
+                child: _vitalChip(scheme, AppStrings.tr('Temp'), '101.2°F'),
               ),
               const SizedBox(width: AppSpacing.unit),
               Expanded(
-                child: _vitalChip(scheme, 'Pulse', '88 bpm'),
+                child: _vitalChip(scheme, AppStrings.tr('Pulse'), '88 bpm'),
               ),
               const SizedBox(width: AppSpacing.unit),
               Expanded(
-                child: _vitalChip(scheme, 'BP', '122/81'),
+                child: _vitalChip(scheme, AppStrings.tr('BP'), '122/81'),
               ),
             ],
           ),
@@ -256,7 +259,7 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
         children: [
           Expanded(
             child: PillButton(
-              label: 'Preview',
+              label: AppStrings.tr('Preview'),
               icon: Icons.description_outlined,
               backgroundColor: scheme.surfaceContainerLow,
               foregroundColor: scheme.primary,
@@ -273,13 +276,13 @@ class DoctorConsultationNotesScreen extends StatelessWidget {
           Expanded(
             flex: 2,
             child: PillButton(
-              label: 'Send to Patient',
+              label: AppStrings.tr('Send to Patient'),
               icon: Icons.send,
               height: 48,
               onPressed: () {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Notes saved.')),
+                  SnackBar(content: Text(AppStrings.tr('Notes saved.'))),
                 );
               },
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jeevandoot/api/api_client.dart';
 import 'package:jeevandoot/api/doctor_service.dart';
 import 'package:jeevandoot/constants.dart';
+import 'package:jeevandoot/l10n/app_strings.dart';
 import 'package:jeevandoot/models/doctor_models.dart';
 import 'package:jeevandoot/screens/doctor/doctor_appointments_screen.dart';
 import 'package:jeevandoot/screens/doctor/doctor_consult_tab.dart';
@@ -124,10 +125,10 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
     return Scaffold(
       appBar: AppTopBar(
         avatarUrl: AppAssets.doctorAvatar,
-        subtitle: 'General Physician',
+        subtitle: AppStrings.tr('General Physician'),
         onTrailing: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No new notifications.')),
+            SnackBar(content: Text(AppStrings.tr('No new notifications.'))),
           );
         },
       ),
@@ -202,7 +203,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
               ),
               const SizedBox(width: 6),
               Text(
-                'Available',
+                AppStrings.tr('Available'),
                 style: AppTextStyles.labelSm.copyWith(
                   color: const Color(0xFF15803D),
                   fontWeight: FontWeight.w600,
@@ -222,16 +223,16 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
             p.risk.level == DoctorRiskLevel.urgent)
         .length;
     final stats = [
-      (label: 'Waiting', value: '${_queue.length}', color: scheme.onSurface),
-      (label: 'Medium', value: '${_queue.where((p) => p.risk.level == DoctorRiskLevel.medium).length}', color: scheme.secondary),
-      (label: 'Urgent', value: '$urgent', color: scheme.error),
-      (label: 'Completed', value: '0', color: scheme.primary),
+      (label: AppStrings.tr('Waiting'), value: '${_queue.length}', color: scheme.onSurface),
+      (label: AppStrings.tr('Medium'), value: '${_queue.where((p) => p.risk.level == DoctorRiskLevel.medium).length}', color: scheme.secondary),
+      (label: AppStrings.tr('Urgent'), value: '$urgent', color: scheme.error),
+      (label: AppStrings.tr('Completed'), value: '0', color: scheme.primary),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Today's Overview",
+          AppStrings.tr("Today's Overview"),
           style: AppTextStyles.labelSm.copyWith(
             color: scheme.outline,
             letterSpacing: 1,
@@ -331,7 +332,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
           ),
           const SizedBox(height: AppSpacing.stackSm),
           Text(
-            patient?.name ?? (_loading ? '…' : 'No urgent cases'),
+            patient?.name ?? (_loading ? '…' : AppStrings.tr('No urgent cases')),
             style: AppTextStyles.headlineMd.copyWith(color: scheme.onSurface),
           ),
           if (patient != null) ...[
@@ -362,7 +363,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
                 Expanded(
                   child: _actionButton(
                     scheme,
-                    label: 'View Patient',
+                    label: AppStrings.tr('View Patient'),
                     filled: false,
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -376,7 +377,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
                 Expanded(
                   child: _actionButton(
                     scheme,
-                    label: 'Start Consultation',
+                    label: AppStrings.tr('Start Consultation'),
                     filled: true,
                     backgroundColor: scheme.error,
                     onTap: () => Navigator.of(context).push(
@@ -401,7 +402,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'NEXT CONSULTATION',
+          AppStrings.tr('NEXT CONSULTATION'),
           style: AppTextStyles.labelSm.copyWith(
             color: scheme.outline,
             letterSpacing: 1,
@@ -429,7 +430,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.stackSm),
                   child: Text(
-                    _loading ? 'Loading…' : 'No consultations scheduled.',
+                    _loading ? AppStrings.tr('Loading…') : AppStrings.tr('No consultations scheduled.'),
                     style: AppTextStyles.bodyMd
                         .copyWith(color: scheme.onSurfaceVariant),
                   ),
@@ -496,7 +497,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
     } else {
       startConsult = () {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No patients in the queue yet.')),
+          SnackBar(content: Text(AppStrings.tr('No patients in the queue yet.'))),
         );
       };
       startPrescription = startConsult;
@@ -506,28 +507,28 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
         icon: Icons.group,
         color: scheme.primary,
         bg: scheme.primaryContainer.withValues(alpha: 0.2),
-        label: 'Patients',
+        label: AppStrings.tr('Patients'),
         onTap: widget.onOpenQueue,
       ),
       (
         icon: Icons.calendar_month,
         color: scheme.secondary,
         bg: scheme.secondaryContainer.withValues(alpha: 0.2),
-        label: 'Appointments',
+        label: AppStrings.tr('Appointments'),
         onTap: widget.onOpenAppointments,
       ),
       (
         icon: Icons.medical_services,
         color: scheme.tertiary,
         bg: scheme.tertiaryContainer.withValues(alpha: 0.2),
-        label: 'Start Consultation',
+        label: AppStrings.tr('Start Consultation'),
         onTap: startConsult,
       ),
       (
         icon: Icons.medication,
         color: scheme.primary,
         bg: scheme.primaryContainer.withValues(alpha: 0.2),
-        label: 'Prescriptions',
+        label: AppStrings.tr('Prescriptions'),
         onTap: startPrescription,
       ),
     ];
@@ -535,7 +536,7 @@ class _DoctorDashboardTabState extends State<DoctorDashboardTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'QUICK ACTIONS',
+          AppStrings.tr('QUICK ACTIONS'),
           style: AppTextStyles.labelSm.copyWith(
             color: scheme.outline,
             letterSpacing: 1,
