@@ -35,8 +35,6 @@ This cuts diagnosis delays by an estimated 70%, prevents disease progression, lo
 - **Design:** UI designed in Google Stitch
 - **Version Control:** Git & GitHub
 
-*(Update this section with your team's final choices before submission.)*
-
 ## Team Members
 1. Srushti Dedaniya
 2. Aanchal Jain
@@ -74,16 +72,123 @@ npm run build
 ### Project Structure
 ```
 jeevandoot/
-├── src/
-│   ├── patient/        # Patient app screens
-│   ├── doctor/         # Doctor portal screens
-│   ├── asha/           # ASHA worker app screens
-│   ├── admin/          # Admin dashboard screens
-│   ├── components/     # Shared UI components
-│   ├── services/       # Firebase/API integration, triage logic
-│   └── App.js
-├── public/
-├── .env
-├── package.json
-└── README.md
+├── render.yaml                        # Render blueprint (deploy config)
+├── README.md
+├── FEATURE_STATUS.md
+├── .gitignore
+│
+├── backend/                           # FastAPI backend
+│   ├── Procfile                       # web: uvicorn app.main:app
+│   ├── requirements.txt
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── server.err
+│   ├── server.out
+│   ├── app/
+│   │   ├── main.py                    # FastAPI entry
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── migrations.py
+│   │   ├── seed.py
+│   │   ├── analysis.py
+│   │   ├── audit.py
+│   │   ├── auth.py
+│   │   ├── normalizer.py
+│   │   ├── notifications.py
+│   │   ├── __init__.py
+│   │   └── routers/
+│   │       ├── appointments.py
+│   │       ├── asha.py
+│   │       ├── auth.py
+│   │       ├── consultations.py
+│   │       ├── demo.py
+│   │       ├── doctors.py
+│   │       ├── family.py
+│   │       ├── followups.py
+│   │       ├── notifications.py
+│   │       ├── patients.py
+│   │       ├── prescriptions.py
+│   │       ├── referrals.py
+│   │       ├── triage.py
+│   │       └── __init__.py
+│   └── tests/
+│       ├── conftest.py
+│       ├── test_analysis.py
+│       ├── test_flows.py
+│       └── __init__.py
+│
+└── jeevandoot/                        # Flutter app
+    ├── pubspec.yaml
+    ├── analysis_options.yaml
+    ├── .metadata
+    ├── README.md
+    ├── lib/
+    │   ├── main.dart
+    │   ├── constants.dart
+    │   ├── api/
+    │   │   ├── api_client.dart
+    │   │   ├── asha_service.dart
+    │   │   ├── auth_service.dart
+    │   │   ├── doctor_service.dart
+    │   │   ├── patient_service.dart
+    │   │   └── symptom_service.dart
+    │   ├── l10n/
+    │   │   └── app_strings.dart
+    │   ├── models/
+    │   │   ├── models.dart
+    │   │   └── doctor_models.dart
+    │   ├── screens/
+    │   │   ├── asha/
+    │   │   │   ├── asha_assignment_detail_screen.dart
+    │   │   │   └── asha_home_screen.dart
+    │   │   ├── doctor/
+    │   │   │   ├── doctor_ai_suggested_questions_screen.dart
+    │   │   │   ├── doctor_appointments_screen.dart
+    │   │   │   ├── doctor_availability_screen.dart
+    │   │   │   ├── doctor_consultation_info_panel_screen.dart
+    │   │   │   ├── doctor_consultation_notes_screen.dart
+│   │   │   ├── doctor_consult_tab.dart
+│   │   │   ├── doctor_home_screen.dart
+│   │   │   ├── doctor_new_prescription_screen.dart
+│   │   │   ├── doctor_patient_case_screen.dart
+│   │   │   ├── doctor_patient_queue_screen.dart
+│   │   │   ├── doctor_prescription_preview_screen.dart
+│   │   │   ├── doctor_pre_check_screen.dart
+│   │   │   ├── doctor_profile_screen.dart
+│   │   │   ├── doctor_referral_screen.dart
+│   │   │   ├── doctor_schedule_screen.dart
+│   │   │   ├── doctor_symptom_timeline_screen.dart
+│   │   │   └── doctor_video_consult_screen.dart
+│   │   ├── appointment_confirmation_screen.dart
+│   │   ├── book_consultation_screen.dart
+│   │   ├── family_members_screen.dart
+│   │   ├── home_screen.dart
+│   │   ├── language_selection_screen.dart
+│   │   ├── listening_screen.dart
+│   │   ├── login_screen.dart
+│   │   ├── my_appointments_screen.dart
+│   │   ├── notifications_screen.dart
+│   │   ├── offline_screen.dart
+│   │   ├── prescription_screen.dart
+│   │   ├── profile_screen.dart
+│   │   ├── profile_settings.dart
+│   │   ├── records_screen.dart
+│   │   ├── reminders_screen.dart
+│   │   ├── self_care_advice_screen.dart
+│   │   ├── splash_screen.dart
+│   │   ├── symptom_checker_screen.dart
+│   │   ├── triage_result_screen.dart
+│   │   └── video_call_screen.dart
+│   ├── services/
+│   │   └── sync_queue.dart
+│   ├── theme/
+│   │   └── app_theme.dart
+│   └── widgets/
+│       ├── app_top_bar.dart
+│       ├── bottom_nav.dart
+│       ├── common.dart
+│       └── doctor_bottom_nav.dart
+    └── test/
 ```
