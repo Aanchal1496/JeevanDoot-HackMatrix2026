@@ -88,11 +88,15 @@ class _DoctorNewPrescriptionScreenState
     }
     setState(() => _submitting = true);
     try {
-      final consultation = await _service.createConsultation(
-        patientUserId: patientUserId,
-        scheduledAt: DateTime.now().toIso8601String(),
-      );
-      final consultationId = consultation['id'] as int;
+      int consultationId =
+          widget.patient.consultationId ?? 0;
+      if (consultationId == 0) {
+        final consultation = await _service.createConsultation(
+          patientUserId: patientUserId,
+          scheduledAt: DateTime.now().toIso8601String(),
+        );
+        consultationId = consultation['id'] as int;
+      }
       await _service.createPrescription(
         consultationId: consultationId,
         patientUserId: patientUserId,

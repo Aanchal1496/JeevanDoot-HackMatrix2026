@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.models import AshaAssignment, Doctor, User, UserRole
 from app.auth import get_user_by_email, hash_password
+from app.routers.demo import ensure_demo
 
 
 def seed(db: Session) -> None:
@@ -106,3 +107,7 @@ def seed(db: Session) -> None:
             )
 
     db.commit()
+
+
+def seed_demo(db: Session) -> None:
+    ensure_demo()

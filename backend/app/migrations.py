@@ -37,6 +37,8 @@ _ADD_COLUMNS: dict[str, list[tuple[str, object]]] = {
         ("started_at", "DATETIME"),
         ("ended_at", "DATETIME"),
         ("connection_quality", "TEXT"),
+        ("risk_level", "TEXT"),
+        ("symptoms", "TEXT"),
         ("created_at", "DATETIME"),
         ("updated_at", "DATETIME"),
     ],

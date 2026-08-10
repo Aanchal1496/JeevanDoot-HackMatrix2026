@@ -95,6 +95,48 @@ class QueuePatient {
       );
 }
 
+/// A consultation waiting in the doctor's demo queue (risk-sorted).
+class ConsultationQueueItem {
+  const ConsultationQueueItem({
+    required this.id,
+    required this.patientId,
+    required this.patientName,
+    required this.riskLevel,
+    required this.status,
+    this.age,
+    this.gender,
+    this.symptoms = const [],
+    this.type,
+    this.scheduledAt,
+  });
+  final int id;
+  final int patientId;
+  final String patientName;
+  final String riskLevel;
+  final String status;
+  final int? age;
+  final String? gender;
+  final List<String> symptoms;
+  final String? type;
+  final String? scheduledAt;
+
+  factory ConsultationQueueItem.fromJson(Map<String, dynamic> json) =>
+      ConsultationQueueItem(
+        id: json['id'] as int,
+        patientId: json['patient_id'] as int,
+        patientName: json['patient_name'] as String? ?? 'Patient',
+        riskLevel: (json['risk_level'] as String? ?? 'LOW').toUpperCase(),
+        status: (json['status'] as String? ?? 'WAITING').toUpperCase(),
+        age: json['age'] as int?,
+        gender: json['gender'] as String?,
+        symptoms: (json['symptoms'] as List<dynamic>? ?? [])
+            .map((e) => e.toString())
+            .toList(),
+        type: json['consultation_type'] as String?,
+        scheduledAt: json['scheduled_at']?.toString(),
+      );
+}
+
 /// Minimal patient record used by the doctor to pick who to schedule for.
 class PatientBrief {
   const PatientBrief({
@@ -173,6 +215,54 @@ class DoctorService {
     return json
         .map((e) => QueuePatient.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Risk-sorted teleconsultation queue (from consultations, demo-mode).
+  Future<List<ConsultationQueueItem>> consultationQueue() async {
+    final json = await _client.get('/consultations/queue') as List<dynamic>;
+    return json
+        .map((e) => ConsultationQueueItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Mark an existing consultation as in-progress.
+  Future<Map<String, dynamic>> startConsultation(int consultationId) async {
+    return await _client.post(
+          '/consultations/$consultationId/start',
+          {},
+          authenticated: true,
+        )
+        as Map<String, dynamic>;
+  }
+
+  Future<List<Map<String, dynamic>>> demoStatus() async {
+    final json = await _client.get('/demo') as Map<String, dynamic>;
+    return (json['patients'] as List<dynamic>? ?? [])
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> simulateBooking({
+    required String patientName,
+    int? age,
+    String? gender,
+    String riskLevel = 'HIGH',
+    List<String>? symptoms,
+  }) async {
+    return await _client.post(
+      '/demo/consultations',
+      {
+        'patient_name': patientName,
+        'age': age,
+        'gender': gender,
+        'risk_level': riskLevel,
+        'symptoms': symptoms,
+      },
+    ) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> resetDemo() async {
+    return await _client.post('/demo/reset', {}) as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> me() async {

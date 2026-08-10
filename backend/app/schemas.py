@@ -88,8 +88,10 @@ class ConsultationCreate(BaseModel):
     doctor_name: Optional[str] = None
     consultation_type: str = "Video Consultation"
     scheduled_at: Optional[str] = None
-    status: str = "upcoming"
+    status: str = "WAITING"
     patient_user_id: Optional[int] = None
+    risk_level: Optional[str] = None
+    symptoms: Optional[list[str]] = None
 
 
 class ConsultationOut(BaseModel):
@@ -103,6 +105,46 @@ class ConsultationOut(BaseModel):
     status: Optional[str] = None
     scheduled_at: Optional[str] = None
     patient_name: Optional[str] = None
+    risk_level: Optional[str] = None
+    symptoms: Optional[str] = None
+
+
+class ConsultationQueueItem(BaseModel):
+    id: int
+    patient_id: int
+    patient_name: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    risk_level: str
+    symptoms: Optional[list[str]] = None
+    status: str
+    consultation_type: Optional[str] = None
+    scheduled_at: Optional[str] = None
+    created_at: Optional[object] = None
+
+
+class DemoConsultationCreate(BaseModel):
+    patient_name: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    risk_level: str = "HIGH"
+    symptoms: Optional[list[str]] = None
+    doctor_id: Optional[int] = None
+    consultation_type: str = "Video Consultation"
+
+
+class DemoPatientOut(BaseModel):
+    name: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    risk_level: str
+    symptoms: list[str]
+    status: str
+
+
+class DemoStatusOut(BaseModel):
+    mode: str = "ON"
+    patients: list[DemoPatientOut]
 
 
 class UserPublic(BaseModel):

@@ -44,14 +44,26 @@ class ApiClient {
   }
 
   dynamic _decode(http.Response response) {
-    final body = response.body.isEmpty ? '' : response.body;
-    final Map<String, dynamic>? json =
-        body.isEmpty ? null : (jsonDecode(body) as Map<String, dynamic>?);
+    final body = response.body;
+
+    dynamic json;
+    if (body.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(body);
+        if (decoded is Map || decoded is List) {
+          json = decoded;
+        }
+      } catch (_) {
+        json = null;
+      }
+    }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return json;
     }
-    final message = (json?['detail'] ?? 'Request failed').toString();
+    final message = json is Map
+        ? (json['detail'] ?? 'Request failed').toString()
+        : 'Request failed';
     throw ApiException(message, statusCode: response.statusCode);
   }
 
@@ -62,11 +74,13 @@ class ApiClient {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    final res = await http.post(
-      Uri.parse('$baseUrl$path'),
-      headers: headers,
-      body: jsonEncode(data),
-    );
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(data),
+        )
+        .timeout(const Duration(seconds: 20));
     return _decode(res);
   }
 
@@ -75,10 +89,9 @@ class ApiClient {
     final headers = {
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    final res = await http.get(
-      Uri.parse('$baseUrl$path'),
-      headers: headers,
-    );
+    final res = await http
+        .get(Uri.parse('$baseUrl$path'), headers: headers)
+        .timeout(const Duration(seconds: 20));
     return _decode(res);
   }
 
@@ -89,11 +102,13 @@ class ApiClient {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    final res = await http.put(
-      Uri.parse('$baseUrl$path'),
-      headers: headers,
-      body: jsonEncode(data),
-    );
+    final res = await http
+        .put(
+          Uri.parse('$baseUrl$path'),
+          headers: headers,
+          body: jsonEncode(data),
+        )
+        .timeout(const Duration(seconds: 20));
     return _decode(res);
   }
 }

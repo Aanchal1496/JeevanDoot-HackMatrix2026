@@ -35,7 +35,7 @@ def decode_token(token: str) -> dict | None:
 
 
 def get_user_by_email(db: Session, email: str) -> User | None:
-    return db.query(User).filter(User.email == email.lower()).first()
+    return db.query(User).filter(User.email == email.strip().lower()).first()
 
 
 def authenticate(db: Session, email: str, password: str) -> User | None:

@@ -55,10 +55,30 @@ class _RecordsTabState extends State<RecordsTab> {
       _loading = true;
       _error = null;
     });
+
+    // Load each source independently so a single failing endpoint can't blank
+    // the whole page — whichever sources succeed still render.
+    var prescriptions = <Prescription>[];
+    var records = <HealthRecord>[];
+    var vitals = <Vital>[];
+    var failures = 0;
+
+    Future<void> safe(Future<List<dynamic>> Function() fn, void Function(dynamic) capture) async {
+      try {
+        final result = await fn().timeout(const Duration(seconds: 15));
+        capture(result);
+      } catch (_) {
+        failures++;
+      }
+    }
+
+    await Future.wait([
+      safe(() => _service.listPrescriptions(), (v) => prescriptions = v as List<Prescription>),
+      safe(() => _service.listHealthRecords(), (v) => records = v as List<HealthRecord>),
+      safe(() => _service.listVitals(), (v) => vitals = v as List<Vital>),
+    ]);
+
     try {
-      final prescriptions = await _service.listPrescriptions();
-      final records = await _service.listHealthRecords();
-      final vitals = await _service.listVitals();
       final List<_RecordEntry> entries = [
         for (final p in prescriptions)
           _RecordEntry(
@@ -102,6 +122,9 @@ class _RecordsTabState extends State<RecordsTab> {
         setState(() {
           _entries = entries;
           _loading = false;
+          _error = failures > 0 && entries.isEmpty
+              ? AppStrings.tr('Could not load your records. Pull to retry.')
+              : null;
         });
       }
     } catch (_) {

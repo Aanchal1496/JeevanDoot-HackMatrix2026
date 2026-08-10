@@ -35,6 +35,7 @@ class DoctorPatient {
     this.startTime,
     this.consultType = 'Video Consultation',
     this.patientUserId,
+    this.consultationId,
   });
 
   final String name;
@@ -47,6 +48,7 @@ class DoctorPatient {
   final String? startTime;
   final String consultType;
   final int? patientUserId;
+  final int? consultationId;
 
   /// Builds a queue card from a live `/doctors/queue` item. Fields not
   /// present in the queue response (age/gender/wait-time) render as "unknown".
@@ -66,6 +68,27 @@ class DoctorPatient {
       waitTime: 'IN QUEUE',
       startTime: null,
       patientUserId: q.patientId,
+    );
+  }
+
+  /// Builds a queue card from a `/consultations/queue` item (demo mode).
+  factory DoctorPatient.fromConsultation(ConsultationQueueItem q) {
+    final level = switch (q.riskLevel) {
+      'HIGH' => DoctorRiskLevel.urgent,
+      'MEDIUM' => DoctorRiskLevel.medium,
+      _ => DoctorRiskLevel.low,
+    };
+    return DoctorPatient(
+      name: q.patientName,
+      id: 'CONS-${q.id}',
+      age: q.age?.toString() ?? 'Not recorded',
+      gender: q.gender ?? 'Unknown',
+      risk: DoctorRisk(level, '${q.riskLevel} Risk'),
+      symptoms: q.symptoms,
+      waitTime: 'IN QUEUE',
+      consultType: q.type ?? 'Video Consultation',
+      patientUserId: q.patientId,
+      consultationId: q.id,
     );
   }
 }
